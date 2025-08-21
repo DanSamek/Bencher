@@ -1,26 +1,46 @@
-﻿@page "/Account/Manage"
-
-@using Microsoft.AspNetCore.Identity
-@using WebApplication.Data
-
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Profile</PageTitle>
 
-<h3>Profile</h3>
-<StatusMessage />
+@page "/Account/Manage"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using WebApplication.Data
+
+
+<h3>Manage account</h3>
+<StatusMessage Message="@_message" />
 
 <div class="row">
     <div class="col-xl-6">
-        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
+        <EditForm Model="Input" FormName="manage" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator/>
+            <ValidationSummary class="text-danger" role="alert"/>
             <div class="form-floating mb-3">
-                <input type="text" value="@username" id="username" class="form-control" placeholder="Choose your username." disabled />
+                <input type="text" value="@_username" id="username" class="form-control" disabled/>
                 <label for="username" class="form-label">Username</label>
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail" class="form-control" aria-required="true" />
+                <label for="Input.NewEmail" class="form-label">New email</label>
+                <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.CurrentPassword" id="Input.CurrentPassword" class="form-control"/>
+                <label for="Input.CurrentPassword" class="form-label">Current password</label>
+                <ValidationMessage For="() => Input.CurrentPassword" class="text-danger"/>
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.NewPassword" id="Input.NewPassword" class="form-control"/>
+                <label for="Input.NewPassword" class="form-label">New password</label>
+                <ValidationMessage For="() => Input.NewPassword" class="text-danger"/>
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword" class="form-control"/>
+                <label for="Input.ConfirmPassword" class="form-label">Confirm password</label>
+                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger"/>
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
         </EditForm>
@@ -28,30 +48,76 @@
 </div>
 
 @code {
-    private ApplicationUser user = default!;
-    private string? username;
-
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
+    private string? _username;
+    private ApplicationUser _user = null!;
+    private string? _message;
+    
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
-
+    
+    [CascadingParameter] 
+    private HttpContext HttpContext { get; set; } = null!;
+    
     protected override async Task OnInitializedAsync()
     {
-        // TODO
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        username = await UserManager.GetUserNameAsync(user);
+        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        _username = await UserManager.GetUserNameAsync(_user);
+        Input.NewEmail ??= _user.Email!;
     }
 
-    private async Task OnValidSubmitAsync()
+    private async Task<bool> TryChangeEmail()
     {
-        await SignInManager.RefreshSignInAsync(user);
+        if (string.IsNullOrEmpty(Input.NewEmail) || _user.Email!.Equals(Input.NewEmail)) return true;
+        var identityResult = await UserManager.SetEmailAsync(_user, Input.NewEmail);
+        var result = HandleResult(identityResult);
+        return result;
+    }
+
+    private async Task<bool> TryChangePassword()
+    {
+        if (string.IsNullOrEmpty(Input.NewPassword)) return true;
+        var identityResult = await UserManager.ChangePasswordAsync(_user, Input.CurrentPassword, Input.NewPassword);
+        var result = HandleResult(identityResult);
+        return result;
+    }
+    
+    private async Task OnValidSubmitAsync(EditContext context)
+    {
+        var result = await TryChangeEmail();
+        if (!result) return;
+
+        result = await TryChangePassword();
+        if (!result) return;
+        
+        await SignInManager.RefreshSignInAsync(_user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
 
-    private sealed class InputModel
+    bool HandleResult(IdentityResult result)
     {
-        /* TODO */
+        if (result.Succeeded) return true;
+        _message = $"Error: {string.Join(",", result.Errors.Select(error => error.Description))}";
+        return false;
+    }
+    
+    private class InputModel
+    {
+        [DataType(DataType.Password)]
+        [Display(Name = "CurrentPassword")]
+        public string CurrentPassword { get; set; } = string.Empty;
+        
+        [DataType(DataType.Password)]
+        [Display(Name = "New password")]
+        public string NewPassword { get; set; } = string.Empty;
+        
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm new password")]
+        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Display(Name = "New email")]
+        [DataType(DataType.EmailAddress)]
+        [EmailAddress]
+        public string? NewEmail { get; set; }
     }
 }
