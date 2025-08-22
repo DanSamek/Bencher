@@ -13,6 +13,7 @@ build_web_app:
 
 build_worker:
     stage: build
+    script:
         - cd Worker
         - dotnet build
     only:
