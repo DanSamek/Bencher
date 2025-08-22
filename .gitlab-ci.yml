@@ -1,0 +1,19 @@
+image: mcr.microsoft.com/dotnet/sdk:9.0
+
+stages:
+    - build
+
+build_web_app:
+    stage: build
+    script:
+        - cd WebApplication
+        - dotnet build
+    only:
+        - main
+
+build_worker:
+    stage: build
+        - cd Worker
+        - dotnet build
+    only:
+        - main
