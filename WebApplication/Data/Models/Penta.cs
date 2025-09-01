@@ -40,4 +40,10 @@ public class Penta : DoId
     /// </summary>
     [Required]
     public int Ww { get; set; } = 0;
+    
+    
+    /// <summary>
+    /// Test that belongs to this penta. 
+    /// </summary>
+    public Test Test { get; set; } = null!;
 }

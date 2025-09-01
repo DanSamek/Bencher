@@ -26,4 +26,22 @@ public class WorkerLog : DoId
     /// </summary>
     [Required]
     public required int Mac { get; set; }
+
+    /// <summary>
+    /// All errors, that happened for this log.
+    /// </summary>
+    public List<Error> Errors { get; set; } = [];
+    
+    /// <summary>
+    /// User that belongs to a log.
+    /// </summary>
+    [Required]
+    public required ApplicationUser User { get; set; }
+    
+    /// <summary>
+    /// Test that belongs to a log. 
+    /// </summary>
+    [Required]
+    public required Test Test { get; set; }
+    
 }

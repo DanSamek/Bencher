@@ -18,4 +18,17 @@ public class Error : DoId
     /// </summary>
     [Required]
     public required string Log { get; set; }
+    
+    /// <summary>
+    /// Test, where this error happened.
+    /// </summary>
+    [Required]
+    public required Test Test { get; set; }
+    
+    /// <summary>
+    /// Worker information.
+    /// </summary>
+    [Required]
+    public required WorkerLog WorkerLog { get; set; }
+    
 }

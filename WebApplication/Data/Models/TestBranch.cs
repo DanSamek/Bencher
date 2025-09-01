@@ -17,5 +17,17 @@ public class TestBranch : DoId
     /// Git branch name. 
     /// </summary>
     [Required]
+    [MaxLength(30)]
     public required string Name { get; set; }
+    
+    /// <summary>
+    /// Engine for a branch. 
+    /// </summary>
+    [Required]
+    public required Engine Engine { get; set; }
+    
+    /// <summary>
+    /// Test for a branch.
+    /// </summary>
+    public Test Test { get; set; } = null!;
 }
