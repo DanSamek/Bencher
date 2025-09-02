@@ -1,0 +1,35 @@
+@inherits CustomComponentBase
+
+@rendermode InteractiveServer
+
+@if (_currentTheme != null)
+{
+    <select class="form-control" @onchange="OnThemeChanged" >
+        <option value="@LIGHT_THEME" selected="@(_currentTheme == LIGHT_THEME)">Light</option>
+        <option value="@DARK_THEME" selected="@(_currentTheme == DARK_THEME)">Dark</option>
+    </select>
+}
+
+@code {
+    private const string LIGHT_THEME = "light";
+    private const string DARK_THEME = "dark";
+    private string? _currentTheme;
+    
+    /// <inheritdoc /> 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            _currentTheme = await JsRuntime.InvokeAsync<string>("getTheme");
+            StateHasChanged();
+        }
+    }
+    
+    private async Task OnThemeChanged(ChangeEventArgs args)
+    {
+        if (args.Value is null) return;
+        _currentTheme = args.Value.ToString()!;
+        await JsRuntime.InvokeVoidAsync("setTheme", [_currentTheme]);
+    } 
+}
