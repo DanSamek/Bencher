@@ -16,7 +16,76 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        // TODO.
         base.OnModelCreating(builder);
+
+        #region User
+        builder.Entity<ApplicationUser>()
+            .HasMany(x => x.Engines)
+            .WithOne(x => x.User)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ApplicationUser>()
+            .HasMany(x => x.Tests)
+            .WithOne(x => x.User)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ApplicationUser>()
+            .HasMany(x => x.WorkerLogs)
+            .WithOne(x => x.User)
+            .OnDelete(DeleteBehavior.Cascade);
+        #endregion
+
+        #region Test
+
+        builder.Entity<Test>()
+            .HasMany(x => x.Errors)
+            .WithOne(x => x.Test)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Test>()
+            .HasMany(x => x.WorkerLogs)
+            .WithOne(x => x.Test)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.Entity<Test>()
+            .HasOne(x => x.BaseBranch)
+            .WithOne(x => x.BaseBranchOf)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.Entity<Test>()
+            .HasOne(x => x.TestBranch)
+            .WithOne(x => x.TestBranchOf)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.Entity<Test>()
+            .HasOne(x => x.Penta)
+            .WithOne(x => x.Test)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        #endregion
+
+        #region Engine
+
+        builder.Entity<Engine>()
+            .HasMany(x => x.Branches)
+            .WithOne(x => x.Engine)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.Entity<Engine>()
+            .HasMany(x => x.Tests)
+            .WithOne(x => x.Engine)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        #endregion
+
+        #region WorkerLog
+
+        builder.Entity<WorkerLog>()
+            .HasMany(x => x.Errors)
+            .WithOne(x => x.WorkerLog)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        #endregion
+
     }
 }

@@ -32,7 +32,7 @@ public class SprtSettings : DoId
     public required double Beta { get; set; }
     
     /// <summary>
-    /// Tests that belongs to this settings.
+    /// Tests that belongs to those settings.
     /// </summary>
     [Required]
     public required List<Test> Test { get; set; } = [];

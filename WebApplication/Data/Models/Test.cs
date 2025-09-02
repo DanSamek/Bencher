@@ -107,14 +107,25 @@ public class Test : DoId
     public required TestBranch BaseBranch { get; set; }
     
     /// <summary>
+    /// Id of the base branch.
+    /// </summary>
+    public int BaseBranchId { get; set; }
+    
+    /// <summary>
     /// Branch with (for example) new heuristic. 
     /// </summary>
     [Required]
     public required TestBranch TestBranch { get; set; }
     
     /// <summary>
+    /// Id of the test branch.
+    /// </summary>
+    public int TestBranchId { get; set; }
+    
+    /// <summary>
     /// User, that created test.
     /// </summary>
     [Required]
     public required ApplicationUser User { get; set; }
+
 }

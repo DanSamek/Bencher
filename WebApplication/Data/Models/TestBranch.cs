@@ -29,5 +29,10 @@ public class TestBranch : DoId
     /// <summary>
     /// Test for a branch.
     /// </summary>
-    public Test Test { get; set; } = null!;
+    public Test? TestBranchOf { get; set; }
+    
+    /// <summary>
+    /// Test for a branch.
+    /// </summary>
+    public Test? BaseBranchOf { get; set; }
 }
