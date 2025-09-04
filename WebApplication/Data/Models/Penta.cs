@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace WebApplication.Data;
 
 /// <summary>
-/// Pentanomial model [ll, ld, dd, wd, ww].
+/// Pentanomial model [ll, ld, dd/wl, wd, ww].
 ///     l = lost
 ///     d = drawn
 ///     w = win
@@ -24,7 +24,7 @@ public class Penta : DoId
     public int Ld { get; set; } = 0;
     
     /// <summary>
-    /// Pair statistic: [draw, draw].
+    /// Pair statistic: [draw, draw] or [win, lose]
     /// </summary>
     [Required]
     public int Dd { get; set; } = 0;
