@@ -37,7 +37,7 @@ public class WorkerLog : DoId
     /// MAC address of the worker.
     /// </summary>
     [Required]
-    public required int Mac { get; set; }
+    public required string Mac { get; set; }
 
     /// <summary>
     /// All errors, that happened for this log.
