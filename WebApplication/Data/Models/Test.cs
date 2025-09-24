@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
 /// Test entity.
@@ -32,12 +32,6 @@ public class Test : DoId
     /// </summary>
     [Required]
     public required int Priority { get; set; }
-    
-    /// <summary>
-    /// If test is autobenched.
-    /// </summary>
-    [Required]
-    public required bool Autobenched { get; set; }
     
     /// <summary>
     /// Number of threads that will be used for the test.
@@ -127,5 +121,36 @@ public class Test : DoId
     /// </summary>
     [Required]
     public required ApplicationUser User { get; set; }
-
+    
+    /// <summary>
+    /// Thread scale of the test.
+    /// Used in the TestQueue - for which test we should add worker. 
+    /// </summary>
+    [Required]
+    public required int ThreadScale { get; set; }
+    
+    /// <summary>
+    /// State of the autobench.
+    /// Technically we don't need <see cref="Autobenched"/>, but it will be faster - no additional db queries needed. 
+    /// </summary>
+    public AutobenchState? AutobenchState { get; set; }
+    
+    /// <summary>
+    /// If test is autobenched.
+    /// </summary>
+    [Required]
+    public required bool Autobenched { get; set; }
+    
+    /// <summary>
+    /// Gets total number of active worker threads for the test.
+    /// <see cref="WorkerLogs"/> has to be included (loaded from database).
+    /// </summary>
+    public int ActiveWorkerThreadCount()
+    {
+        var result = WorkerLogs
+            .Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
+            .Sum(wl => wl.NumberOfThreads);
+        
+        return result;
+    }
 }

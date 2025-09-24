@@ -1,7 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
 /// Worker log entity.
@@ -16,10 +16,22 @@ public class WorkerLog : DoId
     public required DateTime ConnectTime { get; set; }
     
     /// <summary>
-    /// Number of games that will be played on the worker.
+    /// Number of games that was played on the worker.
     /// </summary>
     [Required]
     public required int NumberOfGames { get; set; }
+    
+    /// <summary>
+    /// Number of games that will be played on the worker.
+    /// </summary>
+    [Required]
+    public required int TotalNumberOfGames { get; set; }
+    
+    /// <summary>
+    /// Number of threads of the worker. 
+    /// </summary>
+    [Required]
+    public required int NumberOfThreads { get; set; }
     
     /// <summary>
     /// MAC address of the worker.

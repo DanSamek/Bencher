@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
 /// User entity.
@@ -31,5 +31,10 @@ public class ApplicationUser : IdentityUser
     /// All tests of the user.
     /// </summary>
     [Required]
-    public List<Test> Tests { get; set; } = [];
+    public required List<Test> Tests { get; set; } = [];
+    
+    /// <summary>
+    /// Opening books, that user added.
+    /// </summary>
+    public required List<OpeningBook> OpeningBooks { get; set; } = [];
 }

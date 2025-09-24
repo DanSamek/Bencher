@@ -1,4 +1,4 @@
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
 /// State for the <see cref="Test" />.

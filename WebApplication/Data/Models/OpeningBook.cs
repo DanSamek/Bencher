@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
 /// Opening book entity.
@@ -38,4 +38,10 @@ public class OpeningBook : DoId
     /// </summary>
     [Required]
     public required List<Test> Test { get; set; } = [];
+    
+    /// <summary>
+    /// User, that added opening book.
+    /// </summary>
+    [Required]
+    public ApplicationUser? User { get; set; }
 }

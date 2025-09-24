@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WebApplication.Data;
+using WebApplication.Data.Models;
 
 namespace Microsoft.AspNetCore.Routing;
 

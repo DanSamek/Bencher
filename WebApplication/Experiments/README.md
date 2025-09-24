@@ -1,0 +1,1 @@
+Testování nápadů před implementací do aplikace.

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
 /// https://en.wikipedia.org/wiki/Sequential_probability_ratio_test
@@ -36,4 +36,12 @@ public class SprtSettings : DoId
     /// </summary>
     [Required]
     public required List<Test> Test { get; set; } = [];
+    
+    /// <summary>
+    /// Test error bounds.
+    /// </summary>
+    /// <param name="Type1ErrorBound">False positive.</param>
+    /// <param name="Type2ErrorBound">False negative.</param> 
+    public record Bounds(double Type1ErrorBound, double Type2ErrorBound);
+    public Bounds GetErrorBounds() => new Bounds(Math.Log(Beta / (1 - Alpha)), Math.Log((1 - Beta) / Alpha));
 }

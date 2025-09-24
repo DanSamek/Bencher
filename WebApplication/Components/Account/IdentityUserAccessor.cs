@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using WebApplication.Data;
+using WebApplication.Data.Models;
 
 namespace WebApplication.Components.Account;
 

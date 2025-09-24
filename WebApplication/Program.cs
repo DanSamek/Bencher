@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using WebApplication.Components;
 using WebApplication.Components.Account;
 using WebApplication.Data;
+using WebApplication.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using WebApplication.Stores;
 

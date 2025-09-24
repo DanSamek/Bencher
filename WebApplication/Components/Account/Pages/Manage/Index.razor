@@ -3,12 +3,10 @@
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 
-
 @page "/Account/Manage"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
-@using WebApplication.Data
-
+@using WebApplication.Data.Models
 
 <h3>Manage account</h3>
 <StatusMessage Message="@_message" />

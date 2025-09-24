@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using WebApplication.Data.Models;
 
 namespace WebApplication.Data;
 
@@ -61,6 +62,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(x => x.Penta)
             .WithOne(x => x.Test)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Test>()
+            .HasOne(t => t.AutobenchState)
+            .WithOne(abs => abs.Test)
+            .OnDelete(DeleteBehavior.Cascade);
         
         #endregion
 
@@ -86,6 +92,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade);
         
         #endregion
-
     }
 }

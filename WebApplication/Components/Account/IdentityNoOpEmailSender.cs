@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using WebApplication.Data;
+using WebApplication.Data.Models;
 
 namespace WebApplication.Components.Account;
 

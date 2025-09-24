@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
-/// Pentanomial model [ll, ld, dd/wl, wd, ww].
+/// Pentanomial statistics [ll, ld, dd/wl, wd, ww].
 ///     l = lost
 ///     d = drawn
 ///     w = win
@@ -24,10 +24,16 @@ public class Penta : DoId
     public int Ld { get; set; } = 0;
     
     /// <summary>
-    /// Pair statistic: [draw, draw] or [win, lose]
+    /// Pair statistic: [draw, draw]
     /// </summary>
     [Required]
     public int Dd { get; set; } = 0;
+    
+    /// <summary>
+    /// Pair statistic: [win, lose]
+    /// </summary>
+    [Required]
+    public int Wl { get; set; }
     
     /// <summary>
     /// Pair statistic: [win, draw].
@@ -50,4 +56,39 @@ public class Penta : DoId
     /// Id of the test.
     /// </summary>
     public int TestId {get; set; }
+
+    private int DdWl => Dd + Wl;
+    
+    /// <summary>
+    /// WDL statistics
+    /// </summary>
+    /// <param name="W">Win</param>
+    /// <param name="D">Lose</param>
+    /// <param name="L">Draw</param>
+    public record Wdl(int W, int D, int L);
+    
+    /// <summary>
+    /// Simplified penta - [dd + wl] as one property. 
+    /// </summary>
+    public record RawPentanomial(int Ll, int Ld, int Dd, int Wd, int Ww);
+    
+    public Wdl ToWdl()
+    {
+        var wins = Ww * 2 + Wd + Wl;
+        var loses = Ll * 2 + Wl + Ld;
+        var draws = Dd * 2 + Ld + Wd;
+        
+        var result = new Wdl(wins, draws, loses);
+        return result;
+    }
+
+    public RawPentanomial ToRawPentanomial() => new RawPentanomial(Ll, Ld, DdWl, Wd, Ww);
+    
+    private int TotalPairs => Ll + Ld + DdWl + Wd + Wl;
+    
+    // W = 0.5
+    // D = 0.25
+    // L = 0
+    private double TotalPoints => Ll * 0 + Ld * 0.25 + DdWl * 0.5 + Wd * 0.75 + Ww * 1;
+    public double Score => TotalPoints / TotalPairs;
 }

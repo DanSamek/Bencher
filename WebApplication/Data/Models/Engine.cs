@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.Data;
+namespace WebApplication.Data.Models;
 
 /// <summary>
 /// Engine entity
@@ -22,20 +22,11 @@ public class Engine : DoId
     public required string GitUrl { get; set; }
     
     /// <summary>
-    /// Build script for the windows.
-    /// It can be same as the <see cref="BuildScriptLinux"/>.
-    /// </summary>
-    [Required]
-    [MaxLength(1024)]
-    public required string BuildScriptWindows { get; set; }
-    
-    /// <summary>
     /// Build script for the linux.
-    /// It can be same as the <see cref="BuildScriptWindows"/>.
     /// </summary>
     [Required]
     [MaxLength(1024)]
-    public required string BuildScriptLinux { get; set; }
+    public required string BuildScript { get; set; }
     
     /// <summary>
     /// User, that engine has.
