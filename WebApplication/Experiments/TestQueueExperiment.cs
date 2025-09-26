@@ -71,7 +71,7 @@ public static class TestQueueExperiment
 
         for (var iteration = 0; iteration < workerThreads.Count; iteration++)
         {
-            var testToAddWorker = TestWithoutWorkers(tests) ?? tests.MaxBy(t => Scale(t, t=> t / 2)); 
+            var testToAddWorker = TestWithoutWorkers(tests) ?? tests.MaxBy(t => Scale(t, t => t / 2)); 
             
             testToAddWorker!.WorkerLogs.Add(
                 new WorkerLog

@@ -5,6 +5,7 @@ using WebApplication.Components.Account;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using WebApplication.API;
 using WebApplication.Stores;
 
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
@@ -51,9 +52,17 @@ builder.Services.Configure<IdentityOptions>(options =>
 #region Stores
 
 builder.Services.AddScoped<UserStore>();
+builder.Services.AddScoped<TestStore>();
+builder.Services.AddScoped<WorkerLogStore>();
 
 #endregion
 
+#region WorkerAPI
+
+builder.Services.AddSingleton<WorkerMiddleware>();
+builder.Services.AddControllers();
+
+#endregion
 
 var app = builder.Build();
 
@@ -76,4 +85,12 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapAdditionalIdentityEndpoints();
+
+#region WorkerApi
+
+app.UseMiddleware<WorkerMiddleware>();
+app.MapControllers();
+
+#endregion
+
 app.Run();

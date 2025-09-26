@@ -10,3 +10,11 @@ public enum TestState : byte
     Finished,
     Stopped
 }
+
+public static class TestStateExtensions
+{
+    /// <summary>
+    /// If test is not running.
+    /// </summary>
+    public static bool Running(this TestState state) => state == TestState.Running;
+}

@@ -5,7 +5,7 @@ namespace WebApplication.Data.Models;
 
 /// <summary>
 /// Worker log entity.
-/// We don't store workers as entities. 
+/// Note: Id is also used as a in the <see cref="API.WorkerController"/> ConnectionId.
 /// </summary>
 public class WorkerLog : DoId
 {
@@ -14,6 +14,11 @@ public class WorkerLog : DoId
     /// </summary>
     [Required]
     public required DateTime ConnectTime { get; set; }
+    
+    /// <summary>
+    /// Last connect time of the worker.
+    /// </summary>
+    public DateTime? LastConnectTime { get; set; }
     
     /// <summary>
     /// Number of games that was played on the worker.
@@ -37,6 +42,7 @@ public class WorkerLog : DoId
     /// MAC address of the worker.
     /// </summary>
     [Required]
+    [MaxLength(17)]
     public required string Mac { get; set; }
 
     /// <summary>
