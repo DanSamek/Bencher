@@ -54,6 +54,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<TestStore>();
 builder.Services.AddScoped<WorkerLogStore>();
+builder.Services.AddScoped<PentaStore>();
 
 #endregion
 

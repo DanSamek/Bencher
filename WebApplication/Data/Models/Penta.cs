@@ -15,20 +15,20 @@ public class Penta : DoId
     /// Pair statistic: [loss, loss].
     /// </summary>
     [Required]
-    public int Ll { get; set; } = 0;
+    public int Ll { get; set; }
     
     /// <summary>
     /// Pair statistic: [loss, draw].
     /// </summary>
     [Required]
-    public int Ld { get; set; } = 0;
+    public int Ld { get; set; }
     
     /// <summary>
     /// Pair statistic: [draw, draw]
     /// </summary>
     [Required]
-    public int Dd { get; set; } = 0;
-    
+    public int Dd { get; set; }
+
     /// <summary>
     /// Pair statistic: [win, lose]
     /// </summary>
@@ -39,13 +39,13 @@ public class Penta : DoId
     /// Pair statistic: [win, draw].
     /// </summary>
     [Required]
-    public int Wd { get; set; } = 0;
+    public int Wd { get; set; }
     
     /// <summary>
     /// Pair statistic: [win, win].
     /// </summary>
     [Required]
-    public int Ww { get; set; } = 0;
+    public int Ww { get; set; }
     
     /// <summary>
     /// Test that belongs to this penta. 

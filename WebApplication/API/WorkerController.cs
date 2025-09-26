@@ -9,21 +9,21 @@ namespace WebApplication.API;
 /// Controller for worker -- server communication.
 /// </summary>
 [ApiController]
-[Route("worker-api/")]
-public class WorkerController : Controller
+[Route(Shared.WORKER_API_PREFIX)]
+public class WorkerController : ControllerBase
 {
     private readonly Stores.UserStore _userStore;
     private readonly Stores.WorkerLogStore _workerLogStore;
-    private readonly Stores.TestStore _testStore;
+    private readonly Stores.PentaStore _pentaStore;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public WorkerController(Stores.UserStore userStore, Stores.WorkerLogStore workerLogStore, Stores.TestStore testStore)
+    public WorkerController(Stores.UserStore userStore, Stores.WorkerLogStore workerLogStore, Stores.PentaStore pentaStore)
     {
         _userStore = userStore;
         _workerLogStore = workerLogStore;
-        _testStore = testStore;
+        _pentaStore = pentaStore;
     }
         
     /// <summary>
@@ -32,6 +32,23 @@ public class WorkerController : Controller
     [HttpPost("error")]
     public IActionResult Error([FromBody] ErrorDto errorDto)
     {
+        var workerLog = _workerLogStore.GetByConnectionId(errorDto.ConnectionId);
+        if (workerLog is null) return NotFound();
+
+        if (errorDto.Log.Length > Shared.MAX_LOG_FILE_SIZE) return NotFound(); // TODO maybe in Program.cs configure mox. file upload
+        using var memoryStream = new MemoryStream();
+        errorDto.Log.CopyTo(memoryStream);
+        
+        var error = new Error
+        {
+            Time = DateTime.Now,
+            Log = memoryStream.ToArray(), 
+            Test = workerLog.Test,
+            WorkerLog = workerLog,
+        };
+        
+        workerLog.Errors.Add(error);
+        _workerLogStore.Save(workerLog);
         return Ok(new ResponseBase());
     }
     
@@ -39,17 +56,14 @@ public class WorkerController : Controller
     /// Action for workers classical SPRT results.
     /// </summary>
     [HttpPost("results")]
-    public IActionResult Results([FromBody] ResultsDto resultsDto)
+    public async Task<IActionResult> Results([FromBody] ResultsDto resultsDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(resultsDto.ConnectionId);
         if (workerLog is null) return NotFound();
-        // Technically is also called /running, but KISS.
-        var test = _testStore.GetById(workerLog.Test.Id);
-        if (test is null) return NotFound(); // <- here test can be deleted.
         
-        if (!test.State.Running()) return Ok(new ResultsResponseDto(false));
-        
-        // TODO make sure, that Penta.Ll += xx is okay multithreaded.
+        if (!workerLog.Test.State.Running()) return Ok(new ResultsResponseDto(false));
+
+        await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
         return Ok(new ResultsResponseDto(true));
     }
     

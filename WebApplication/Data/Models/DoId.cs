@@ -8,5 +8,5 @@ namespace WebApplication.Data.Models;
 public class DoId
 {
     [Key]
-    public required int Id { get; set; }
+    public int Id { get; set; }
 }

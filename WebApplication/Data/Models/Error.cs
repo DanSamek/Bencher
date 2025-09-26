@@ -15,9 +15,10 @@ public class Error : DoId
     
     /// <summary>
     /// Log of the error.
+    /// Worker app will upload xxx.txt
     /// </summary>
     [Required]
-    public required string Log { get; set; }
+    public required byte[] Log { get; set; }
     
     /// <summary>
     /// Test, where this error happened.

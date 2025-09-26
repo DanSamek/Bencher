@@ -13,7 +13,7 @@ public class WorkerLogStore : StoreBase
 
     /// <summary>
     /// Gets <see cref="WorkerLog" /> by connectionId.
-    /// Note: loads with the <see cref="Test" /> entity!
+    /// Note: loads with the <see cref="Test" /> entity
     /// </summary>
     public WorkerLog? GetByConnectionId(int connectionId)
     {
