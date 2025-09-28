@@ -9,12 +9,13 @@ namespace WebApplication.API;
 /// </summary>
 public class MacAttribute : ValidationAttribute
 {
+    /// <summary>
+    /// .Ctor
+    /// </summary>
     public MacAttribute(){}
 
-    //02:42:77:ba:b9:9b
+    // 02:42:77:ba:b9:9b
     private const int MAC_CHAR_SIZE = 17;
-    
-    private static readonly Regex _regex = new Regex("^[a-zA-Z0-9]{1,}$");
     
     public override bool IsValid(object? value)
     {
