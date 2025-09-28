@@ -27,4 +27,11 @@ public class WorkerLogStore : StoreBase
     /// Saves a worker log.
     /// </summary>
     public void Save(WorkerLog workerLog) => Context.WorkerLogs.Update(workerLog);
+    
+    
+    /// <summary>
+    /// Creae
+    /// </summary>
+    /// <param name="workerLog"></param>
+    public void Create(WorkerLog workerLog) => Context.WorkerLogs.Add(workerLog);
 }

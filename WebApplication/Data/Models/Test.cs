@@ -8,6 +8,12 @@ namespace WebApplication.Data.Models;
 public class Test : DoId
 {
     /// <summary>
+    /// Calculates thread scale.
+    /// Note, we can call it in .Ctor, but TimeManagement can be null.
+    /// </summary>
+    public void CalculateThreadScale() => ThreadScale = NumberOfThreads * TimeManagement.Seconds(); 
+    
+    /// <summary>
     /// Test name.
     /// </summary>
     [Required]
@@ -153,4 +159,10 @@ public class Test : DoId
         
         return result;
     }
+}
+
+file static class StringExtensions
+{
+    public static int Seconds(this string s) => int.Parse(s.Split("+")[0]); // TODO avoid allocation.
+
 }

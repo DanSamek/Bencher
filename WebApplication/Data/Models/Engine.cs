@@ -25,8 +25,7 @@ public class Engine : DoId
     /// Build script for the linux.
     /// </summary>
     [Required]
-    [MaxLength(1024)]
-    public required string BuildScript { get; set; }
+    public required byte[] BuildScript { get; set; }
     
     /// <summary>
     /// User, that engine has.

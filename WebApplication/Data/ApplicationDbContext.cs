@@ -14,6 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Penta> Pentas { get; set; }
     public DbSet<Error> Errors { get; set; }
     public DbSet<WorkerLog> WorkerLogs { get; set; }
+    public DbSet<AutobenchState> AutobenchStates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

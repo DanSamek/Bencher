@@ -15,8 +15,6 @@ public static class TestQueueExperiment
         "120+1.2"*/
     ];
     
-    private static int Seconds(this string s) => int.Parse(s.Split("+")[0]);
-    
     private static Test CreateTest(int n)
     {
         var random = new Random(n);
@@ -45,8 +43,9 @@ public static class TestQueueExperiment
             BaseBranchId = 0,
             TestBranchId = 0
         };
-
-        test.ThreadScale = test.NumberOfThreads * test.TimeManagement.Seconds(); // Todo maybe create .ctor for a test.
+        
+        test.CalculateThreadScale();
+        //test.ThreadScale = test.NumberOfThreads * test.TimeManagement.Seconds(); // Todo maybe create .ctor for a test.
         return test;
     }
 
