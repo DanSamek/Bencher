@@ -11,29 +11,19 @@ public class TestStore : StoreBase
     /// .Ctor
     /// </summary>
     public TestStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) { }
-
-    private IIncludableQueryable<Test, List<WorkerLog>> WithEngineAndWorkerLogs() =>
-        Context.Tests
-            .Include(t => t.Engine)
-            .Include(t => t.WorkerLogs);
-    
-    private bool AnyRunningTest() 
-        => Context.Tests.Any(t => t.State == TestState.Running);
-    
-    private Test? PausedTestWithHighestPriority() 
-        => WithEngineAndWorkerLogs()
-            .MaxBy(t => t.Priority);
     
     /// <summary>
     /// Returns a test, that should be run on the worker.
-    /// Note, this method also includes <see cref="Test.WorkerLogs" /> and <see cref="Test.Engine" />
+    /// Note, this method also includes <see cref="Test.WorkerLogs" />, <see cref="Test.Engine" /> and <see cref="Test.AutobenchState" /> 
     /// Algorithm for finding optimal test to run:
+    /// NOTE if, test is autobenched (t.Autobenched = true), but it's Resolved, it's not an autobench test anymore, but a normal test.)
+    ///
     /// -> if there is not running test, we will pick a paused test with the highest priority.
     /// -> else:
     ///     -> we will find a maximum running priority.
     ///     -> we will find a test that is not running with a same priority.
     ///         -> if test exists, we return.
-    ///         -> otherwise we will select test by max (test.ThreadScale / 2 / Test.ActiveWorkerThreadCount())
+    ///         -> otherwise we will select test by max ((test.ThreadScale / 2) / Test.ActiveWorkerThreadCount())
     /// </summary>
     public Test? GetNextTestForWorker(bool autobench)
     {
@@ -41,7 +31,7 @@ public class TestStore : StoreBase
         var anyRunningTest = AnyRunningTest();
         if (!anyRunningTest)
         {
-            var test = PausedTestWithHighestPriority();
+            var test = PausedTestWithHighestPriority(autobench);
             return test;
         }
         
@@ -50,17 +40,17 @@ public class TestStore : StoreBase
             .Where(t => t.State == TestState.Running)
             .Max(t => t.Priority);
 
-        // Get a paused test with a same priority 
+        // Get a paused test with a same priority.
         var notRunningTestWithoutWorkers = 
-            WithEngineAndWorkerLogs()
-            .Where(t => t.State == TestState.Paused && t.Priority == runningPriority && t.Autobenched == autobench)
+            Include()
+            .Where(t => t.State == TestState.Paused && t.Priority == runningPriority && Filter(t, autobench))
             .OrderByDescending(t => t.ThreadScale)
             .FirstOrDefault();
         
-        // If doesn't exist's, select by math.
+        // If a paused test doesn't exist's, select by math.
         var result = notRunningTestWithoutWorkers
-                     ?? WithEngineAndWorkerLogs()
-                         .Where(t => t.State == TestState.Running && t.Priority == runningPriority && t.Autobenched == autobench)
+                     ?? Include()
+                         .Where(t => t.State == TestState.Running && t.Priority == runningPriority && Filter(t, autobench))
                          .MaxBy(t => (t.ThreadScale / 2) / 
                                      (t.WorkerLogs
                                          .Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
@@ -70,6 +60,28 @@ public class TestStore : StoreBase
         
         return result;
     }
+    
+    private IIncludableQueryable<Test, AutobenchState?> Include() =>
+        Context.Tests
+            .Include(t => t.Engine)
+            .Include(t => t.WorkerLogs)
+            .Include(t => t.AutobenchState);
+    
+    private bool AnyRunningTest() 
+        => Context.Tests.Any(t => t.State == TestState.Running);
+    
+    private static bool Filter(Test test, bool autobench)
+    {
+        if (!test.Autobenched) return test.Autobenched == autobench;
+        
+        // We have autobench test here, autobenchState can't be null!
+        return test.AutobenchState!.Resolved == !autobench;
+    }
+    
+    private Test? PausedTestWithHighestPriority(bool autobench) 
+        => Include()
+            .Where(t => Filter(t, autobench))
+            .MaxBy(t => t.Priority);
     
     /// <summary>
     /// Updates test entity

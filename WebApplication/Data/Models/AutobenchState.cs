@@ -29,21 +29,21 @@ public class AutobenchState : DoId
     /// Confidence of the autobench.  
     /// </summary>
     [Required]
-    public required double Confidence { get; set; }
+    public double Confidence { get; set; }
     
     /// <summary>
     /// If autobench was resolved. 
     /// </summary>
     [Required]
-    public bool Resolved =>  1.0 - Confidence <= 0.0001; // For autobench purposes is okay. We don't expect that user want to run > 1 / 0.0001 autobenches.
-
+    public bool Resolved { get; set; }
+    
     /// <summary>
     /// Confidence of the user - it basically means, what is a chance, that this code doesn't have UB.
     /// Will be used in the calculation of the <see cref="Confidence" />.
     /// Note: Valid values are (0.0001,1].
     /// </summary>
     [Required]
-    public required double UserConfidence { get; set; } = 1; // 100%
+    public double UserConfidence { get; set; } = 1; // 100%
 
     /// <summary>
     /// Updates <see cref="Confidence"/>, if bench is the same.
@@ -54,6 +54,11 @@ public class AutobenchState : DoId
         if (workerBench != Bench) return false;
         
         Confidence += UserConfidence;
+        if (1.0 - Confidence <= 0.0001)
+        {
+            Resolved = true;
+        }
+
         return true;
     }
 }
