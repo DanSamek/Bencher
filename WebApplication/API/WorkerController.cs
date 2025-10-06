@@ -23,7 +23,7 @@ public partial class WorkerController : ControllerBase
     /// <summary>
     /// .Ctor
     /// </summary>
-    private WorkerController(UserStore userStore, WorkerLogStore workerLogStore, PentaStore pentaStore, TestStore testStore, TestBranchStore testBranchStore, AutobenchStateStore autobenchStateStore)
+    public WorkerController(UserStore userStore, WorkerLogStore workerLogStore, PentaStore pentaStore, TestStore testStore, TestBranchStore testBranchStore, AutobenchStateStore autobenchStateStore)
     {
         _userStore = userStore;
         _workerLogStore = workerLogStore;
@@ -97,7 +97,7 @@ public partial class WorkerController : ControllerBase
     [HttpPost("get-test")]
     public IActionResult GetTest([FromBody] GetTestDto getTestDto)
     {
-        var test = _testStore.GetNextTestForWorker(getTestDto.Autobench);
+        var test = _testStore.GetNextTestForWorker(getTestDto.Autobench, getTestDto.NumberOfThreads);
         if (test is null) return NotFound(new ResponseBase());
         
         var userToken = HttpContext.GetUserToken();

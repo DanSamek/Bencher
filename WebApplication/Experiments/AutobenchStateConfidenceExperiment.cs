@@ -46,7 +46,8 @@ public class AutobenchStateConfidenceExperiment
                 TestId = 0,
                 Confidence = 0,
                 UserConfidence = confidence,
-                Bench = BENCH
+                Bench = BENCH,
+                Resolved = false
             };
 
             var expectedAutobenchResults = (int)Math.Round(1 / state.UserConfidence);
