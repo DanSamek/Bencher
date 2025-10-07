@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using WebApplication.API;
 using WebApplication.Data.Models;
@@ -29,6 +30,7 @@ public class WorkerControllerTests
             AccessToken = accessToken
         });
         context.SaveChanges();
+        _controller.ControllerContext.HttpContext = new DefaultHttpContext();
         _controller.HttpContext.Request.Headers.Add(new (Shared.WORKER_REQUEST_HEADER, accessToken));
         
         // Create 
