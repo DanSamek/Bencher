@@ -33,6 +33,7 @@ public class SprtSettings : DoId
     
     /// <summary>
     /// Tests that belongs to those settings.
+    /// TODO rename to the Tests!
     /// </summary>
     [Required]
     public required List<Test> Test { get; set; } = [];

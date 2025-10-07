@@ -104,18 +104,18 @@ public class Test : DoId
     /// Base branch for a test.
     /// </summary>
     [Required]
-    public required TestBranch BaseBranch { get; set; }
+    public TestBranch BaseBranch { get; set; } = null!;
     
     /// <summary>
     /// Id of the base branch.
     /// </summary>
     public int BaseBranchId { get; set; }
-    
+
     /// <summary>
     /// Branch with (for example) new heuristic. 
     /// </summary>
     [Required]
-    public required TestBranch TestBranch { get; set; }
+    public TestBranch TestBranch { get; set; } = null!;
     
     /// <summary>
     /// Id of the test branch.
@@ -133,7 +133,7 @@ public class Test : DoId
     /// Used in the TestQueue - for which test we should add worker. 
     /// </summary>
     [Required]
-    public required int ThreadScale { get; set; }
+    public int ThreadScale { get; set; }
     
     /// <summary>
     /// State of the autobench.

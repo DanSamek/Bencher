@@ -34,7 +34,7 @@ public class OpeningBook : DoId
     public required int Depth { get; set; }
     
     /// <summary>
-    /// Tests that uses this opening book.
+    /// Tests that uses this opening book. // TOTO rename to Tests!!
     /// </summary>
     [Required]
     public required List<Test> Test { get; set; } = [];
@@ -42,6 +42,5 @@ public class OpeningBook : DoId
     /// <summary>
     /// User, that added opening book.
     /// </summary>
-    [Required]
     public ApplicationUser? User { get; set; }
 }
