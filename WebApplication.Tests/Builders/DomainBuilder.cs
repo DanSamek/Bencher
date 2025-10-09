@@ -24,13 +24,14 @@ public class DomainBuilder
             OpeningBooks = [],
             UserName = username,
             PasswordHash = "123456789",
-            Email = $"{username}@test.com"
+            Email = $"{username}@test.com",
+            Engines = []
         };
 
-        user = _context.Users.Add(user).Entity; // Ensure tracked.
+        _context.Users.Add(user);
         _context.SaveChanges();
-
         var userBuilder = new UserBuilder(user, _context, this);
+
         return userBuilder;
     }
 
@@ -44,9 +45,10 @@ public class DomainBuilder
             Depth = 0,
             Test = []
         };
+        
         _context.OpeningBooks.Add(book);
         _context.SaveChanges();
-
+        
         return this;
     }
 
@@ -60,6 +62,7 @@ public class DomainBuilder
             Beta = 0.05,
             Test = []
         };
+        
         _context.SprtSettings.Add(settings);
         _context.SaveChanges();
 

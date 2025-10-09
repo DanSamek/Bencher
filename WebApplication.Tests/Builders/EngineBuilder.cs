@@ -28,7 +28,7 @@ public class EngineBuilder
             Name = name,
             Engine = _engine
         };
-        
+
         _context.TestBranches.Add(branch);
         _context.SaveChanges();
         
@@ -43,7 +43,9 @@ public class EngineBuilder
                                  int priority = 0, 
                                  int numberOfThreads = 1)
     {
-        var penta = new Penta();
+        var penta = _context.Pentas.Add(new Penta()).Entity;
+        var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
+        var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
         {
             Name = name,
@@ -59,13 +61,16 @@ public class EngineBuilder
             WorkerLogs = [],
             Engine = _engine,
             Penta = penta,
-            BaseBranch = _context.TestBranches.First(x => x.Name == baseBranchName),
-            TestBranch = _context.TestBranches.First(x => x.Name == testBranchName),
+            BaseBranch = baseBranch,
+            BaseBranchId = baseBranch.Id,
+            TestBranch = testBranch,
+            TestBranchId = testBranch.Id,
             User = _user,
             Autobenched = false
         };
         test.CalculateThreadScale();
         _context.Tests.Add(test);
+        _user.Tests.Add(test);
         _context.SaveChanges();
         
         return this;

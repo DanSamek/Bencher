@@ -42,6 +42,7 @@ public partial class WorkerController : ControllerBase
         var workerLog = _workerLogStore.GetByConnectionId(errorDto.ConnectionId);
         if (workerLog is null || errorDto.Log.Length > Shared.MAX_LOG_FILE_SIZE) return NotFound();
 
+        // TODO move to the stores
         using var memoryStream = new MemoryStream();
         errorDto.Log.CopyTo(memoryStream);
         
@@ -55,6 +56,9 @@ public partial class WorkerController : ControllerBase
         
         workerLog.Errors.Add(error);
         _workerLogStore.Save(workerLog);
+        
+        _testStore.SetState(workerLog.Test, TestState.Stopped);
+        
         return Ok(new ResponseBase());
     }
     
@@ -86,8 +90,8 @@ public partial class WorkerController : ControllerBase
         if (autobenchState is null) return NotFound(new ResponseBase());
 
         var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
-
         if (!result) await _testStore.StopTest(workerLog.Test.Id);
+        
         return Ok(new ResponseBase());
     }
     
@@ -103,6 +107,7 @@ public partial class WorkerController : ControllerBase
         var userToken = HttpContext.GetUserToken();
         var user = _userStore.GetUserByAccessToken(userToken);
 
+        // TODO move to the store
         var wl = new WorkerLog
         {
             ConnectTime = DateTime.Now,
@@ -114,14 +119,13 @@ public partial class WorkerController : ControllerBase
             Test = test
         };
         
-        _workerLogStore.Create(wl); // TODO maybe this can be removed, because its added to a test entity.
+        _workerLogStore.Create(wl);
         test.WorkerLogs.Add(wl);
         _testStore.Update(test);
         
-        // TODO maybe this can be removed, because its added to a test entity.
-        // We need to save workerlog -- we need id.
-        _workerLogStore.SaveChanges();
-        _testStore.SaveChanges();
+        // Should be okay -- when disposing stores we call Context.SaveChanges()
+        //_workerLogStore.SaveChanges();
+        //_testStore.SaveChanges();
         
         return getTestDto.Autobench ? HandleAutobenchResponse(wl, test) : HandleNormalTestResponse(wl, test);
     }
@@ -135,6 +139,17 @@ public partial class WorkerController : ControllerBase
     {
         var workerLog = _workerLogStore.GetByConnectionId(runningTestDto.ConnectionId);
         if (workerLog is null) return NotFound();
+
+        // TODO move to the store.
+        // First information from the worker.
+        // Set running || autobenched.
+        if (workerLog.LastConnectTime is null && workerLog.Test.State == TestState.Paused)
+        {
+            var state = workerLog.Test.AutobenchState is null || workerLog.Test.AutobenchState!.Resolved
+                        ? TestState.Running : TestState.Autobenched;
+            
+            _testStore.SetState(workerLog.Test, state);
+        }
         
         workerLog.LastConnectTime = DateTime.Now;
         _workerLogStore.Save(workerLog);

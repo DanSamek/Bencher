@@ -6,6 +6,7 @@ namespace WebApplication.Data.Models;
 public enum TestState : byte
 {
     Paused,
+    Autobenched,
     Running,
     Finished,
     Stopped
@@ -16,5 +17,5 @@ public static class TestStateExtensions
     /// <summary>
     /// If test is not running.
     /// </summary>
-    public static bool Running(this TestState state) => state == TestState.Running;
+    public static bool Running(this TestState state) => state is TestState.Running or TestState.Autobenched;
 }

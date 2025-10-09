@@ -19,6 +19,7 @@ public class WorkerLogStore : StoreBase
     {
         var workerLog = Context.WorkerLogs
             .Include(wl => wl.Test)
+                .ThenInclude(t => t.AutobenchState)
             .FirstOrDefault(wl => wl.Id == connectionId);
         
         return workerLog;

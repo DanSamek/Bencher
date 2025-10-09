@@ -30,6 +30,9 @@ public class UserBuilder
             Tests = [],
             Branches = []
         };
+        _user.Engines.Add(engine);
+        _context.Add(engine);
+        _context.SaveChanges();
         var engineBuilder = new EngineBuilder(engine, _context, this, _user);
         return engineBuilder;
     }
@@ -39,9 +42,14 @@ public class UserBuilder
         if (accessToken is null) return this;
         
         _user.AccessToken = accessToken;
+        _context.Users.Update(_user);
         _context.SaveChanges();
         return this;
     }
-    
-    public DomainBuilder Close() => _domainBuilder;
+
+    public DomainBuilder Close()
+    {
+        _context.SaveChanges();
+        return _domainBuilder;
+    }
 }

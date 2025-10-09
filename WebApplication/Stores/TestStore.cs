@@ -25,6 +25,9 @@ public class TestStore : StoreBase
     ///     -> we will find a test that is not running with a same priority.
     ///         -> if test exists, we return.
     ///         -> otherwise we will select test by max ((test.ThreadScale / 2) / Test.ActiveWorkerThreadCount())
+    /// TODO ? Change test scale by user's running test count.
+    ///
+    /// NOTE: when a test is returned from the method, it's automatically set do running.
     /// </summary>
     public Test? GetNextTestForWorker(bool autobench, int workerNumberOfThreads)
     {
@@ -42,23 +45,18 @@ public class TestStore : StoreBase
             .Max(t => t.Priority);
 
         // Get a paused test with a same priority.
-        var notRunningTestWithoutWorkers = 
-            WhereFilter(Include(), autobench,  workerNumberOfThreads)
-             .Where(t => t.State == TestState.Paused && t.Priority == runningPriority)
-             .OrderByDescending(t => t.ThreadScale)
-             .FirstOrDefault();
+        var notRunningTestWithoutWorkers =
+            WhereFilter(Include(), autobench, workerNumberOfThreads)
+                .Where(t => t.State == TestState.Paused && t.Priority == runningPriority)
+                .OrderByDescending(t => t.ThreadScale)
+                .FirstOrDefault();
         
         // If a paused test doesn't exist's, select by math.
         var result = notRunningTestWithoutWorkers
                      ?? WhereFilter(Include(), autobench,  workerNumberOfThreads)
-                         .Where(t => t.State == TestState.Running && t.Priority == runningPriority )
-                         .MaxBy(t => (t.ThreadScale / 2) / 
-                                     (t.WorkerLogs
-                                         .Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
-                                         .Sum(wl => wl.NumberOfThreads)
-                                     ) 
-                                     ); // inlined Test.ActiveWorkerThreadCount()
-        
+                         .Where(t => t.State == TestState.Running && t.Priority == runningPriority)
+                         .OrderByDescending(t => (t.ThreadScale / 2) / (t.WorkerLogs.Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames).Sum(wl => wl.NumberOfThreads))) // inlined Test.ActiveWorkerThreadCount()
+                         .FirstOrDefault(); 
         return result;
     }
     
@@ -103,7 +101,23 @@ public class TestStore : StoreBase
     /// Stops a test by an id.
     /// </summary>
     public async Task StopTest(int testId)
+        => await SetState(testId, TestState.Stopped);
+    
+    /// <summary>
+    /// Sets a state for a test. 
+    /// </summary>
+    public async Task SetState(int testId, TestState state)
         => await Context.Tests
             .Where(t => t.Id == testId)
-            .ExecuteUpdateAsync(spc => spc.SetProperty(t => t.State, TestState.Stopped));
+            .ExecuteUpdateAsync(spc => spc.SetProperty(t => t.State, state));
+    
+    /// <summary>
+    /// Sets a state for a test. 
+    /// </summary>
+    public void SetState(Test test, TestState state)
+    {
+        test.State = state;
+        Context.SaveChanges();
+    }
+    
 }

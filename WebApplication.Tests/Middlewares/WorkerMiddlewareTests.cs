@@ -21,8 +21,7 @@ public class WorkerMiddlewareTests : TestBase
     public async Task PassTest(string requestUri, string? createdAccessToken, string? usedAccessToken, bool shouldPassMiddleware)
     {
         var factory = CreateContextFactory();
-        await using var context = factory.CreateDbContext();
-        new DomainBuilder(context)
+        new DomainBuilder(factory.CreateDbContext())
             .CreateUser("test_user")
                 .WithAccessToken(createdAccessToken)
                 .Close()
