@@ -34,5 +34,14 @@ public class UserBuilder
         return engineBuilder;
     }
 
+    public UserBuilder WithAccessToken(string? accessToken)
+    {
+        if (accessToken is null) return this;
+        
+        _user.AccessToken = accessToken;
+        _context.SaveChanges();
+        return this;
+    }
+    
     public DomainBuilder Close() => _domainBuilder;
 }

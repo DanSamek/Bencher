@@ -15,7 +15,7 @@ public class DomainBuilder
     {
         _context = context;
     }
-    
+
     public UserBuilder CreateUser(string username)
     {
         var user = new ApplicationUser
@@ -26,14 +26,14 @@ public class DomainBuilder
             PasswordHash = "123456789",
             Email = $"{username}@test.com"
         };
-        
-        _context.Users.Add(user);
+
+        user = _context.Users.Add(user).Entity; // Ensure tracked.
         _context.SaveChanges();
 
         var userBuilder = new UserBuilder(user, _context, this);
         return userBuilder;
     }
-    
+
     public DomainBuilder CreateBook(string name)
     {
         var book = new OpeningBook
@@ -62,7 +62,9 @@ public class DomainBuilder
         };
         _context.SprtSettings.Add(settings);
         _context.SaveChanges();
-        
+
         return this;
     }
+    
+    public void Close(){ }
 }

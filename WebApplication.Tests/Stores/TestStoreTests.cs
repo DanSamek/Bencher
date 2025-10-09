@@ -10,7 +10,8 @@ public class TestStoreTests : TestBase
     // TODO [TestCases] ?
     public void GetNextTestForWorker_NoRunningTest()
     {
-        new DomainBuilder(Factory.CreateDbContext())
+        var factory = CreateContextFactory();
+        new DomainBuilder(factory.CreateDbContext())
             .CreateBook("test_book")
             .CreateSprtSettings()
             .CreateUser("test_user")
@@ -21,7 +22,7 @@ public class TestStoreTests : TestBase
                 .Close()
             .Close();
         
-        var testStore = new TestStore(Factory);
+        var testStore = new TestStore(factory);
         var nextTest = testStore.GetNextTestForWorker(false, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_1"));
