@@ -35,13 +35,14 @@ public class EngineBuilder
         return this;
     }
     
-    public EngineBuilder AddTest(string name, 
+    public TestBuilder AddTest(string name, 
                                  string bookName,
                                  string baseBranchName,
                                  string testBranchName,
                                  string timeManagement = "8+0.08", 
                                  int priority = 0, 
-                                 int numberOfThreads = 1)
+                                 int numberOfThreads = 1,
+                                 TestState state = TestState.Paused)
     {
         var penta = _context.Pentas.Add(new Penta()).Entity;
         var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
@@ -54,7 +55,7 @@ public class EngineBuilder
             NumberOfThreads = numberOfThreads,
             HashSize = 16,
             TimeManagement = timeManagement,
-            State = TestState.Paused,
+            State = state,
             Settings = _context.SprtSettings.First(), // TODO maybe as a parameter.
             OpeningBook = _context.OpeningBooks.First(x => x.Name == bookName),
             Errors = [],
@@ -72,7 +73,8 @@ public class EngineBuilder
         _context.Tests.Add(test);
         _user.Tests.Add(test);
         _context.SaveChanges();
-        
-        return this;
+
+        var testBuilder = new TestBuilder(this, test, _user, _context);
+        return testBuilder;
     }
 }

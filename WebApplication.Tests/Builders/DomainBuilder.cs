@@ -43,7 +43,7 @@ public class DomainBuilder
             Data = [],
             Type = OpeningBookType.EPD,
             Depth = 0,
-            Test = []
+            Tests = []
         };
         
         _context.OpeningBooks.Add(book);
@@ -60,12 +60,11 @@ public class DomainBuilder
             Elo1 = 2,
             Alpha = 0.05,
             Beta = 0.05,
-            Test = []
+            Tests = []
         };
         
         _context.SprtSettings.Add(settings);
         _context.SaveChanges();
-
         return this;
     }
     

@@ -1,6 +1,4 @@
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 
@@ -60,7 +58,51 @@ public class TestStore : StoreBase
         return result;
     }
     
+    /// <summary>
+    /// Updates test state to <see cref="TestState.Running"/> or <see cref="TestState.Autobenched"/>.
+    /// </summary>
+    /// <param name="test"></param>
+    public void SetRunningState(Test test)
+    {
+        if (test.State != TestState.Paused) return;
+        
+        var state = test.AutobenchState is null || test.AutobenchState!.Resolved
+            ? TestState.Running : TestState.Autobenched;
 
+        test.State = state;
+        Update(test);
+        Context.SaveChanges();
+    }
+    
+    /// <summary>
+    /// Updates test entity
+    /// </summary>
+    public void Update(Test test) => Context.Tests.Update(test);
+    
+    /// <summary>
+    /// Stops a test by an id.
+    /// </summary>
+    public async Task StopTest(int testId)
+        => await SetState(testId, TestState.Stopped);
+    
+    /// <summary>
+    /// Sets a state for a test. 
+    /// </summary>
+    public async Task SetState(int testId, TestState state)
+        => await Context.Tests
+            .Where(t => t.Id == testId)
+            .ExecuteUpdateAsync(spc => spc.SetProperty(t => t.State, state));
+    
+    /// <summary>
+    /// Sets a state for a test. 
+    /// </summary>
+    public void SetState(Test test, TestState state)
+    {
+        test.State = state;
+        Update(test);
+        Context.SaveChanges();
+    }
+    
     // NOTE: Good for read-only stuff - used .AsNoTracking()
     private IQueryable<Test> Include() =>
         Context.Tests
@@ -85,39 +127,11 @@ public class TestStore : StoreBase
     private static bool Filter(Test test, bool autobench, int workerNumberOfThreads)
     {
         if (test.NumberOfThreads > workerNumberOfThreads) return false;
-        
+
         if (!test.Autobenched) return test.Autobenched == autobench;
-        
+
         // We have autobench test here, autobenchState can't be null!
         return test.AutobenchState!.Resolved == !autobench;
     }*/
-    
-    /// <summary>
-    /// Updates test entity
-    /// </summary>
-    public void Update(Test test) => Context.Tests.Update(test);
 
-    /// <summary>
-    /// Stops a test by an id.
-    /// </summary>
-    public async Task StopTest(int testId)
-        => await SetState(testId, TestState.Stopped);
-    
-    /// <summary>
-    /// Sets a state for a test. 
-    /// </summary>
-    public async Task SetState(int testId, TestState state)
-        => await Context.Tests
-            .Where(t => t.Id == testId)
-            .ExecuteUpdateAsync(spc => spc.SetProperty(t => t.State, state));
-    
-    /// <summary>
-    /// Sets a state for a test. 
-    /// </summary>
-    public void SetState(Test test, TestState state)
-    {
-        test.State = state;
-        Context.SaveChanges();
-    }
-    
 }

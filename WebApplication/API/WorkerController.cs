@@ -41,8 +41,7 @@ public partial class WorkerController : ControllerBase
     {
         var workerLog = _workerLogStore.GetByConnectionId(errorDto.ConnectionId);
         if (workerLog is null || errorDto.Log.Length > Shared.MAX_LOG_FILE_SIZE) return NotFound();
-
-        // TODO move to the stores
+        
         using var memoryStream = new MemoryStream();
         errorDto.Log.CopyTo(memoryStream);
         
@@ -54,11 +53,9 @@ public partial class WorkerController : ControllerBase
             WorkerLog = workerLog
         };
         
-        workerLog.Errors.Add(error);
-        _workerLogStore.Save(workerLog);
+        _workerLogStore.AddError(workerLog, error);
         
         _testStore.SetState(workerLog.Test, TestState.Stopped);
-        
         return Ok(new ResponseBase());
     }
     
@@ -107,7 +104,6 @@ public partial class WorkerController : ControllerBase
         var userToken = HttpContext.GetUserToken();
         var user = _userStore.GetUserByAccessToken(userToken);
 
-        // TODO move to the store
         var wl = new WorkerLog
         {
             ConnectTime = DateTime.Now,
@@ -140,16 +136,7 @@ public partial class WorkerController : ControllerBase
         var workerLog = _workerLogStore.GetByConnectionId(runningTestDto.ConnectionId);
         if (workerLog is null) return NotFound();
 
-        // TODO move to the store.
-        // First information from the worker.
-        // Set running || autobenched.
-        if (workerLog.LastConnectTime is null && workerLog.Test.State == TestState.Paused)
-        {
-            var state = workerLog.Test.AutobenchState is null || workerLog.Test.AutobenchState!.Resolved
-                        ? TestState.Running : TestState.Autobenched;
-            
-            _testStore.SetState(workerLog.Test, state);
-        }
+        _testStore.SetRunningState(workerLog.Test);
         
         workerLog.LastConnectTime = DateTime.Now;
         _workerLogStore.Save(workerLog);

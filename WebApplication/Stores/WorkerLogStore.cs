@@ -31,8 +31,18 @@ public class WorkerLogStore : StoreBase
     
     
     /// <summary>
-    /// Creae
+    /// Creates a worker log.
     /// </summary>
     /// <param name="workerLog"></param>
     public void Create(WorkerLog workerLog) => Context.WorkerLogs.Add(workerLog);
+
+    /// <summary>
+    /// Adds error to the worker log.
+    /// </summary>
+    public void AddError(WorkerLog workerLog, Error error)
+    {
+        workerLog.Errors.Add(error);
+        Context.WorkerLogs.Update(workerLog);
+        Context.SaveChanges();
+    }
 }

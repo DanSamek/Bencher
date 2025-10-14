@@ -55,7 +55,5 @@ public class WorkerMiddlewareTests : TestBase
         });
 
         Assert.That(shouldPassMiddleware, Is.EqualTo(wasInvokedNext));
-
-
     }
 }

@@ -11,7 +11,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Test> Tests { get; set; }
     public DbSet<OpeningBook> OpeningBooks { get; set; }
     public DbSet<SprtSettings> SprtSettings { get; set; }
-    public DbSet<Penta> Pentas { get; set; }
+    public DbSet<Penta> Pentas { get; set; }    
     public DbSet<Error> Errors { get; set; }
     public DbSet<WorkerLog> WorkerLogs { get; set; }
     public DbSet<AutobenchState> AutobenchStates { get; set; }
@@ -68,7 +68,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(t => t.AutobenchState)
             .WithOne(abs => abs.Test)
             .OnDelete(DeleteBehavior.Cascade);
+
+
+        builder.Entity<Test>()
+            .HasIndex(t => t.TestBranchId)
+            .IsUnique(false);
         
+        builder.Entity<Test>()
+            .HasIndex(t => t.BaseBranchId)
+            .IsUnique(false);
         #endregion
 
         #region Engine

@@ -29,6 +29,6 @@ public class GetTestDto
     /// <summary>
     /// Number of threads of the worker.
     /// </summary>
-    [Min(0)]
+    [Min(1)]
     public required int NumberOfThreads { get; set; }
 }
