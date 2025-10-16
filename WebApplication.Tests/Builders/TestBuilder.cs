@@ -41,5 +41,17 @@ public class TestBuilder
         return this;
     }
 
+    public TestBuilder EnsurePentaCreated(ApplicationDbContext context)
+    {
+        context.Attach(_test);
+        var penta = new Penta
+        {
+            Test = _test
+        };
+        context.Pentas.Add(penta);
+        context.SaveChanges();
+        return this;
+    }
+
     public EngineBuilder Close() => _engineBuilder;
 }

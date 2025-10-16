@@ -40,7 +40,7 @@ public class DomainBuilder
         var book = new OpeningBook
         {
             Name = name,
-            Data = [],
+            Data = [0x69],
             Type = OpeningBookType.EPD,
             Depth = 0,
             Tests = []

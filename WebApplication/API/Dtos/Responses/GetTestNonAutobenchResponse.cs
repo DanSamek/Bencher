@@ -5,7 +5,7 @@ public class GetTestNonAutobenchResponse : ResponseBase
     /// <summary>
     /// Technically <see cref="Data.Models.WorkerLog.Id" />.
     /// </summary>
-    public int ConnectionId { get; set; }
+    public required int ConnectionId { get; set; }
     
     /// <inheritdoc cref="Data.Models.Engine.GitUrl" /> 
     public required string GitUrl { get; set; }

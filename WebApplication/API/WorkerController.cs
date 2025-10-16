@@ -40,7 +40,7 @@ public partial class WorkerController : ControllerBase
     public IActionResult Error([FromBody] ErrorDto errorDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(errorDto.ConnectionId);
-        if (workerLog is null || errorDto.Log.Length > Shared.MAX_LOG_FILE_SIZE) return NotFound();
+        if (workerLog is null || errorDto.Log.Length > Shared.MAX_LOG_FILE_SIZE) return NotFound(new ResponseBase());
         
         using var memoryStream = new MemoryStream();
         errorDto.Log.CopyTo(memoryStream);
@@ -54,7 +54,6 @@ public partial class WorkerController : ControllerBase
         };
         
         _workerLogStore.AddError(workerLog, error);
-        
         _testStore.SetState(workerLog.Test, TestState.Stopped);
         return Ok(new ResponseBase());
     }
@@ -66,9 +65,9 @@ public partial class WorkerController : ControllerBase
     public async Task<IActionResult> Results([FromBody] ResultsDto resultsDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(resultsDto.ConnectionId);
-        if (workerLog is null) return NotFound();
+        if (workerLog is null) return NotFound(new ResponseBase());
         
-        if (!workerLog.Test.State.Running()) return Ok(new ResultsResponseDto(false));
+        if (workerLog.Test.State != TestState.Running) return Ok(new ResultsResponseDto(false));
 
         await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
         return Ok(new ResultsResponseDto(true));
@@ -89,6 +88,14 @@ public partial class WorkerController : ControllerBase
         var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
         if (!result) await _testStore.StopTest(workerLog.Test.Id);
         
+        _autobenchStateStore.SaveChanges();
+        
+        // If test is resolved, set this as a bench of the test branch.
+        if (autobenchState.Resolved)
+        {
+            await _testBranchStore.SetTestBranchBench(workerLog.Test.Id, autobenchState.Bench);
+        }
+        
         return Ok(new ResponseBase());
     }
     
@@ -103,6 +110,9 @@ public partial class WorkerController : ControllerBase
         
         var userToken = HttpContext.GetUserToken();
         var user = _userStore.GetUserByAccessToken(userToken);
+        
+        _workerLogStore.Attach(user!);
+        _workerLogStore.Attach(test);
 
         var wl = new WorkerLog
         {
@@ -115,13 +125,8 @@ public partial class WorkerController : ControllerBase
             Test = test
         };
         
-        _workerLogStore.Create(wl);
-        test.WorkerLogs.Add(wl);
-        _testStore.Update(test);
-        
-        // Should be okay -- when disposing stores we call Context.SaveChanges()
-        //_workerLogStore.SaveChanges();
-        //_testStore.SaveChanges();
+        _workerLogStore.Add(wl);
+        _workerLogStore.SaveChanges();
         
         return getTestDto.Autobench ? HandleAutobenchResponse(wl, test) : HandleNormalTestResponse(wl, test);
     }
@@ -134,12 +139,12 @@ public partial class WorkerController : ControllerBase
     public IActionResult RunningTest([FromBody] RunningTestDto runningTestDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(runningTestDto.ConnectionId);
-        if (workerLog is null) return NotFound();
-
+        if (workerLog is null) return NotFound(new ResponseBase());
         _testStore.SetRunningState(workerLog.Test);
         
         workerLog.LastConnectTime = DateTime.Now;
         _workerLogStore.Save(workerLog);
+        _workerLogStore.SaveChanges();
         
         var running = workerLog.Test.State.Running();
         var result = new RunningTestResponseDto(running);

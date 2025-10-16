@@ -6,7 +6,7 @@ namespace WebApplication.API;
 
 public partial class WorkerController
 {
-    private OkObjectResult HandleNormalTestResponse(WorkerLog workerLog, Test test)
+    private OkObjectResult HandleAutobenchResponse(WorkerLog workerLog, Test test)
     {
         var testBranch = _testBranchStore.GetById(test.TestBranchId); // TestBranch shouldn't be null - test is already created.
         var result = new GetTestAutobenchResponse
@@ -19,13 +19,14 @@ public partial class WorkerController
         return Ok(result);
     }
 
-    private OkObjectResult HandleAutobenchResponse(WorkerLog workerLog, Test test)
+    private OkObjectResult HandleNormalTestResponse(WorkerLog workerLog, Test test)
     {
         var testBranch = _testBranchStore.GetById(test.TestBranchId);
         var baseBranch = _testBranchStore.GetById(test.BaseBranchId);
         
         var result = new GetTestNonAutobenchResponse
         {
+            ConnectionId = workerLog.Id,
             GitUrl = test.Engine.GitUrl,
             TestBranch = testBranch!.Name,
             TestBranchBench = testBranch.Bench,

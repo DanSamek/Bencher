@@ -47,8 +47,6 @@ public class EngineBuilder
         int bench = 1000000,
         double userConfidence = 0.1)
     {
-        
-        var penta = _context.Pentas.Add(new Penta()).Entity;
         var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
         var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
@@ -65,7 +63,6 @@ public class EngineBuilder
             Errors = [],
             WorkerLogs = [],
             Engine = _engine,
-            Penta = penta,
             BaseBranch = baseBranch,
             BaseBranchId = baseBranch.Id,
             TestBranch = testBranch,
@@ -73,10 +70,7 @@ public class EngineBuilder
             User = _user,
             Autobenched = true
         };
-        test.CalculateThreadScale();
-        test = _context.Tests.Add(test).Entity;
-        _user.Tests.Add(test);
-        _context.SaveChanges();
+        test = UpdateTest(_context, test, _user);
         
         var autobenchState = new AutobenchState
         {
@@ -103,7 +97,6 @@ public class EngineBuilder
                                  int numberOfThreads = 1,
                                  TestState state = TestState.Paused)
     {
-        var penta = _context.Pentas.Add(new Penta()).Entity;
         var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
         var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
@@ -120,7 +113,6 @@ public class EngineBuilder
             Errors = [],
             WorkerLogs = [],
             Engine = _engine,
-            Penta = penta,
             BaseBranch = baseBranch,
             BaseBranchId = baseBranch.Id,
             TestBranch = testBranch,
@@ -128,11 +120,9 @@ public class EngineBuilder
             User = _user,
             Autobenched = false
         };
-        test.CalculateThreadScale();
-        _context.Tests.Add(test);
-        _user.Tests.Add(test);
-        _context.SaveChanges();
-
+       
+        
+        test = UpdateTest(_context, test, _user);
         var testBuilder = new TestBuilder(this, test, _user, _context);
         return testBuilder;
     }
@@ -156,7 +146,6 @@ public class EngineBuilder
         var engine = context.Engines.First(e => e.Name == engineName);
         var user = context.Users.First(u => u.UserName == username);
 
-        var penta = context.Pentas.Add(new Penta()).Entity;
         var baseBranch = context.TestBranches.First(x => x.Name == baseBranchName);
         var testBranch = context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
@@ -173,7 +162,6 @@ public class EngineBuilder
             Errors = [],
             WorkerLogs = [],
             Engine = engine,
-            Penta = penta,
             BaseBranch = baseBranch,
             BaseBranchId = baseBranch.Id,
             TestBranch = testBranch,
@@ -181,9 +169,17 @@ public class EngineBuilder
             User = user,
             Autobenched = true
         };
-        test.CalculateThreadScale();
-        test = context.Tests.Add(test).Entity;
-        user.Tests.Add(test);
+        test = UpdateTest(context, test, user);
+        
+        var penta = context.Pentas.Add(new Penta
+        {
+            Test = test,
+            TestId = test.Id,
+        }).Entity;
+        
+        context.SaveChanges();
+        
+        test.Penta = penta;
         context.SaveChanges();
         
         var autobenchState = new AutobenchState
@@ -221,4 +217,15 @@ public class EngineBuilder
         
     }
     
+    
+    private static Test UpdateTest(ApplicationDbContext context, Test test, ApplicationUser user)
+    {
+        test.CalculateThreadScale();
+        test = context.Tests.Add(test).Entity;
+        context.SaveChanges();
+        
+        user.Tests.Add(test);
+        context.SaveChanges();
+        return test;
+    }
 }

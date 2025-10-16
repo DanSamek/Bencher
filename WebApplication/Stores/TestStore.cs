@@ -120,13 +120,12 @@ public class TestStore : Store<Test>
         Context.SaveChanges();
     }
     
-    // NOTE: Good for read-only stuff - used .AsNoTracking()
-    private IQueryable<Test> Include() 
+    private IQueryable<Test> Include()
         => Context.Tests
             .Include(t => t.Engine)
             .Include(t => t.WorkerLogs)
             .Include(t => t.AutobenchState)
-            .AsNoTracking();
+            .Include(t => t.OpeningBook);
 
     private bool AnyRunningTest(bool autobench)
         => Context.Tests

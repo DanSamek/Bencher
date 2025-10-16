@@ -60,5 +60,7 @@ where T : class
         SaveChanges();
     }
 
+    public void Attach(object entity) => Context.Attach(entity);
+
     protected abstract DbSet<T> GetDbSet();
 }

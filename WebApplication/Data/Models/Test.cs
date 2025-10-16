@@ -63,12 +63,11 @@ public class Test : DoId
     /// </summary>
     [Required]
     public required TestState State { get; set; }
-    
+
     /// <summary>
     /// Penta that belongs to a test.
     /// </summary>
-    [Required]
-    public required Penta Penta { get; set; }
+    public Penta Penta { get; set; } = null!;
     
     /// <summary>
     /// SPRT settings that belongs to a test.

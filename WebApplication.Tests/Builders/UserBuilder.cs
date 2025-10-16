@@ -19,12 +19,15 @@ public class UserBuilder
         _domainBuilder = domainBuilder;
     }
 
-    public EngineBuilder AddEngine(string name)
+
+    private string DefaultEngineUrlBuilder(string engineName) => $"git-url-{engineName}";
+    public EngineBuilder AddEngine(string name, Func<string, string>? gitUrlBuilder = null)
     {
+        gitUrlBuilder ??= DefaultEngineUrlBuilder;
         var engine = new Engine
         {
             Name = name,
-            GitUrl = $"git-url{name}",
+            GitUrl = gitUrlBuilder(name),
             BuildScript = [],
             User = _user,
             Tests = [],
@@ -49,7 +52,6 @@ public class UserBuilder
 
     public DomainBuilder Close()
     {
-        _context.SaveChanges();
         return _domainBuilder;
     }
 }

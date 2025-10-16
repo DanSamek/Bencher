@@ -15,12 +15,14 @@ public class UserStore : Store<ApplicationUser>
     /// <summary>
     /// Verifies that users access token exists. 
     /// </summary>
-    public bool DoesUserTokenExists(string accessToken) => Context.Users.Any(u => u.AccessToken == accessToken);
+    public bool DoesUserTokenExists(string accessToken) 
+        => Context.Users.Any(u => u.AccessToken == accessToken);
     
     /// <summary>
     /// Gets user by accessToken.
     /// </summary>
-    public ApplicationUser? GetUserByAccessToken(string accessToken) => Context.Users.FirstOrDefault(u => u.AccessToken == accessToken);
+    public ApplicationUser? GetUserByAccessToken(string accessToken)
+        => Context.Users.FirstOrDefault(u => u.AccessToken == accessToken);
     
     /// <summary>
     /// Gets all users. 

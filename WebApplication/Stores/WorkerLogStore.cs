@@ -16,7 +16,7 @@ public class WorkerLogStore : Store<WorkerLog>
     
     /// <summary>
     /// Gets <see cref="WorkerLog" /> by connectionId.
-    /// Note: loads with the <see cref="Test" /> entity
+    /// Note: loads with the <see cref="Test" /> entity and AutobenchState
     /// </summary>
     public WorkerLog? GetByConnectionId(int connectionId)
     {
@@ -37,7 +37,7 @@ public class WorkerLogStore : Store<WorkerLog>
     /// Creates a worker log.
     /// </summary>
     /// <param name="workerLog"></param>
-    public void Create(WorkerLog workerLog) => Context.WorkerLogs.Add(workerLog);
+    public void Add(WorkerLog workerLog) => Context.WorkerLogs.Add(workerLog);
 
     /// <summary>
     /// Adds error to the worker log.

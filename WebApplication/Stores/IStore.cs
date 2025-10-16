@@ -21,4 +21,9 @@ where T : class
     /// Deletes an entity. 
     /// </summary>
     void Delete(T entity);
+    
+    /// <summary>
+    /// Entity, that will be attached in the store. 
+    /// </summary>
+    void Attach(object entity);
 }

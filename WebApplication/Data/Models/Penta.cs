@@ -50,12 +50,13 @@ public class Penta : DoId
     /// <summary>
     /// Test that belongs to this penta. 
     /// </summary>
-    public Test Test { get; set; } = null!;
+    [Required]
+    public required Test Test { get; set; }
     
     /// <summary>
     /// Id of the test.
     /// </summary>
-    public int TestId {get; set; }
+    public int TestId { get; set; }
 
     private int DdWl => Dd + Wl;
     
