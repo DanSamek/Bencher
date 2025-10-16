@@ -181,6 +181,7 @@ public class WorkerControllerTests
 
     /// <summary>
     /// Test for <see cref="WorkerController.GetTest" /> - when there is no test in the database.
+    /// We expect 404.
     /// </summary>
     [Test]
     public async Task GetTest_NoTest()
@@ -198,9 +199,9 @@ public class WorkerControllerTests
         
         var result = _controller.GetTest(dto);
         Assert.That(result, Is.Not.Null);
-        Assert.That(result, Is.InstanceOf<OkObjectResult>());
+        Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
         
-        var resultDto = GetResponseValue<ResponseBase, OkObjectResult>(result);
+        var resultDto = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
         Assert.That(resultDto, Is.Not.Null);
     }
     
