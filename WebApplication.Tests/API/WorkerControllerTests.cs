@@ -183,9 +183,9 @@ public class WorkerControllerTests
     /// Test for <see cref="WorkerController.GetTest" /> - when there is no test in the database.
     /// </summary>
     [Test]
-    public void GetTest_NoTest()
+    public async Task GetTest_NoTest()
     {
-        _factory.CreateDbContext().Tests.ExecuteDelete();
+        await _factory.CreateDbContext().Tests.ExecuteDeleteAsync();
         
         var dto = new GetTestDto
         {
