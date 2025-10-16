@@ -4,13 +4,16 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.Stores;
 
-public class PentaStore : StoreBase
+public class PentaStore : Store<Penta>
 {
     /// <summary>
     /// .Ctor
     /// </summary>
     /// <param name="factory"></param>
     public PentaStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) { }
+    
+    /// <inheritdoc /> 
+    protected override DbSet<Penta> GetDbSet() => Context.Pentas;
     
     /// <summary>
     /// Thread-safe update of the pentanomial values.
@@ -31,4 +34,6 @@ public class PentaStore : StoreBase
                     .SetProperty(p => p.Ww, p => p.Ww + ww)
             );
     }
+    
+
 }

@@ -23,7 +23,7 @@ public class AutobenchState : DoId
     /// Probably correct bench [this value is taken from first response of the worker].
     /// </summary>
     [Required]
-    public int? Bench { get; set; }
+    public int Bench { get; set; }
     
     /// <summary>
     /// Confidence of the autobench.  

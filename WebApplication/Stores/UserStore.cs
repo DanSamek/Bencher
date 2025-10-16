@@ -5,9 +5,12 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.Stores;
 
-public class UserStore : StoreBase
+public class UserStore : Store<ApplicationUser>
 {
     public UserStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) { }
+    
+    /// <inheritdoc /> 
+    protected override DbSet<ApplicationUser> GetDbSet() =>  Context.Users;
     
     /// <summary>
     /// Verifies that users access token exists. 
@@ -36,4 +39,5 @@ public class UserStore : StoreBase
         Context.Users.Remove(user);
         SaveChanges();
     }
+    
 }

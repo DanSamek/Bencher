@@ -4,12 +4,15 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.Stores;
 
-public class TestStore : StoreBase
+public class TestStore : Store<Test>
 {
     /// <summary>
     /// .Ctor
     /// </summary>
     public TestStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) { }
+    
+    /// <inheritdoc /> 
+    protected override DbSet<Test> GetDbSet() => Context.Tests;
     
     /// <summary>
     /// Returns a test, that should be run on the worker.
@@ -23,14 +26,13 @@ public class TestStore : StoreBase
     ///     -> we will find a test that is not running with a same priority.
     ///         -> if test exists, we return.
     ///         -> otherwise we will select test by max ((test.ThreadScale / 2) / Test.ActiveWorkerThreadCount())
-    /// TODO ? Change test scale by user's running test count.
-    ///
     /// NOTE: when a test is returned from the method, it's automatically set do running.
     /// </summary>
     public Test? GetNextTestForWorker(bool autobench, int workerNumberOfThreads)
     {
+        
         // If there is not running test, we will pick a paused test with the highest priority.
-        var anyRunningTest = AnyRunningTest(workerNumberOfThreads);
+        var anyRunningTest = AnyRunningTest(autobench);
         if (!anyRunningTest)
         {
             var test = PausedTestWithHighestPriority(autobench, workerNumberOfThreads);
@@ -39,7 +41,7 @@ public class TestStore : StoreBase
         
         // Get maximum priority of running test.
         var runningPriority = Context.Tests
-            .Where(t => t.State == TestState.Running)
+            .Where(t => autobench ? t.State == TestState.Autobenched : t.State == TestState.Running)
             .Max(t => t.Priority);
 
         // Get a paused test with a same priority.
@@ -48,13 +50,33 @@ public class TestStore : StoreBase
                 .Where(t => t.State == TestState.Paused && t.Priority == runningPriority)
                 .OrderByDescending(t => t.ThreadScale)
                 .FirstOrDefault();
+
+
+        if (notRunningTestWithoutWorkers is not null)
+        {
+            return notRunningTestWithoutWorkers;
+        }
+
+
+        var filteredRunningTests = Include()
+            .Where(t => (autobench ? t.State == TestState.Autobenched : t.State == TestState.Running) &&
+                        t.Priority == runningPriority);
         
-        // If a paused test doesn't exist's, select by math.
-        var result = notRunningTestWithoutWorkers
-                     ?? WhereFilter(Include(), autobench,  workerNumberOfThreads)
-                         .Where(t => t.State == TestState.Running && t.Priority == runningPriority)
-                         .OrderByDescending(t => (t.ThreadScale / 2) / (t.WorkerLogs.Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames).Sum(wl => wl.NumberOfThreads))) // inlined Test.ActiveWorkerThreadCount()
-                         .FirstOrDefault(); 
+        if (autobench)
+        {
+            filteredRunningTests = filteredRunningTests
+                .OrderByDescending(t => t.ThreadScale);
+        }
+        else
+        {
+            filteredRunningTests = filteredRunningTests
+                .OrderByDescending(t =>
+                    (t.ThreadScale / 2) / (t.WorkerLogs.Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
+                        .Sum(wl => wl.NumberOfThreads))); // inlined Test.ActiveWorkerThreadCount() 
+
+        }
+        
+        var result = filteredRunningTests.FirstOrDefault();
         return result;
     }
     
@@ -64,20 +86,15 @@ public class TestStore : StoreBase
     /// <param name="test"></param>
     public void SetRunningState(Test test)
     {
-        if (test.State != TestState.Paused) return;
+        if (test.State is TestState.Finished or TestState.Stopped) return;
         
         var state = test.AutobenchState is null || test.AutobenchState!.Resolved
             ? TestState.Running : TestState.Autobenched;
 
         test.State = state;
         Update(test);
-        Context.SaveChanges();
+        SaveChanges();
     }
-    
-    /// <summary>
-    /// Updates test entity
-    /// </summary>
-    public void Update(Test test) => Context.Tests.Update(test);
     
     /// <summary>
     /// Stops a test by an id.
@@ -104,17 +121,17 @@ public class TestStore : StoreBase
     }
     
     // NOTE: Good for read-only stuff - used .AsNoTracking()
-    private IQueryable<Test> Include() =>
-        Context.Tests
+    private IQueryable<Test> Include() 
+        => Context.Tests
             .Include(t => t.Engine)
             .Include(t => t.WorkerLogs)
             .Include(t => t.AutobenchState)
-            .AsNoTracking(); 
-    
-    private bool AnyRunningTest(int workerNumberOfThreads) 
-        => Context.Tests.Any(t => t.State == TestState.Running && t.NumberOfThreads <= workerNumberOfThreads);
-    
+            .AsNoTracking();
 
+    private bool AnyRunningTest(bool autobench)
+        => Context.Tests
+            .Any(t => autobench ? t.State == TestState.Autobenched : t.State == TestState.Running); 
+    
     private Test? PausedTestWithHighestPriority(bool autobench, int workerNumberOfThreads)
         => WhereFilter(Include(), autobench,  workerNumberOfThreads)
             .OrderByDescending(t => t.Priority)
@@ -123,15 +140,5 @@ public class TestStore : StoreBase
     private IQueryable<Test> WhereFilter(IQueryable<Test> tests, bool autobench, int workerNumberOfThreads)
         => tests.Where(t => t.NumberOfThreads <= workerNumberOfThreads &&
                             (!t.Autobenched ? t.Autobenched == autobench : t.AutobenchState!.Resolved == !autobench));
-    /*
-    private static bool Filter(Test test, bool autobench, int workerNumberOfThreads)
-    {
-        if (test.NumberOfThreads > workerNumberOfThreads) return false;
-
-        if (!test.Autobenched) return test.Autobenched == autobench;
-
-        // We have autobench test here, autobenchState can't be null!
-        return test.AutobenchState!.Resolved == !autobench;
-    }*/
 
 }

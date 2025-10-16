@@ -67,6 +67,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<Test>()
             .HasOne(t => t.AutobenchState)
             .WithOne(abs => abs.Test)
+            .HasForeignKey<AutobenchState>(a => a.TestId)
             .OnDelete(DeleteBehavior.Cascade);
 
 

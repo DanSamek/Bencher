@@ -35,6 +35,65 @@ public class EngineBuilder
         return this;
     }
     
+    // KISS
+    public TestBuilder AddAutobenchedTest(string name, 
+        string bookName,
+        string baseBranchName,
+        string testBranchName,
+        string timeManagement = "8+0.08", 
+        int priority = 0, 
+        int numberOfThreads = 1,
+        TestState state = TestState.Paused,
+        int bench = 1000000,
+        double userConfidence = 0.1)
+    {
+        
+        var penta = _context.Pentas.Add(new Penta()).Entity;
+        var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
+        var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
+        var test = new Test
+        {
+            Name = name,
+            Created = DateTime.Now,
+            Priority = priority,
+            NumberOfThreads = numberOfThreads,
+            HashSize = 16,
+            TimeManagement = timeManagement,
+            State = state,
+            Settings = _context.SprtSettings.First(), // TODO maybe as a parameter.
+            OpeningBook = _context.OpeningBooks.First(x => x.Name == bookName),
+            Errors = [],
+            WorkerLogs = [],
+            Engine = _engine,
+            Penta = penta,
+            BaseBranch = baseBranch,
+            BaseBranchId = baseBranch.Id,
+            TestBranch = testBranch,
+            TestBranchId = testBranch.Id,
+            User = _user,
+            Autobenched = true
+        };
+        test.CalculateThreadScale();
+        test = _context.Tests.Add(test).Entity;
+        _user.Tests.Add(test);
+        _context.SaveChanges();
+        
+        var autobenchState = new AutobenchState
+        {
+            Bench = bench,
+            UserConfidence = userConfidence,
+            Test = test,
+            TestId = test.Id,
+        };
+        
+        _context.AutobenchStates.Add(autobenchState);
+        _context.SaveChanges();
+        
+        var testBuilder = new TestBuilder(this, test, _user, _context);
+        return testBuilder;
+    }
+    
+    // KISS
     public TestBuilder AddTest(string name, 
                                  string bookName,
                                  string baseBranchName,
@@ -77,4 +136,89 @@ public class EngineBuilder
         var testBuilder = new TestBuilder(this, test, _user, _context);
         return testBuilder;
     }
+    
+    public static void AddAutobenchedTestForUser(
+        string name,
+        string bookName,
+        string baseBranchName,
+        string testBranchName,
+        string engineName,
+        string username,  
+        ApplicationDbContext context,
+        string timeManagement = "8+0.08", 
+        int priority = 0, 
+        int numberOfThreads = 1,
+        TestState state = TestState.Paused,
+        int bench = 1000000,
+        double userConfidence = 0.1,
+        params int[] workerThreads)
+    {
+        var engine = context.Engines.First(e => e.Name == engineName);
+        var user = context.Users.First(u => u.UserName == username);
+
+        var penta = context.Pentas.Add(new Penta()).Entity;
+        var baseBranch = context.TestBranches.First(x => x.Name == baseBranchName);
+        var testBranch = context.TestBranches.First(x => x.Name == testBranchName);
+        var test = new Test
+        {
+            Name = name,
+            Created = DateTime.Now,
+            Priority = priority,
+            NumberOfThreads = numberOfThreads,
+            HashSize = 16,
+            TimeManagement = timeManagement,
+            State = state,
+            Settings = context.SprtSettings.First(), // TODO maybe as a parameter.
+            OpeningBook = context.OpeningBooks.First(x => x.Name == bookName),
+            Errors = [],
+            WorkerLogs = [],
+            Engine = engine,
+            Penta = penta,
+            BaseBranch = baseBranch,
+            BaseBranchId = baseBranch.Id,
+            TestBranch = testBranch,
+            TestBranchId = testBranch.Id,
+            User = user,
+            Autobenched = true
+        };
+        test.CalculateThreadScale();
+        test = context.Tests.Add(test).Entity;
+        user.Tests.Add(test);
+        context.SaveChanges();
+        
+        var autobenchState = new AutobenchState
+        {
+            Bench = bench,
+            UserConfidence = userConfidence,
+            Test = test,
+            TestId = test.Id,
+        };
+        
+        context.AutobenchStates.Add(autobenchState);
+        context.SaveChanges();
+
+
+        foreach (var numberOfWorkerThreads in workerThreads)
+        {
+            var wl = new WorkerLog
+            {
+                Mac = "AA:BB:CC:DD:EE:FF",
+                NumberOfGames = 0,
+                TotalNumberOfGames = 64,
+                LastConnectTime = DateTime.Now,
+                NumberOfThreads = numberOfWorkerThreads,
+                ConnectTime = DateTime.Now,
+                User = user,
+                Test = test
+            };
+            
+            context.WorkerLogs.Add(wl);
+            test.WorkerLogs.Add(wl);
+            context.SaveChanges();
+        }
+        
+        Console.WriteLine(context.WorkerLogs.Count());
+        
+    }
+    
 }

@@ -4,13 +4,16 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.Stores;
 
-public class WorkerLogStore : StoreBase
+public class WorkerLogStore : Store<WorkerLog>
 {
     /// <summary>
     /// .Ctor
     /// </summary>
     public WorkerLogStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) { }
-
+    
+    /// <inheritdoc /> 
+    protected override DbSet<WorkerLog> GetDbSet() =>  Context.WorkerLogs;
+    
     /// <summary>
     /// Gets <see cref="WorkerLog" /> by connectionId.
     /// Note: loads with the <see cref="Test" /> entity

@@ -9,6 +9,8 @@ namespace WebApplication.Data.Models;
 /// </summary>
 public class WorkerLog : DoId
 {
+    // TODO add WorkerLogState -- Disconnected, Finished, Active.
+    
     /// <summary>
     /// Time of the connection for the current workload.
     /// </summary>

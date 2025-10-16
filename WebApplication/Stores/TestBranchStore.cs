@@ -4,15 +4,14 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.Stores;
 
-public class TestBranchStore : StoreBase
+public class TestBranchStore : Store<TestBranch>
 {
     /// <summary>
     /// .Ctor
     /// </summary>
     public TestBranchStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) {}
+
+    /// <inheritdoc /> 
+    protected override DbSet<TestBranch> GetDbSet() => Context.TestBranches;
     
-    /// <summary>
-    /// Returns test branch by id.
-    /// </summary>
-    public TestBranch? GetById(int id) => Context.TestBranches.Find(id);
 }
