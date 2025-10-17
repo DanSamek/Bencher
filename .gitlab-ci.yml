@@ -3,39 +3,36 @@ image: mcr.microsoft.com/dotnet/sdk:9.0
 services:
   - name: docker:dind
     alias: docker
-  - name: postgres:15.1
-    alias: postgres
+    command: ["--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock"]
 
 variables:
   DOCKER_HOST: tcp://docker:2375
-
+  DOCKER_TLS_CERTDIR: ""
+  
 stages:
-    - build
-    - test
+  - build
+  - test
 
 build_web_app:
-    stage: build
-    script:
-        - cd WebApplication
-        - dotnet build
-    only:
-        - main
+  stage: build
+  script:
+    - cd WebApplication
+    - dotnet build
+  only:
+    - main
 
 build_worker:
-    stage: build
-    script:
-        - cd Worker
-        - dotnet build
-    only:
-        - main
+  stage: build
+  script:
+    - cd Worker
+    - dotnet build
+  only:
+    - main
 
 test_web_app:
-    stage: test
-    services:
-    - name: postgres:15.1
-      alias: postgres
-    script:
-        - cd WebApplication.Tests
-        - dotnet test
-    only:
-        - main
+  stage: test
+  script:
+    - cd WebApplication.Tests
+    - dotnet test
+  only:
+    - main
