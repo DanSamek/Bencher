@@ -43,7 +43,9 @@ public class TestBase
     
     private static async Task<PostgreSqlContainer> CreateContainer()
     {
-        var container = new PostgreSqlBuilder().Build();
+        var container = new PostgreSqlBuilder()
+            .WithImage("postgres:15.1")
+            .Build();
         await container.StartAsync();
         return container;
     }
