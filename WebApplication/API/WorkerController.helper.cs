@@ -35,7 +35,7 @@ public partial class WorkerController
             HashSize = test.HashSize,
             NumberOfThreads = test.NumberOfThreads,
             TimeManagement = test.TimeManagement,
-            NumberOfGames = workerLog.NumberOfGames,
+            NumberOfGames = workerLog.TotalNumberOfGames,
             OpeningBook = new OpeningBookDto(test.OpeningBook.Name, test.OpeningBook.Data, test.OpeningBook.Depth)
         };
         

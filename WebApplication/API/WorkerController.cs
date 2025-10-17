@@ -71,13 +71,14 @@ public partial class WorkerController : ControllerBase
         if (workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase()); // TODO update docs.
         if (workerLog.Test.State != TestState.Running) return Ok(new ResultsResponseDto(false));
 
-        await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
-        
         var toIncrement = (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
         if (workerLog.NumberOfGames + toIncrement > workerLog.TotalNumberOfGames) return NotFound(new ResponseBase()); // TODO update docs.
-
+        
+        await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
         workerLog.NumberOfGames += toIncrement;
         _workerLogStore.Update(workerLog);
+        
+        // TODO SPRT part if test is finished.
         
         return Ok(new ResultsResponseDto(true));
     }

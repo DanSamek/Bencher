@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using WebApplication.API;
 using WebApplication.API.Dtos.Requests;
 using WebApplication.API.Dtos.Responses;
 using WebApplication.Data.Models;
+using WebApplication.Stores;
 using WebApplication.Tests.Builders;
 
 namespace WebApplication.Tests.API;
@@ -378,7 +380,6 @@ public class WorkerControllerTests : WorkerControllerTestBase
     /// <summary>
     /// Test for <see cref="WorkerController.Results" /> - test is running.
     /// We expect, that penta stats will be updated.
-    /// TODO multithreaded!
     /// </summary>
     [Test]
     public async Task Results() 
@@ -419,6 +420,146 @@ public class WorkerControllerTests : WorkerControllerTestBase
             Assert.That(penta.Ww, Is.EqualTo(6));
         });
     }
+
+    /// <summary>
+    /// Test for <see cref="WorkerController.Results" /> -- Multithreaded -- test is running.
+    /// We expect, that penta stats will be updated + no dataraces when updates.
+    /// </summary>
+    [Test]
+    public async Task Results_Multithreaded()
+    {
+        // TODO maybe write some batch updater.
+        Assert.Fail(
+            );
+        using var context = Factory.CreateDbContext();
+        await context.Users.ExecuteDeleteAsync();
+        
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateUser("user_1")
+                .WithAccessToken("12345678")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .AddTest("test_31", "uho", "base_branch", "test_branch")
+                         .EnsurePentaCreated(Factory.CreateDbContext())
+                    .Close()
+                .Close()
+            .Close()
+        .Close();
+
+        Assert.That(context.Tests.Count(), Is.EqualTo(1));
+        Assert.That(context.Pentas.Count(), Is.EqualTo(1));
+
+        var workerThreadsCounts = new[] { 12, 10, 1, 1, 1, 12, 1, 2, 4, 5, 4, 4, 4, 2};
+        var bag = new ConcurrentBag<SimplePenta>();
+
+        var tasks = new List<Task>();
+        var dtos = new List<GetTestNonAutobenchResponse>();
+
+        foreach (var workerThreadCounts in workerThreadsCounts)
+        {
+            RefreshController();
+            LoginAs("user_1");
+            var resultDto = GetTest<GetTestNonAutobenchResponse>(false, workerThreadCounts);
+            dtos.Add(resultDto);
+            RefreshController();
+            Controller.RunningTest(new RunningTestDto
+            {
+                ConnectionId = resultDto.ConnectionId
+            });
+        }
+        
+        foreach (var dto in dtos)
+        {
+            tasks.Add(Task.Run(async () =>
+            {
+                await SimulateResults(dto.ConnectionId, dto.NumberOfGames);
+            }));
+        }
+        
+        Task.WaitAll(tasks.ToArray());
+        var pentaSums = new SimplePenta(new int[6]);
+        
+        foreach (var simplePenta in bag)
+        {
+            pentaSums.Data[SimplePenta.LL] += simplePenta.At(SimplePenta.LL);
+            pentaSums.Data[SimplePenta.LD] += simplePenta.At(SimplePenta.LD);
+            pentaSums.Data[SimplePenta.DD] += simplePenta.At(SimplePenta.DD);
+            pentaSums.Data[SimplePenta.WL] += simplePenta.At(SimplePenta.WL);
+            pentaSums.Data[SimplePenta.WD] += simplePenta.At(SimplePenta.WD);
+            pentaSums.Data[SimplePenta.WW] += simplePenta.At(SimplePenta.WW);
+        }
+
+        var penta = Factory.CreateDbContext().Pentas.First();
+        Assert.Multiple(() =>
+        {
+            Assert.That(penta.Ll, Is.EqualTo(pentaSums.Data[SimplePenta.LL]));
+            Assert.That(penta.Ld, Is.EqualTo(pentaSums.Data[SimplePenta.LD]));
+            Assert.That(penta.Dd, Is.EqualTo(pentaSums.Data[SimplePenta.DD]));
+            Assert.That(penta.Wl, Is.EqualTo(pentaSums.Data[SimplePenta.WL]));
+            Assert.That(penta.Wd, Is.EqualTo(pentaSums.Data[SimplePenta.WD]));
+            Assert.That(penta.Ww, Is.EqualTo(pentaSums.Data[SimplePenta.WW]));
+        });
+        
+        return;
+        async Task SimulateResults(int connectionId, int numberOfGames)
+        {
+            var exponent = Random.Shared.Next(1, Math.Min(numberOfGames / 8, 4));
+            var iterPairs = numberOfGames / (int)Math.Pow(2, exponent);
+            var numberOfPairs = numberOfGames / 2;
+            while (numberOfPairs > 0)
+            {
+                var controller = new WorkerController(new UserStore(Factory), new WorkerLogStore(Factory),
+                    new PentaStore(Factory),
+                    new TestStore(Factory), new TestBranchStore(Factory), new AutobenchStateStore(Factory));
+
+                var simplePenta = SimplePenta.Generate(iterPairs);
+                bag.Add(simplePenta);
+                
+                var dto = new ResultsDto
+                {
+                    Ll = simplePenta.Data[SimplePenta.LL],
+                    Ld = simplePenta.Data[SimplePenta.LD],
+                    Dd = simplePenta.Data[SimplePenta.DD],
+                    Wl = simplePenta.Data[SimplePenta.WL],
+                    Wd = simplePenta.Data[SimplePenta.WD],
+                    Ww = simplePenta.Data[SimplePenta.WW],
+                    ConnectionId = connectionId
+                };
+                await controller.Results(dto);
+                numberOfPairs -= iterPairs;
+            }
+        }
+    }
+
+    private record SimplePenta(int[] Data)
+    {
+        public static int LL = 0;
+        public static int LD = 1;
+        public static int WL = 2;
+        public static int DD = 3;
+        public static int WD = 4;
+        public static int WW = 5;
+
+        public int At(int index)
+        {
+            return Data[index];
+        }
+        
+        public static SimplePenta Generate(int totalGames)
+        {
+            var data = new int[6];
+            while (totalGames > 0)
+            {
+                var index = Random.Shared.Next(0, 6);
+                data[index]++;
+                totalGames--;
+            }
+            var result = new SimplePenta(data);
+            return result;
+        }
+    }
+    
     
     /// <summary>
     /// Test for <see cref="WorkerController.Results" /> - invalid connection id.
@@ -458,7 +599,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     public async Task Results_NotRunningTest() 
     {
         LoginAs("user_2");
-        var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
+        var resultDto = GetTest<GetTestNonAutobenchResponse>(false, 4);
         RefreshController();
         _ = Controller.RunningTest(new RunningTestDto
         {
