@@ -3,6 +3,9 @@ image: mcr.microsoft.com/dotnet/sdk:9.0
 services:
   - name: docker:dind
     alias: docker
+  - name: postgres:15.1
+    alias: postgres
+
 variables:
   DOCKER_HOST: tcp://docker:2375
 
@@ -28,6 +31,9 @@ build_worker:
 
 test_web_app:
     stage: test
+    services:
+    - name: postgres:15.1
+      alias: postgres
     script:
         - cd WebApplication.Tests
         - dotnet test
