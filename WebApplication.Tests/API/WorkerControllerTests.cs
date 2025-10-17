@@ -6,32 +6,20 @@ using WebApplication.API;
 using WebApplication.API.Dtos.Requests;
 using WebApplication.API.Dtos.Responses;
 using WebApplication.Data.Models;
-using WebApplication.Stores;
 using WebApplication.Tests.Builders;
 
 namespace WebApplication.Tests.API;
 
-public class WorkerControllerTests
+[TestFixture]
+public class WorkerControllerTests : WorkerControllerTestBase
 {
-    private WorkerController _controller;
-    private TestContextFactory _factory;
-
-    // TODO check status of workerlogs.
-
-    // For multiple requests in the tests - "fresh" for each request.
-    private void RefreshController()
-    {
-        _controller = new WorkerController(new UserStore(_factory), new WorkerLogStore(_factory), new PentaStore(_factory), 
-            new TestStore(_factory), new TestBranchStore(_factory), new AutobenchStateStore(_factory));
-    }
-    
     [SetUp]
-    public void Setup()
+    public override void Setup()
     {
-        _factory = new TestContextFactory();
+        base.Setup();
         RefreshController();
         
-        new DomainBuilder(_factory.CreateDbContext())
+        new DomainBuilder(Factory.CreateDbContext())
             .CreateBook("uho")
             .CreateSprtSettings()
             .CreateUser("user_1")
@@ -50,23 +38,23 @@ public class WorkerControllerTests
                 .AddBranch("test_branch")
                 .AddBranch("test_branch_2")
                 .AddTest("test_31", "uho", "base_branch", "test_branch")
-                    .EnsurePentaCreated(_factory.CreateDbContext())
+                    .EnsurePentaCreated(Factory.CreateDbContext())
                     .Close()
                 .AddTest("test_32", "uho", "base_branch", "test_branch_2")
-            .EnsurePentaCreated(_factory.CreateDbContext())
+            .EnsurePentaCreated(Factory.CreateDbContext())
                     .Close()
                 .Close()
             .Close()
         .Close();
         
         EngineBuilder.AddAutobenchedTestForUser("test_21", "uho", "base_branch", 
-            "test_branch", "sentinel", "user_2", _factory.CreateDbContext());
+            "test_branch", "sentinel", "user_2", Factory.CreateDbContext());
         
         EngineBuilder.AddAutobenchedTestForUser("test_22", "uho", "base_branch", 
-            "test_branch", "stockfish", "user_2", _factory.CreateDbContext()); 
+            "test_branch", "stockfish", "user_2", Factory.CreateDbContext()); 
         
         EngineBuilder.AddAutobenchedTestForUser("test_33", "uho", "base_branch", 
-            "test_branch", "stockfish", "user_3", _factory.CreateDbContext());
+            "test_branch", "stockfish", "user_3", Factory.CreateDbContext());
     }
     
     /// <summary>
@@ -78,7 +66,7 @@ public class WorkerControllerTests
     public void Validate_ValidToken(string accessToken, string username)
     {
         SetAccessToken(accessToken);
-        var result = _controller.Validate();
+        var result = Controller.Validate();
         Assert.That(result, Is.Not.Null);
         Assert.That(result, Is.InstanceOf<OkObjectResult>());
         var dto = GetResponseValue<ValidateResponseDto, OkObjectResult>(result);;
@@ -94,7 +82,7 @@ public class WorkerControllerTests
     public void Validate_InvalidToken()
     {
         SetAccessToken("154123");
-        var result = _controller.Validate();
+        var result = Controller.Validate();
         Assert.That(result, Is.Not.Null);
         Assert.That(result, Is.InstanceOf<UnauthorizedObjectResult>());
     }
@@ -114,7 +102,7 @@ public class WorkerControllerTests
             NumberOfThreads = 1
         };
         
-        var result = _controller.GetTest(dto);
+        var result = Controller.GetTest(dto);
         Assert.That(result, Is.Not.Null);
         Assert.That(result, Is.InstanceOf<OkObjectResult>());
         
@@ -122,7 +110,7 @@ public class WorkerControllerTests
         Assert.That(resultDto, Is.Not.Null);
         Assert.That(resultDto.GitUrl, Is.EqualTo("git-url-sentinel"));
         
-        using var validationContext = _factory.CreateDbContext();
+        using var validationContext = Factory.CreateDbContext();
         Assert.That(validationContext.WorkerLogs.Count(), Is.EqualTo(1));
         var workerLog = validationContext.WorkerLogs
             .AsNoTracking()
@@ -154,7 +142,7 @@ public class WorkerControllerTests
             NumberOfThreads = 1
         };
         
-        var result = _controller.GetTest(dto);
+        var result = Controller.GetTest(dto);
         Assert.That(result, Is.Not.Null);
         Assert.That(result, Is.InstanceOf<OkObjectResult>());
         
@@ -163,7 +151,7 @@ public class WorkerControllerTests
         Assert.That(resultDto.GitUrl, Is.EqualTo("git-url-stockfish"));
         Assert.That(resultDto.OpeningBook.Data, Is.EqualTo(new int[] { 0x69 }));
 
-        using var validationContext = _factory.CreateDbContext();
+        using var validationContext = Factory.CreateDbContext();
         Assert.That(validationContext.WorkerLogs.Count(), Is.EqualTo(1));
         var workerLog = validationContext.WorkerLogs
             .AsNoTracking()
@@ -187,7 +175,7 @@ public class WorkerControllerTests
     [Test]
     public async Task GetTest_NoTest()
     {
-        await _factory.CreateDbContext().Tests.ExecuteDeleteAsync();
+        await Factory.CreateDbContext().Tests.ExecuteDeleteAsync();
         
         var dto = new GetTestDto
         {
@@ -198,7 +186,7 @@ public class WorkerControllerTests
         };
         LoginAs("user_2");
         
-        var result = _controller.GetTest(dto);
+        var result = Controller.GetTest(dto);
         Assert.That(result, Is.Not.Null);
         Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
         
@@ -219,7 +207,7 @@ public class WorkerControllerTests
         Assert.That(runningTest.State, Is.EqualTo(TestState.Paused));
         
         RefreshController();
-        _controller.RunningTest(new RunningTestDto
+        Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -243,7 +231,7 @@ public class WorkerControllerTests
         Assert.That(runningTest.State, Is.EqualTo(TestState.Paused));
         
         RefreshController();
-        _controller.RunningTest(new RunningTestDto
+        Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -259,7 +247,7 @@ public class WorkerControllerTests
     [Test]
     public void RunningTest_InvalidConnectionId()
     {
-        var result = _controller.RunningTest(new RunningTestDto
+        var result = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = 5555
         });
@@ -278,7 +266,7 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -288,7 +276,7 @@ public class WorkerControllerTests
         Assert.That(test.AutobenchState!.Confidence, Is.EqualTo(0.0));
         
         RefreshController();
-        var result = await _controller.Autobench(new AutobenchDto
+        var result = await Controller.Autobench(new AutobenchDto
         {
             Autobench = testBranchBench,
             ConnectionId = resultDto.ConnectionId
@@ -311,7 +299,7 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -321,7 +309,7 @@ public class WorkerControllerTests
         Assert.That(test.State, Is.EqualTo(TestState.Autobenched));
         
         RefreshController();
-        var result = await _controller.Autobench(new AutobenchDto
+        var result = await Controller.Autobench(new AutobenchDto
         {
             Autobench = 1,
             ConnectionId = resultDto.ConnectionId
@@ -344,14 +332,14 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
         
         var test = GetTestByConnectionId(resultDto.ConnectionId);
         RefreshController();
-        var result = await _controller.Autobench(new AutobenchDto
+        var result = await Controller.Autobench(new AutobenchDto
         {
             Autobench = test.AutobenchState!.Bench,
             ConnectionId = 100000
@@ -371,13 +359,13 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
         
         RefreshController();
-        var result = await _controller.Autobench(new AutobenchDto
+        var result = await Controller.Autobench(new AutobenchDto
         {
             Autobench = 555555,
             ConnectionId = resultDto.ConnectionId
@@ -396,15 +384,15 @@ public class WorkerControllerTests
     public async Task Results() 
     {
         LoginAs("user_2");
-        var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
+        var resultDto = GetTest<GetTestNonAutobenchResponse>(false, 4);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
-        
+                
         RefreshController();
-        var result = await _controller.Results(new ResultsDto
+        var result = await Controller.Results(new ResultsDto
         {
             Ll = 1,
             Ld = 2,
@@ -420,7 +408,7 @@ public class WorkerControllerTests
         Assert.That(responseDto.Running);
         
         var testId = GetTestByConnectionId(resultDto.ConnectionId).Id;
-        var penta = _factory.CreateDbContext().Pentas.First(x => x.TestId == testId);
+        var penta = Factory.CreateDbContext().Pentas.First(x => x.TestId == testId);
         Assert.Multiple(() =>
         {
             Assert.That(penta.Ll, Is.EqualTo(1));
@@ -441,13 +429,13 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
         
         RefreshController();
-        var result = await _controller.Results(new ResultsDto
+        var result = await Controller.Results(new ResultsDto
         {
             Ll = 1,
             Ld = 2,
@@ -472,13 +460,13 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
         
         RefreshController();
-        _ = await _controller.Results(new ResultsDto
+        _ = await Controller.Results(new ResultsDto
         {
             Ll = 1,
             Ld = 2,
@@ -491,11 +479,11 @@ public class WorkerControllerTests
 
 
         var test = GetTestByConnectionId(resultDto.ConnectionId);
-        await _factory.CreateDbContext().Tests.Where(t => t.Id == test.Id)
+        await Factory.CreateDbContext().Tests.Where(t => t.Id == test.Id)
             .ExecuteUpdateAsync(psc => psc.SetProperty(t => t.State, TestState.Stopped));
 
         RefreshController();
-        var result = await _controller.Results(new ResultsDto
+        var result = await Controller.Results(new ResultsDto
         {
             Ll = 1,
             Ld = 2,
@@ -510,7 +498,7 @@ public class WorkerControllerTests
         Assert.That(responseDto, Is.Not.Null);
         
         Assert.That(!responseDto.Running);
-        var penta = _factory.CreateDbContext().Pentas.First(x => x.TestId == test.Id);
+        var penta = Factory.CreateDbContext().Pentas.First(x => x.TestId == test.Id);
         Assert.Multiple(() =>
         {
             Assert.That(penta.Ll, Is.EqualTo(1));
@@ -532,7 +520,7 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -542,7 +530,7 @@ public class WorkerControllerTests
         var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
         
         RefreshController();
-        var result = _controller.Error(new ErrorDto
+        var result = Controller.Error(new ErrorDto
         {
             Log = file,
             ConnectionId = resultDto.ConnectionId
@@ -552,7 +540,7 @@ public class WorkerControllerTests
         Assert.That(response, Is.Not.Null);
         
         var test = GetTestByConnectionId(resultDto.ConnectionId);
-        var testError = _factory.CreateDbContext()
+        var testError = Factory.CreateDbContext()
             .Errors
             .Include(t => t.Test)
             .First(x => x.Test.Id == test.Id);
@@ -570,7 +558,7 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -580,7 +568,7 @@ public class WorkerControllerTests
         var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
         
         RefreshController();
-        var result = _controller.Error(new ErrorDto
+        var result = Controller.Error(new ErrorDto
         {
             Log = file,
             ConnectionId = 5000000
@@ -599,7 +587,7 @@ public class WorkerControllerTests
         LoginAs("user_2");
         var resultDto = GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        _ = _controller.RunningTest(new RunningTestDto
+        _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -608,7 +596,7 @@ public class WorkerControllerTests
     
     private int TestBranchBench(int testId)
     {
-        var testBranchBench = _factory.CreateDbContext()
+        var testBranchBench = Factory.CreateDbContext()
             .Tests
             .Include(t => t.AutobenchState)
             .First(t => t.Id == testId)
@@ -619,7 +607,7 @@ public class WorkerControllerTests
     
     private void CheckDifferentConnectTimes(int connectionId)
     {
-        var test = _factory.CreateDbContext()
+        var test = Factory.CreateDbContext()
             .Tests
             .AsNoTracking()
             .Include(test => test.WorkerLogs)
@@ -629,42 +617,29 @@ public class WorkerControllerTests
         Assert.That(test.WorkerLogs[0].ConnectTime, Is.Not.EqualTo(test.WorkerLogs[0].LastConnectTime));
     }
     
-    private TDto GetTest<TDto>(bool autobench)
+    private TDto GetTest<TDto>(bool autobench, int numberOfThreads = 1)
     {
         var dto = new GetTestDto
         {
             Autobench = autobench,
             Mac = "AA:BB:CC:DD:EE:FF",
             Name = "WORKSTATION_PC",
-            NumberOfThreads = 1
+            NumberOfThreads = numberOfThreads
         };
-        var result = _controller.GetTest(dto);
+        var result = Controller.GetTest(dto);
         var resultDto = GetResponseValue<TDto, OkObjectResult>(result)!;
         return resultDto;
-    }
-    
-    private T? GetResponseValue<T, TRes>(IActionResult result)
-        where TRes : ObjectResult
-    {
-        return (T?)((TRes)result).Value;
-    }
-    
-    private void LoginAs(string username)
-    {
-        var user = _factory.CreateDbContext().Users.First(u => u.UserName == username);
-        _controller.ControllerContext.HttpContext = new DefaultHttpContext();
-        _controller.HttpContext.Request.Headers.Add(new KeyValuePair<string, StringValues>(Shared.WORKER_REQUEST_HEADER, user.AccessToken));
     }
 
     private void SetAccessToken(string accessToken)
     {
-        _controller.ControllerContext.HttpContext = new DefaultHttpContext();
-        _controller.HttpContext.Request.Headers.Add(new KeyValuePair<string, StringValues>(Shared.WORKER_REQUEST_HEADER, accessToken));
+        Controller.ControllerContext.HttpContext = new DefaultHttpContext();
+        Controller.HttpContext.Request.Headers.Add(new KeyValuePair<string, StringValues>(Shared.WORKER_REQUEST_HEADER, accessToken));
     }
     
     private Test GetTestByConnectionId(int id)
     {
-        var test = _factory.CreateDbContext()
+        var test = Factory.CreateDbContext()
             .WorkerLogs
             .AsNoTracking()
             .Include(workerLog => workerLog.Test)

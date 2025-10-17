@@ -6,6 +6,7 @@ using WebApplication.Tests.Builders;
 
 namespace WebApplication.Tests.Middlewares;
 
+[TestFixture]
 public class WorkerMiddlewareTests : TestBase
 {
     /// <summary>

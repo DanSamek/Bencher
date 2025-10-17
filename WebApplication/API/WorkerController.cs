@@ -73,7 +73,10 @@ public partial class WorkerController : ControllerBase
 
         await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
         
-        workerLog.NumberOfGames += (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
+        var toIncrement = (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
+        if (workerLog.NumberOfGames + toIncrement > workerLog.TotalNumberOfGames) return NotFound(new ResponseBase()); // TODO update docs.
+
+        workerLog.NumberOfGames += toIncrement;
         _workerLogStore.Update(workerLog);
         
         return Ok(new ResultsResponseDto(true));

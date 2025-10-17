@@ -11,8 +11,11 @@ namespace WebApplication.API;
 /// </summary>
 public class WorkerLogWatcher : IHostedService
 {
-    private const int LAST_CONNECT_TIME_MIN_MAX = 1;
-    private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(new TimeSpan(0, 0, LAST_CONNECT_TIME_MIN_MAX, 0));
+    private const int LAST_CONNECT_TIME_MINUTES_MAX = 1;
+    private const int WATCHER_PERIOD_MINUTES = 1;
+    
+    
+    private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(new TimeSpan(0, 0, WATCHER_PERIOD_MINUTES, 0));
     private readonly IServiceScopeFactory _serviceScopeFactory;
     
     /// <summary>
@@ -27,7 +30,7 @@ public class WorkerLogWatcher : IHostedService
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var lowerBoundTime = DateTime.Now.Subtract(new TimeSpan(0, LAST_CONNECT_TIME_MIN_MAX, 0));
+            var lowerBoundTime = DateTime.Now.Subtract(new TimeSpan(0, LAST_CONNECT_TIME_MINUTES_MAX, 0));
 
             await context.WorkerLogs
                 .Where(wl => wl.LastConnectTime < lowerBoundTime)
