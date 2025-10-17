@@ -47,7 +47,7 @@ public partial class WorkerController : ControllerBase
         
         var error = new Error
         {
-            Time = DateTime.Now,
+            Time = DateTime.UtcNow,
             Log = memoryStream.ToArray(),
             Test = workerLog.Test,
             WorkerLog = workerLog
@@ -127,7 +127,7 @@ public partial class WorkerController : ControllerBase
         _workerLogStore.Attach(user!);
         _workerLogStore.Attach(test);
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var wl = new WorkerLog
         {
             InitialTestState = getTestDto.Autobench ? InitialTestState.Autobenched : InitialTestState.Normal,
@@ -159,7 +159,7 @@ public partial class WorkerController : ControllerBase
         if (workerLog is null) return NotFound(new ResponseBase());
         _testStore.SetRunningState(workerLog.Test);
         
-        workerLog.LastConnectTime = DateTime.Now;
+        workerLog.LastConnectTime = DateTime.UtcNow;
         _workerLogStore.Save(workerLog);
         _workerLogStore.SaveChanges();
         

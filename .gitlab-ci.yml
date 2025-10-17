@@ -1,5 +1,10 @@
 image: mcr.microsoft.com/dotnet/sdk:9.0
 
+services:
+  - docker:dind
+variables:
+  DOCKER_HOST: tcp://docker:2375
+
 stages:
     - build
     - test

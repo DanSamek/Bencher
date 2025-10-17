@@ -21,8 +21,7 @@ public class WorkerMiddlewareTests : TestBase
     [TestCase("/www/api", "1111", "1111", true)]
     public async Task PassTest(string requestUri, string? createdAccessToken, string? usedAccessToken, bool shouldPassMiddleware)
     {
-        var factory = CreateContextFactory();
-        new DomainBuilder(factory.CreateDbContext())
+        new DomainBuilder(Factory.CreateDbContext())
             .CreateUser("test_user")
                 .WithAccessToken(createdAccessToken)
                 .Close()
@@ -33,7 +32,7 @@ public class WorkerMiddlewareTests : TestBase
         var workerMiddleware = new WorkerMiddleware();
         var httpContext = new DefaultHttpContext();
         
-        var userStore = new UserStore(factory);
+        var userStore = new UserStore(Factory);
         
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock

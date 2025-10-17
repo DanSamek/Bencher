@@ -42,9 +42,6 @@ public class WorkerControllerTests : WorkerControllerTestBase
                 .AddTest("test_31", "uho", "base_branch", "test_branch")
                     .EnsurePentaCreated(Factory.CreateDbContext())
                     .Close()
-                .AddTest("test_32", "uho", "base_branch", "test_branch_2")
-            .EnsurePentaCreated(Factory.CreateDbContext())
-                    .Close()
                 .Close()
             .Close()
         .Close();
@@ -428,28 +425,6 @@ public class WorkerControllerTests : WorkerControllerTestBase
     [Test]
     public async Task Results_Multithreaded()
     {
-        // TODO maybe write some batch updater.
-        Assert.Fail(
-            );
-        using var context = Factory.CreateDbContext();
-        await context.Users.ExecuteDeleteAsync();
-        
-        new DomainBuilder(Factory.CreateDbContext())
-            .CreateUser("user_1")
-                .WithAccessToken("12345678")
-                .AddEngine("stockfish")
-                    .AddBranch("base_branch")
-                    .AddBranch("test_branch")
-                    .AddTest("test_31", "uho", "base_branch", "test_branch")
-                         .EnsurePentaCreated(Factory.CreateDbContext())
-                    .Close()
-                .Close()
-            .Close()
-        .Close();
-
-        Assert.That(context.Tests.Count(), Is.EqualTo(1));
-        Assert.That(context.Pentas.Count(), Is.EqualTo(1));
-
         var workerThreadsCounts = new[] { 12, 10, 1, 1, 1, 12, 1, 2, 4, 5, 4, 4, 4, 2};
         var bag = new ConcurrentBag<SimplePenta>();
 
@@ -459,7 +434,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         foreach (var workerThreadCounts in workerThreadsCounts)
         {
             RefreshController();
-            LoginAs("user_1");
+            LoginAs("user_3");
             var resultDto = GetTest<GetTestNonAutobenchResponse>(false, workerThreadCounts);
             dtos.Add(resultDto);
             RefreshController();
@@ -490,7 +465,8 @@ public class WorkerControllerTests : WorkerControllerTestBase
             pentaSums.Data[SimplePenta.WW] += simplePenta.At(SimplePenta.WW);
         }
 
-        var penta = Factory.CreateDbContext().Pentas.First();
+        var test = GetTestByConnectionId(dtos[0].ConnectionId);
+        var penta = Factory.CreateDbContext().Pentas.First(p => p.TestId == test.Id);
         Assert.Multiple(() =>
         {
             Assert.That(penta.Ll, Is.EqualTo(pentaSums.Data[SimplePenta.LL]));

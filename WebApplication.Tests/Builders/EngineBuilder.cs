@@ -52,7 +52,7 @@ public class EngineBuilder
         var test = new Test
         {
             Name = name,
-            Created = DateTime.Now,
+            Created = DateTime.UtcNow,
             Priority = priority,
             NumberOfThreads = numberOfThreads,
             HashSize = 16,
@@ -102,7 +102,7 @@ public class EngineBuilder
         var test = new Test
         {
             Name = name,
-            Created = DateTime.Now,
+            Created = DateTime.UtcNow,
             Priority = priority,
             NumberOfThreads = numberOfThreads,
             HashSize = 16,
@@ -151,7 +151,7 @@ public class EngineBuilder
         var test = new Test
         {
             Name = name,
-            Created = DateTime.Now,
+            Created = DateTime.UtcNow,
             Priority = priority,
             NumberOfThreads = numberOfThreads,
             HashSize = 16,
@@ -201,9 +201,9 @@ public class EngineBuilder
                 Mac = "AA:BB:CC:DD:EE:FF",
                 NumberOfGames = 0,
                 TotalNumberOfGames = 64,
-                LastConnectTime = DateTime.Now,
+                LastConnectTime = DateTime.UtcNow,
                 NumberOfThreads = numberOfWorkerThreads,
-                ConnectTime = DateTime.Now,
+                ConnectTime = DateTime.UtcNow,
                 User = user,
                 Test = test,
                 State = WorkerLogState.Active,

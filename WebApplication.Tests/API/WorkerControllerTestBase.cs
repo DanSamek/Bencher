@@ -13,8 +13,6 @@ namespace WebApplication.Tests.API;
 public class WorkerControllerTestBase : TestBase
 {
     protected WorkerController Controller { get; private set; }
-
-    protected TestContextFactory Factory { get; private set; }
     
     /// <summary>
     /// Creates a new instance of the controller.
@@ -24,11 +22,6 @@ public class WorkerControllerTestBase : TestBase
     {
         Controller = new WorkerController(new UserStore(Factory), new WorkerLogStore(Factory), new PentaStore(Factory), 
             new TestStore(Factory), new TestBranchStore(Factory), new AutobenchStateStore(Factory));
-    }
-    
-    public virtual void Setup()
-    {
-        Factory = CreateContextFactory();
     }
     
     protected void LoginAs(string username)

@@ -34,7 +34,7 @@ public static class TestQueueExperiment
             Name = $"Test {n}",
             AutobenchState = null,
             BaseBranch = null!,
-            Created = DateTime.Now,
+            Created = DateTime.UtcNow,
             HashSize = 16,
             NumberOfThreads =1,// (int)Math.Pow(2, random.Next(1, 4)),
             State = TestState.Paused,
@@ -82,7 +82,7 @@ public static class TestQueueExperiment
                     TotalNumberOfGames = 64,
                     Test = testToAddWorker,
                     User = null!,
-                    ConnectTime = DateTime.Now,
+                    ConnectTime = DateTime.UtcNow,
                     Errors = [],
                     State = WorkerLogState.Disconnected,
                     InitialTestState = InitialTestState.Normal

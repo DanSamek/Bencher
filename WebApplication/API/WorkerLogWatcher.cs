@@ -7,7 +7,6 @@ namespace WebApplication.API;
 /// <summary>
 /// Service, that will watch all running worker logs and sets to state Disconnected,
 /// if last now - connection time of the worker log is higher than  LAST_CONNECT_TIME_MIN_MAX.
-/// TODO somehow test.
 /// </summary>
 public class WorkerLogWatcher : IHostedService
 {
@@ -30,7 +29,7 @@ public class WorkerLogWatcher : IHostedService
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var lowerBoundTime = DateTime.Now.Subtract(new TimeSpan(0, LAST_CONNECT_TIME_MINUTES_MAX, 0));
+            var lowerBoundTime = DateTime.UtcNow.Subtract(new TimeSpan(0, LAST_CONNECT_TIME_MINUTES_MAX, 0));
 
             await context.WorkerLogs
                 .Where(wl => wl.LastConnectTime < lowerBoundTime)

@@ -13,11 +13,11 @@ namespace WebApplication.Tests.API;
 public class WorkerLogWatcherTests : WorkerControllerTestBase
 {
     private WorkerLogWatcher _watcher;
-    
+
     [SetUp]
     public override void Setup()
     {
-        base.Setup();    
+        base.Setup();
         var scopeFactory = new TestScopeFactory(Factory);
         _watcher = new WorkerLogWatcher(scopeFactory);
         RefreshController();
@@ -41,7 +41,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     }
 
     /// <summary>
-    /// Watcher test with all running tests + all of them has DateTime.Now as LastConnectTime.
+    /// Watcher test with all running tests + all of them has DateTime.UtcNow as LastConnectTime.
     /// We expect, that all tests will be still in the running state.
     /// </summary>
     [Test]
@@ -60,7 +60,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     }
     
     /// <summary>
-    /// Watcher test with all running tests + all of them has DateTime.Now - (1 min 1 sec) as the LastConnectTime.
+    /// Watcher test with all running tests + all of them has DateTime.UtcNow - (1 min 1 sec) as the LastConnectTime.
     /// We expect, that all tests will be still in the disconnected state.
     /// </summary>
     [Test]
@@ -68,7 +68,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     {
         CreateWorkerLogs(5);
         await using var changingContext = Factory.CreateDbContext();
-        var toChangeDateTime = DateTime.Now.Subtract(new TimeSpan(0,1, 1));
+        var toChangeDateTime = DateTime.UtcNow.Subtract(new TimeSpan(0,1, 1));
         await changingContext.WorkerLogs.ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.LastConnectTime, toChangeDateTime));
         
         Task.Run(async () => { await _watcher.StartAsync(new CancellationToken()); });
