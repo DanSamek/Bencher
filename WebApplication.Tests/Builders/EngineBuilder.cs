@@ -205,7 +205,9 @@ public class EngineBuilder
                 NumberOfThreads = numberOfWorkerThreads,
                 ConnectTime = DateTime.Now,
                 User = user,
-                Test = test
+                Test = test,
+                State = WorkerLogState.Active,
+                InitialTestState = InitialTestState.Autobenched
             };
             
             context.WorkerLogs.Add(wl);

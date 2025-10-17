@@ -9,8 +9,17 @@ namespace WebApplication.Data.Models;
 /// </summary>
 public class WorkerLog : DoId
 {
-    // TODO add WorkerLogState -- Disconnected, Finished, Active.
-    // + InitialTestState -- Autobenched || Normal
+    /// <summary>
+    /// Current state.
+    /// </summary>
+    [Required]
+    public required WorkerLogState  State { get; set; }
+    
+    /// <summary>
+    /// Initial state of the test.
+    /// </summary>
+    [Required]
+    public required InitialTestState InitialTestState { get; set; }
     
     /// <summary>
     /// Time of the connection for the current workload.
@@ -64,5 +73,4 @@ public class WorkerLog : DoId
     /// </summary>
     [Required]
     public required Test Test { get; set; }
-    
 }

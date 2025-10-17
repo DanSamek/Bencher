@@ -61,6 +61,7 @@ builder.Services.AddScoped<PentaStore>();
 #region WorkerAPI
 
 builder.Services.AddSingleton<WorkerMiddleware>();
+builder.Services.AddHostedService<WorkerLogWatcher>();
 builder.Services.AddControllers();
 
 #endregion

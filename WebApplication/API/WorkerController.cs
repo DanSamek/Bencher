@@ -52,7 +52,8 @@ public partial class WorkerController : ControllerBase
             Test = workerLog.Test,
             WorkerLog = workerLog
         };
-        
+
+        workerLog.State = WorkerLogState.Finished;
         _workerLogStore.AddError(workerLog, error);
         _testStore.SetState(workerLog.Test, TestState.Stopped);
         return Ok(new ResponseBase());
@@ -67,9 +68,14 @@ public partial class WorkerController : ControllerBase
         var workerLog = _workerLogStore.GetByConnectionId(resultsDto.ConnectionId);
         if (workerLog is null) return NotFound(new ResponseBase());
         
+        if (workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase()); // TODO update docs.
         if (workerLog.Test.State != TestState.Running) return Ok(new ResultsResponseDto(false));
 
         await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
+        
+        workerLog.NumberOfGames += (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
+        _workerLogStore.Update(workerLog);
+        
         return Ok(new ResultsResponseDto(true));
     }
     
@@ -80,13 +86,16 @@ public partial class WorkerController : ControllerBase
     public async Task<IActionResult> Autobench([FromBody] AutobenchDto autobenchDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(autobenchDto.ConnectionId);
-        if (workerLog is null) return NotFound(new ResponseBase());
+        if (workerLog is null || workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase());
         
         var autobenchState = _autobenchStateStore.GetAutobenchStateByTestId(workerLog.Test.Id);
         if (autobenchState is null) return NotFound(new ResponseBase());
 
         var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
         if (!result) await _testStore.StopTest(workerLog.Test.Id);
+
+        workerLog.State = WorkerLogState.Finished;
+        _workerLogStore.SaveChanges();
         
         _autobenchStateStore.SaveChanges();
         
@@ -114,9 +123,13 @@ public partial class WorkerController : ControllerBase
         _workerLogStore.Attach(user!);
         _workerLogStore.Attach(test);
 
+        var now = DateTime.Now;
         var wl = new WorkerLog
         {
-            ConnectTime = DateTime.Now,
+            InitialTestState = getTestDto.Autobench ? InitialTestState.Autobenched : InitialTestState.Normal,
+            State = WorkerLogState.Active,
+            ConnectTime = now,
+            LastConnectTime = now,
             NumberOfGames = 0,
             TotalNumberOfGames = getTestDto.NumberOfThreads * Shared.GAME_THREAD_COUNT_MULTIPLIER, 
             NumberOfThreads = getTestDto.NumberOfThreads,

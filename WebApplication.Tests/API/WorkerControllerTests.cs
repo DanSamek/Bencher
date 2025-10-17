@@ -16,6 +16,7 @@ public class WorkerControllerTests
     private WorkerController _controller;
     private TestContextFactory _factory;
 
+    // TODO check status of workerlogs.
 
     // For multiple requests in the tests - "fresh" for each request.
     private void RefreshController()

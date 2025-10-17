@@ -32,7 +32,9 @@ public class TestBuilder
             NumberOfThreads = numberOfWorkerThreads,
             ConnectTime = DateTime.Now,
             User = _user,
-            Test = _test
+            Test = _test,
+            State = WorkerLogState.Active,
+            InitialTestState = _test.Autobenched ? InitialTestState.Autobenched : InitialTestState.Normal
         };
         
         _context.WorkerLogs.Add(wl);
