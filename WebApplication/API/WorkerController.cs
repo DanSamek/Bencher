@@ -167,7 +167,7 @@ public partial class WorkerController : ControllerBase
         _testStore.SetRunningState(workerLog.Test);
         
         workerLog.LastConnectTime = DateTime.UtcNow;
-        _workerLogStore.Save(workerLog);
+        _workerLogStore.Update(workerLog);
         _workerLogStore.SaveChanges();
         
         var running = workerLog.Test.State.Running();

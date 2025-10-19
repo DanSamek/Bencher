@@ -8,7 +8,7 @@ public interface IStore<T>
 where T : class
 {
     /// <summary>
-    /// Gets entity by an id - tracked by EF.
+    /// Gets entity by an id.
     /// </summary>
     T? GetById(int id);
 
@@ -16,6 +16,11 @@ where T : class
     /// Updates the entity.
     /// </summary>
     void Update(T entity);
+    
+    /// <summary>
+    /// Adds the entity.
+    /// </summary>
+    void Add(T entity);
 
     /// <summary>
     /// Deletes an entity. 

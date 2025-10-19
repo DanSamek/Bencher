@@ -27,20 +27,10 @@ public class WorkerLogStore : Store<WorkerLog>
         
         return workerLog;
     }
-    /// <summary>
-    /// Saves a worker log.
-    /// </summary>
-    public void Save(WorkerLog workerLog) => Context.WorkerLogs.Update(workerLog);
     
-    
-    /// <summary>
-    /// Creates a worker log.
-    /// </summary>
-    /// <param name="workerLog"></param>
-    public void Add(WorkerLog workerLog) => Context.WorkerLogs.Add(workerLog);
-
     /// <summary>
     /// Adds error to the worker log.
+    /// NOTE: WorkerLog has to be tracked.
     /// </summary>
     public void AddError(WorkerLog workerLog, Error error)
     {

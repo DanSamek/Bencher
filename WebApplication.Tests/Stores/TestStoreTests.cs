@@ -746,6 +746,38 @@ public class TestStoreTests : TestBase
         Assert.That(test.State, Is.EqualTo(expectedState));
     }
 
+    /// <summary>
+    /// Test for <see cref="TestStore.GetById" />.
+    /// </summary>
+    [Test]
+    public void GetById()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+                .AddBranch("base_branch")
+                .AddBranch("test_branch")
+                .AddTest("test_1", "test_book", "base_branch", "test_branch", numberOfThreads: 4)
+                    .EnsurePentaCreated(Factory.CreateDbContext())
+                    .AddWorker(1)
+                    .Close()
+                .Close()
+            .Close()
+        .Close();
+
+        var testStore = new TestStore(Factory);
+        var testId = Factory.CreateDbContext().Tests.First()!.Id;
+        var test = testStore.GetById(testId);
+        
+        Assert.That(test, Is.Not.Null);
+        Assert.That(test.Penta, Is.Not.Null);
+        Assert.That(test.TestBranch, Is.Not.Null);
+        Assert.That(test.BaseBranch, Is.Not.Null);
+        Assert.That(test.Settings, Is.Not.Null);
+    }
+    
     private static Test GetTestByName(TestContextFactory factory, string name)
     {
         using var context = factory.CreateDbContext();

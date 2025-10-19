@@ -60,6 +60,14 @@ where T : class
         SaveChanges();
     }
 
+    /// <inheritdoc /> 
+    public void Add(T entity)
+    {
+        var dbSet = GetDbSet();
+        dbSet.Add(entity);
+        SaveChanges();
+    }
+
     public void Attach(object entity) => Context.Attach(entity);
 
     protected abstract DbSet<T> GetDbSet();
