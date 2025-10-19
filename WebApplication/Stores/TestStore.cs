@@ -14,6 +14,22 @@ public class TestStore : Store<Test>
     /// <inheritdoc /> 
     protected override DbSet<Test> GetDbSet() => Context.Tests;
     
+    /// <inheritdoc />
+    /// NOTE: Loads all entities related to the test [not tracked!]
+    public override Test? GetById(int id)
+    {
+        var result = Context.Tests
+            .AsNoTracking()
+            .Include(t => t.Penta)
+            .Include(t => t.AutobenchState)
+            .Include(t => t.BaseBranch)
+            .Include(t => t.TestBranch)
+            .Include(t => t.Settings)
+            .FirstOrDefault(t => t.Id == id);
+        
+        return result;
+    }
+
     /// <summary>
     /// Returns a test, that should be run on the worker.
     /// Note, this method also includes <see cref="Test.WorkerLogs" />, <see cref="Test.Engine" /> and <see cref="Test.AutobenchState" /> 

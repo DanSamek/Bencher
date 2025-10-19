@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication.API.Dtos.Requests;
 using WebApplication.API.Dtos.Responses;
 using WebApplication.Data.Models;
+using WebApplication.SPRT;
 using WebApplication.Stores;
 
 namespace WebApplication.API;
@@ -78,7 +79,13 @@ public partial class WorkerController : ControllerBase
         workerLog.NumberOfGames += toIncrement;
         _workerLogStore.Update(workerLog);
         
-        // TODO SPRT part if test is finished.
+        // SPRT part. 
+        var test = _testStore.GetById(workerLog.Test.Id)!;
+        var statistics = Sprt.GetStatistics(test);
+        if (statistics.Result != Sprt.SprtResult.Unknown)
+        {
+            await _testStore.SetState(test.Id, TestState.Finished);
+        }
         
         return Ok(new ResultsResponseDto(true));
     }

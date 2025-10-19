@@ -37,7 +37,7 @@ where T : class
 
     
     /// <inheritdoc />
-    public T? GetById(int id)
+    public virtual T? GetById(int id)
     {
         var dbSet = GetDbSet();
         var result = dbSet.Find(id);

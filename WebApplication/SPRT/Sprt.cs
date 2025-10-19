@@ -32,11 +32,13 @@ public static class Sprt
     
     /// <summary>
     /// Calculates test statistics for a test.
+    /// Requirements: Included Penta.
+    /// Note, we don't store statistics in the database so far.
     /// </summary>
     public static Statistics GetStatistics(Test test)
     {
         var score = test.Penta.Score;
-        
+        // TODO !!
         var result = new Statistics
         {
             Result =  SprtResult.Unknown,
