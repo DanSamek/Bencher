@@ -8,7 +8,7 @@ namespace WebApplication.API;
 /// Service, that will watch all running worker logs and sets to state Disconnected,
 /// if last now - connection time of the worker log is higher than  LAST_CONNECT_TIME_MIN_MAX.
 /// </summary>
-public class WorkerLogWatcher : IHostedService
+public class WorkerLogWatcher : BackgroundService
 {
     private const int LAST_CONNECT_TIME_MINUTES_MAX = 1;
     private const int WATCHER_PERIOD_MINUTES = 1;
@@ -21,9 +21,10 @@ public class WorkerLogWatcher : IHostedService
     /// .Ctor 
     /// </summary>
     public WorkerLogWatcher(IServiceScopeFactory serviceScopeFactory) => _serviceScopeFactory = serviceScopeFactory;
+
     
     /// <inheritdoc /> 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (true)
         {
@@ -33,13 +34,9 @@ public class WorkerLogWatcher : IHostedService
 
             await context.WorkerLogs
                 .Where(wl => wl.LastConnectTime < lowerBoundTime)
-                .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Disconnected), cancellationToken: cancellationToken);
+                .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Disconnected), cancellationToken: stoppingToken);
             
-            await _periodicTimer.WaitForNextTickAsync(cancellationToken);
+            await _periodicTimer.WaitForNextTickAsync(stoppingToken);
         }
     }
-    
-    /// <inheritdoc /> 
-    public Task StopAsync(CancellationToken cancellationToken)=> Task.CompletedTask;
-    
 }

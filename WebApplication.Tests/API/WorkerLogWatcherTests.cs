@@ -14,6 +14,12 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
 {
     private WorkerLogWatcher _watcher;
 
+    [TearDown]
+    public void TearDown()
+    {
+        _watcher.Dispose();
+    }
+    
     [SetUp]
     public override void Setup()
     {

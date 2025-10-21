@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace WebApplication.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,10 +16,10 @@ namespace WebApplication.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,22 +30,22 @@ namespace WebApplication.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    AccessToken = table.Column<string>(type: "TEXT", maxLength: 16, nullable: true),
-                    UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    AccessToken = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: true),
+                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "text", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -52,31 +53,15 @@ namespace WebApplication.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OpeningBooks",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Data = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    Type = table.Column<byte>(type: "INTEGER", nullable: false),
-                    Depth = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OpeningBooks", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "SprtSettings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Elo0 = table.Column<int>(type: "INTEGER", nullable: false),
-                    Elo1 = table.Column<int>(type: "INTEGER", nullable: false),
-                    Alpha = table.Column<double>(type: "REAL", nullable: false),
-                    Beta = table.Column<double>(type: "REAL", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Elo0 = table.Column<int>(type: "integer", nullable: false),
+                    Elo1 = table.Column<int>(type: "integer", nullable: false),
+                    Alpha = table.Column<double>(type: "double precision", nullable: false),
+                    Beta = table.Column<double>(type: "double precision", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -87,11 +72,11 @@ namespace WebApplication.Migrations
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleId = table.Column<string>(type: "text", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -108,11 +93,11 @@ namespace WebApplication.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    ClaimType = table.Column<string>(type: "text", nullable: true),
+                    ClaimValue = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -129,10 +114,10 @@ namespace WebApplication.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderKey = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "TEXT", nullable: true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false)
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    ProviderKey = table.Column<string>(type: "text", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -149,8 +134,8 @@ namespace WebApplication.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false)
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    RoleId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -173,10 +158,10 @@ namespace WebApplication.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: true)
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -193,13 +178,12 @@ namespace WebApplication.Migrations
                 name: "Engines",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    GitUrl = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    BuildScriptWindows = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
-                    BuildScriptLinux = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    GitUrl = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    BuildScript = table.Column<byte[]>(type: "bytea", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -213,14 +197,36 @@ namespace WebApplication.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "OpeningBooks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Data = table.Column<byte[]>(type: "bytea", nullable: false),
+                    Type = table.Column<byte>(type: "smallint", nullable: false),
+                    Depth = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OpeningBooks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OpeningBooks_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TestBranches",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Bench = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 30, nullable: false),
-                    EngineId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Bench = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    EngineId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -237,23 +243,24 @@ namespace WebApplication.Migrations
                 name: "Tests",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: true),
-                    Created = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
-                    Autobenched = table.Column<bool>(type: "INTEGER", nullable: false),
-                    NumberOfThreads = table.Column<int>(type: "INTEGER", nullable: false),
-                    HashSize = table.Column<int>(type: "INTEGER", nullable: false),
-                    TimeManagement = table.Column<string>(type: "TEXT", maxLength: 30, nullable: false),
-                    State = table.Column<byte>(type: "INTEGER", nullable: false),
-                    SettingsId = table.Column<int>(type: "INTEGER", nullable: false),
-                    OpeningBookId = table.Column<int>(type: "INTEGER", nullable: false),
-                    EngineId = table.Column<int>(type: "INTEGER", nullable: false),
-                    BaseBranchId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TestBranchId = table.Column<int>(type: "INTEGER", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: true),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Priority = table.Column<int>(type: "integer", nullable: false),
+                    NumberOfThreads = table.Column<int>(type: "integer", nullable: false),
+                    HashSize = table.Column<int>(type: "integer", nullable: false),
+                    TimeManagement = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    State = table.Column<byte>(type: "smallint", nullable: false),
+                    SettingsId = table.Column<int>(type: "integer", nullable: false),
+                    OpeningBookId = table.Column<int>(type: "integer", nullable: false),
+                    EngineId = table.Column<int>(type: "integer", nullable: false),
+                    BaseBranchId = table.Column<int>(type: "integer", nullable: false),
+                    TestBranchId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    ThreadScale = table.Column<int>(type: "integer", nullable: false),
+                    Autobenched = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -297,17 +304,41 @@ namespace WebApplication.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AutobenchStates",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    TestId = table.Column<int>(type: "integer", nullable: false),
+                    Bench = table.Column<int>(type: "integer", nullable: false),
+                    Confidence = table.Column<double>(type: "double precision", nullable: false),
+                    Resolved = table.Column<bool>(type: "boolean", nullable: false),
+                    UserConfidence = table.Column<double>(type: "double precision", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AutobenchStates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AutobenchStates_Tests_TestId",
+                        column: x => x.TestId,
+                        principalTable: "Tests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Pentas",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Ll = table.Column<int>(type: "INTEGER", nullable: false),
-                    Ld = table.Column<int>(type: "INTEGER", nullable: false),
-                    Dd = table.Column<int>(type: "INTEGER", nullable: false),
-                    Wd = table.Column<int>(type: "INTEGER", nullable: false),
-                    Ww = table.Column<int>(type: "INTEGER", nullable: false),
-                    TestId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Ll = table.Column<int>(type: "integer", nullable: false),
+                    Ld = table.Column<int>(type: "integer", nullable: false),
+                    Dd = table.Column<int>(type: "integer", nullable: false),
+                    Wl = table.Column<int>(type: "integer", nullable: false),
+                    Wd = table.Column<int>(type: "integer", nullable: false),
+                    Ww = table.Column<int>(type: "integer", nullable: false),
+                    TestId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -324,13 +355,18 @@ namespace WebApplication.Migrations
                 name: "WorkerLogs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ConnectTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    NumberOfGames = table.Column<int>(type: "INTEGER", nullable: false),
-                    Mac = table.Column<int>(type: "INTEGER", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    TestId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    State = table.Column<int>(type: "integer", nullable: false),
+                    InitialTestState = table.Column<int>(type: "integer", nullable: false),
+                    ConnectTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastConnectTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    NumberOfGames = table.Column<int>(type: "integer", nullable: false),
+                    TotalNumberOfGames = table.Column<int>(type: "integer", nullable: false),
+                    NumberOfThreads = table.Column<int>(type: "integer", nullable: false),
+                    Mac = table.Column<string>(type: "character varying(17)", maxLength: 17, nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    TestId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -353,12 +389,12 @@ namespace WebApplication.Migrations
                 name: "Errors",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Time = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Log = table.Column<string>(type: "TEXT", nullable: false),
-                    TestId = table.Column<int>(type: "INTEGER", nullable: false),
-                    WorkerLogId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Time = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Log = table.Column<byte[]>(type: "bytea", nullable: false),
+                    TestId = table.Column<int>(type: "integer", nullable: false),
+                    WorkerLogId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -415,6 +451,12 @@ namespace WebApplication.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_AutobenchStates_TestId",
+                table: "AutobenchStates",
+                column: "TestId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Engines_UserId",
                 table: "Engines",
                 column: "UserId");
@@ -430,6 +472,11 @@ namespace WebApplication.Migrations
                 column: "WorkerLogId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OpeningBooks_UserId",
+                table: "OpeningBooks",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Pentas_TestId",
                 table: "Pentas",
                 column: "TestId",
@@ -443,8 +490,7 @@ namespace WebApplication.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Tests_BaseBranchId",
                 table: "Tests",
-                column: "BaseBranchId",
-                unique: true);
+                column: "BaseBranchId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tests_EngineId",
@@ -464,8 +510,7 @@ namespace WebApplication.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Tests_TestBranchId",
                 table: "Tests",
-                column: "TestBranchId",
-                unique: true);
+                column: "TestBranchId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tests_UserId",
@@ -500,6 +545,9 @@ namespace WebApplication.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "AutobenchStates");
 
             migrationBuilder.DropTable(
                 name: "Errors");
