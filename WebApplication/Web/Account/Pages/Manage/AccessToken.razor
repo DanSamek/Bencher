@@ -1,0 +1,47 @@
+@page "/Account/AccessToken"
+
+@using Microsoft.AspNetCore.Identity
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+
+@inject UserStore UserStore
+@inject UserManager<ApplicationUser> UserManager
+
+@rendermode InteractiveServer
+
+@{ 
+    var user = UserStore.GetById(_userId);
+}
+@if (user?.AccessToken is not null)
+{
+    <h2>Access token</h2>
+    <code>@user.AccessToken</code>
+    <button class="btn" @onclick="RemoveAccessToken">Remove access token</button>
+}
+else
+{
+    <button class="btn" @onclick="CreateAccessToken">Create access token</button>
+}
+
+@code {
+    [CascadingParameter] 
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    private string _userId = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        _userId = UserManager.GetUserId(authState.User)!;
+    }
+
+    private void CreateAccessToken()
+    {
+        UserStore.CreateAccessToken(_userId);
+    }
+
+    private void RemoveAccessToken()
+    {
+        UserStore.RemoveAccessToken(_userId);
+    }
+}

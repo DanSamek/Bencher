@@ -30,7 +30,6 @@ where T : class
     /// <inheritdoc cref="IDisposable.Dispose"/>
     public void Dispose()
     {
-        SaveChanges();
         Context.Dispose();
         GC.SuppressFinalize(this);
     }

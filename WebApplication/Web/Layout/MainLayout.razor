@@ -14,3 +14,24 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+
+@code {
+    // TODO somehow figure out
+    /*
+    [CascadingParameter] 
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    
+    private ApplicationUser? _user;
+    protected override async Task OnInitializedAsync()
+    {
+        
+        var authState = await AuthenticationStateTask;
+        var userId = UserManager.GetUserId(authState.User);
+        if (userId is not null)
+        {
+            _user = await UserManager.FindByIdAsync(userId);
+        }
+        StateHasChanged();
+    }*/
+}
