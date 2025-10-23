@@ -8,6 +8,7 @@ using WebApplication.Data;
 using WebApplication.Data.Models;
 using WebApplication.API;
 using WebApplication.Stores;
+using WebApplication.Web;
 
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 

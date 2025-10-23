@@ -1,0 +1,26 @@
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
+
+<div class="nav-item" style="cursor: pointer" @onclick="NavigateTo">
+    <a class="nav-link">
+        @ChildContent
+    </a>
+</div>
+
+@code {
+    
+    /// <summary>
+    /// Redirect url.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required string Url { get; set; }
+    
+    /// <summary>
+    /// Renderfragment in the link. 
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required RenderFragment ChildContent { get; set; }
+    
+    private void NavigateTo() => NavigationManager.NavigateTo(Url, true);
+}
