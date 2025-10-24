@@ -5,6 +5,7 @@
 @using Microsoft.AspNetCore.Identity
 @using WebApplication.Components.Account
 @using WebApplication.Data.Models
+@using WebApplication.Web.Components
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager NavigationManager
@@ -12,43 +13,41 @@
 
 <PageTitle>Log in</PageTitle>
 
-<h1>Log in</h1>
-<div class="row">
-    <div class="col-lg-6">
-        <section>
-            <StatusMessage Message="@_errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
-                <DataAnnotationsValidator />
-                <ValidationSummary class="text-danger" role="alert" />
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Username" id="Input.Username" class="form-control" aria-required="true" />
-                    <label for="Input.Username" class="form-label">Username</label>
-                    <ValidationMessage For="() => Input.Username" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" aria-required="true" />
-                    <label for="Input.Password" class="form-label">Password</label>
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
-                </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
-                </div>
-                <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a href="Account/ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register</a>
-                    </p>
-                </div>
-            </EditForm>
-        </section>
+<div class="d-flex flex-column align-items-center">
+    <PageHeader Value="Log in"/>
+    <div class="col-xl-6 col-12 pt-2">
+        <StatusMessage Message="@_errorMessage" />
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Username" id="Input.Username" class="form-control" aria-required="true" />
+                <label for="Input.Username" class="form-label">Username</label>
+                <ValidationMessage For="() => Input.Username" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" aria-required="true" />
+                <label for="Input.Password" class="form-label">Password</label>
+                <ValidationMessage For="() => Input.Password" class="text-danger" />
+            </div>
+            <div class="checkbox mb-3">
+                <label class="form-label">
+                    <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
+                    Remember me
+                </label>
+            </div>
+            <div>
+                <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+            </div>
+            <div class="d-flex pt-3 justify-content-center gap-3">
+                <p>
+                    <a href="Account/ForgotPassword">Forgot your password?</a>
+                </p>
+                <p>
+                    <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register</a>
+                </p>
+            </div>
+        </EditForm>
     </div>
 </div>
 

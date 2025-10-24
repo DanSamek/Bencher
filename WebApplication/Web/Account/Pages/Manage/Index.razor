@@ -8,23 +8,22 @@
 @using Microsoft.AspNetCore.Identity
 @using WebApplication.Components.Account
 @using WebApplication.Data.Models
+@using WebApplication.Web.Components
 
-<h3>Manage account</h3>
-<StatusMessage Message="@_message" />
-
-<div class="row">
-    <div class="col-xl-6">
+<div class="d-flex flex-column align-items-center">
+    <PageHeader Value="Manage account" /> 
+    <div class="col-xl-6 col-12 pt-2">
+        <StatusMessage Message="@_message"/>
         <EditForm Model="Input" FormName="manage" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator/>
-            <ValidationSummary class="text-danger" role="alert"/>
             <div class="form-floating mb-3">
                 <input type="text" value="@_username" id="username" class="form-control" disabled/>
                 <label for="username" class="form-label">Username</label>
             </div>
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail" class="form-control" aria-required="true" />
+                <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail" class="form-control" aria-required="true"/>
                 <label for="Input.NewEmail" class="form-label">New email</label>
-                <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
+                <ValidationMessage For="() => Input.NewEmail" class="text-danger"/>
             </div>
             <div class="form-floating mb-3">
                 <InputText type="password" @bind-Value="Input.CurrentPassword" id="Input.CurrentPassword" class="form-control"/>

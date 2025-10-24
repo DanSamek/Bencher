@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Identity
 @using WebApplication.Components.Account
 @using WebApplication.Data.Models
+@using WebApplication.Web.Components
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -12,14 +13,13 @@
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Register</PageTitle>
-<h1>Register</h1>
-<div class="row">
-    <div class="col-lg-6">
+
+<div class="d-flex flex-column align-items-center">
+    <PageHeader Value="Register"/>
+    <div class="col-xl-6 col-12 pt-2">
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
-            <hr />
-            <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" aria-required="true" />
                 <label for="Input.Email">Email</label>
@@ -114,6 +114,7 @@
         public string Password { get; set; } = "";
 
         [Display(Name = "Confirm password")]
+        [Required]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
     }

@@ -2,19 +2,28 @@
 
 @rendermode InteractiveServer
 
-<div class="nav-item" style="cursor: pointer" @onclick="NavigateTo">
+@{
+    var additionalClass = IsMobile ? "nav-link d-flex align-items-center" : string.Empty;
+}
+
+<div class="nav-item @additionalClass" style="cursor: pointer" @onclick="NavigateTo">
     <a class="nav-link">
         @ChildContent
     </a>
 </div>
 
 @code {
-    
     /// <summary>
     /// Redirect url.
     /// </summary>
     [EditorRequired, Parameter]
     public required string Url { get; set; }
+
+    /// <summary>
+    /// If icon is rendered for mobile. 
+    /// </summary>
+    [CascadingParameter]
+    public bool IsMobile { get; set; }
     
     /// <summary>
     /// Renderfragment in the link. 
