@@ -1,8 +1,14 @@
 ﻿@inherits LayoutComponentBase
 
+@using Microsoft.AspNetCore.Identity
+@using WebApplication.Data.Models
+
+@inject UserManager<ApplicationUser> UserManager
+
+
 <NavMenu />
 <div class="page">
-    <main class="content px-4" style="padding-top: 5rem" >
+    <main class="content px-4" style="padding-top: 5rem">
         <div>
             @Body
         </div>
@@ -15,23 +21,5 @@
     <span class="dismiss">🗙</span>
 </div>
 
-
 @code {
-    // TODO somehow figure out
-    /*
-    [CascadingParameter] 
-    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-    
-    private ApplicationUser? _user;
-    protected override async Task OnInitializedAsync()
-    {
-        
-        var authState = await AuthenticationStateTask;
-        var userId = UserManager.GetUserId(authState.User);
-        if (userId is not null)
-        {
-            _user = await UserManager.FindByIdAsync(userId);
-        }
-        StateHasChanged();
-    }*/
 }

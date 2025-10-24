@@ -1,0 +1,60 @@
+@inherits AuthorizedPageBase
+
+@page "/Engines/Manage"
+
+@using Microsoft.AspNetCore.Authorization
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+
+@inject EngineStore EngineStore
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+<CascadingValue Value="this"> 
+    <h1>Engine management</h1>
+    
+    <div>
+        <button @onclick="ShowCreateEngineForm" type="button" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"></path>
+            </svg>
+        </button>
+    </div>
+
+    @if (_showCreateEngineForm)
+    {
+        <CreateEngineForm />
+    }
+
+    <div>
+        <h3>All engines</h3>
+        @foreach (var engine in _engines)
+        {
+            <EngineDetail Engine="engine" />
+        }
+    </div>
+
+</CascadingValue>
+@code {
+    private bool _showCreateEngineForm;
+    private List<Engine> _engines = [];
+    
+    private void ShowCreateEngineForm() => _showCreateEngineForm = true;
+    
+    /// <inheritdoc /> 
+    protected override void OnParametersSet()
+    {
+        if (UserId is not null)
+        {
+            ReloadState();
+        }
+    }
+    
+    internal void ReloadState()
+    {
+        _engines = EngineStore.GetEnginesForUser(UserId!);
+        StateHasChanged();
+    }
+}

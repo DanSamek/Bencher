@@ -1,0 +1,26 @@
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using WebApplication.Data.Models
+
+@inject UserManager<ApplicationUser> UserManager
+
+@attribute [Authorize]
+
+@code {
+    /// <summary>
+    /// Currently logged user id. 
+    /// </summary>
+    protected string? UserId { get; set; }
+    
+    [CascadingParameter] 
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    
+    /// <inheritdoc /> 
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        UserId = UserManager.GetUserId(authState.User);
+    }
+
+
+}
