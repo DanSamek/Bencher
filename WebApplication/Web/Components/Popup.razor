@@ -1,0 +1,89 @@
+@inherits CustomComponentBase
+
+@using WebApplication.Components.Components
+
+@if (_visible)
+{
+    <div id="@_id" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="@TitleId()" aria-hidden="true" style="display: block">
+        <div class="modal-dialog" role="document"  style="z-index:1055">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="@TitleId()">@Title</h5>
+                    <button class="btn" @onclick="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @ChildContent
+                </div>
+                @if (ShowFooter())
+                {
+                    <div class="modal-footer">
+                        @if (CloseButtonText is not null)
+                        {
+                            <button type="button" class="btn btn-secondary" @onclick="Close">@CloseButtonText</button>
+                        }
+                        @if (SaveButtonText is not null)
+                        {
+                            <button type="button" class="btn btn-primary" @onclick="Close">@SaveButtonText</button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="modal-backdrop fade show" @onclick="Close"></div>
+    </div>
+}
+
+@code {
+    private uint _id = IdGenerator.GetId();
+    private bool _visible = false;
+    
+    /// <summary>
+    /// Title of the pop-up.
+    /// </summary>
+    [Parameter]
+    public string? Title { get; set; }
+    
+    /// <summary>
+    /// Content, that will be rendered.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required RenderFragment ChildContent { get; set; }
+    
+    /// <summary>
+    /// Text for close button.
+    /// </summary>
+    [Parameter]
+    public string? CloseButtonText { get; set; }
+    
+    /// <summary>
+    /// Text for save button.
+    /// </summary>
+    [Parameter]
+    public string? SaveButtonText { get; set; }
+
+    /// <summary>
+    /// Shows popup. 
+    /// </summary>
+    public void Show()
+    {
+        _visible = true;
+        StateHasChanged();
+    }
+    
+    /// <summary>
+    /// Closes a popup.
+    /// </summary>
+    public void Close()
+    {
+        _visible = false;
+        StateHasChanged();
+    }
+    
+    private string TitleId() => $"title_{_id}";
+    private bool ShowFooter() => SaveButtonText is not null || CloseButtonText is not null;
+
+}
