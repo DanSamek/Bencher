@@ -80,12 +80,12 @@ public class EngineStore : Store<Engine>
     }
 
     /// <summary>
-    /// Check if any test is running for the engine. 
+    /// Check if any test is not finished.
     /// </summary>
-    public bool AnyRunningTest(int engineId)
+    public bool AnyNotFinishedTest(int engineId)
     {
         var result = Context.Tests
-            .Any(t => t.State == TestState.Running || t.State == TestState.Autobenched);
+            .Any(t => t.Engine.Id == engineId && t.State != TestState.Stopped && t.State != TestState.Finished);
         return result;
     }
 }
