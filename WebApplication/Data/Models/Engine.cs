@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 
 namespace WebApplication.Data.Models;
 
@@ -44,4 +45,15 @@ public class Engine : DoId
     /// </summary>
     [Required]
     public required List<TestBranch> Branches { get; set; } = [];
+    
+    /// <summary>
+    /// Converts build script to the string. 
+    /// </summary>
+    public string GetBuildScriptString() => Encoding.ASCII.GetString(BuildScript);
+    
+    /// <summary>
+    /// Helper function for string buildscript conversion to the byte array. 
+    /// </summary>
+    public static byte[] GetBuildScriptBytes(string buildScript) => Encoding.ASCII.GetBytes(buildScript);
+
 }

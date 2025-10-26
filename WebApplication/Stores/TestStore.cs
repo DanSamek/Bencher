@@ -136,6 +136,21 @@ public class TestStore : Store<Test>
         Context.SaveChanges();
     }
     
+    /// <summary>
+    /// Returns "count" recent tests. 
+    /// </summary>
+    public IReadOnlyList<Test> RecentTests(int engineId, int count)
+    {
+        var result = 
+            GetDbSet()
+                .AsNoTracking()
+                .OrderByDescending(t => t.Created)
+                .Take(count)
+                .ToArray();
+        
+        return result;
+    }
+    
     private IQueryable<Test> Include()
         => Context.Tests
             .Include(t => t.Engine)

@@ -10,4 +10,7 @@ public class CustomComponentBase : ComponentBase
 {
     [Inject]
     public required IJSRuntime JsRuntime { get; set; }
+    
+    [Inject] 
+    public required NavigationManager NavigationManager { get; set; }
 }

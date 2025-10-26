@@ -13,26 +13,27 @@
 
 @attribute [Authorize]
 
-<CascadingValue Value="this"> 
+<CascadingValue Value="this">
     <PageHeader Value="Engine management"/>
-    
-    <button type="button" class="btn btn-primary" @onclick="ShowPopup">
+
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-2" @onclick="ShowPopup">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
             <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"></path>
         </svg>
+        Add engine
     </button>
-    
-    <Popup @ref="_popup">
+
+    <Popup @ref="_popup" Title="Add engine">
         <ChildContent>
-            <CreateEngineForm />
+            <AddEngineForm OnEngineAdd="ReloadState"/>
         </ChildContent>
     </Popup>
 
-    <div>
+    <div class="pt-3">
         <h3>All engines</h3>
         @foreach (var engine in _engines)
         {
-            <EngineDetail Engine="engine" />
+            <EngineRow Engine="engine" OnEngineDelete="ReloadState"/>
         }
     </div>
 
@@ -51,7 +52,7 @@
         }
     }
     
-    internal void ReloadState()
+    private void ReloadState()
     {
         _engines = EngineStore.GetEnginesForUser(UserId!);
         _popup?.Close();

@@ -1,0 +1,33 @@
+@inherits AuthorizedPageBase
+
+@using WebApplication.Stores
+
+@inject EngineStore EngineStore
+
+<EditForm Model="_formData" OnValidSubmit="AddEngine" FormName="AddEngine">
+    <DataAnnotationsValidator/>
+    <InputText @bind-Value="@_formData.Name" Id="Name"></InputText>
+    <ValidationMessage For="@(() => _formData.Name)"/>
+
+    <InputText @bind-Value="@_formData.GitUrl" Id="GitUrl"></InputText>
+    <ValidationMessage For="@(() => _formData.GitUrl)"/>
+    
+    <InputTextArea @bind-Value="@_formData.BuildScript" Id="BuildScript" /> @*TODO monaco editor?*@
+    <ValidationMessage For="@(() => _formData.BuildScript)"/>
+    
+    <button type="submit" class="btn btn-primary" value="Save">Add</button>
+</EditForm>
+
+@code {
+    private EngineFormModel _formData = new EngineFormModel();
+    
+    [Parameter, EditorRequired]
+    public required Action OnEngineAdd { get; set; }
+    
+    private void AddEngine()
+    {
+        // TODO validate gitlab uri.
+        EngineStore.Add(_formData.Name, _formData.GitUrl, _formData.BuildScript, UserId!);
+        OnEngineAdd.Invoke();
+    }
+}

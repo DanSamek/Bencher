@@ -1,0 +1,51 @@
+@inherits AuthorizedPageBase
+
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+
+@inject EngineStore EngineStore
+
+@* Edit is only possible when no test is running !*@
+
+<EditForm Model="_formData" OnValidSubmit="EditEngine" FormName="EditEngine">
+    <DataAnnotationsValidator/>
+    <InputText @bind-Value="@_formData.Name" Id="Name"></InputText>
+    <ValidationMessage For="@(() => _formData.Name)"/>
+    
+    <InputText @bind-Value="@_formData.GitUrl" Id="GitUrl"></InputText>
+    <ValidationMessage For="@(() => _formData.GitUrl)"/>
+    
+    <InputTextArea @bind-Value="@_formData.BuildScript" Id="BuildScript" /> @*TODO monaco editor?*@
+    <ValidationMessage For="@(() => _formData.BuildScript)"/>
+    
+    <button type="submit" class="btn btn-primary" value="Save">Save</button>
+</EditForm>
+
+@code {
+    private EngineFormModel _formData = null!;
+    
+    [Parameter, EditorRequired]
+    public required Action OnEngineEdit { get; set; }
+    
+    [Parameter, EditorRequired]
+    public required Engine Engine { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        _formData = new EngineFormModel
+        {
+            Name = Engine.Name,
+            GitUrl = Engine.GitUrl,
+            BuildScript = Engine.GetBuildScriptString()
+        };
+    }
+
+    private void EditEngine()
+    {
+        // TODO validate gitlab uri.
+        
+        EngineStore.Update(Engine.Id, _formData.Name, _formData.GitUrl, _formData.BuildScript);
+        OnEngineEdit.Invoke();
+    }
+}

@@ -40,7 +40,7 @@ public class EngineStore : Store<Engine>
         var user = Context.Users
             .First(u => u.Id == userId);
         
-        var buildScriptBytes = Encoding.ASCII.GetBytes(buildScript);
+        var buildScriptBytes = Engine.GetBuildScriptBytes(buildScript);
         
         var engine = new Engine
         {
@@ -62,5 +62,30 @@ public class EngineStore : Store<Engine>
     public void DeleteById(int id)
     {
         GetDbSet().Where(e => e.Id == id).ExecuteDelete();
+    }
+
+    /// <summary>
+    /// Updates an engine.
+    /// </summary>
+    public void Update(int engineId, string name, string gitUrl, string buildScript)
+    {
+        var bytes = Engine.GetBuildScriptBytes(buildScript);
+        GetDbSet()
+            .Where(e => e.Id == engineId)
+            .ExecuteUpdateAsync(spc =>
+                spc.SetProperty(t => t.Name, name)
+                    .SetProperty(t => t.GitUrl, gitUrl)
+                    .SetProperty(t => t.BuildScript, bytes)
+            );
+    }
+
+    /// <summary>
+    /// Check if any test is running for the engine. 
+    /// </summary>
+    public bool AnyRunningTest(int engineId)
+    {
+        var result = Context.Tests
+            .Any(t => t.State == TestState.Running || t.State == TestState.Autobenched);
+        return result;
     }
 }
