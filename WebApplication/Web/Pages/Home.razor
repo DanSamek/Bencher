@@ -1,6 +1,12 @@
 ﻿@page "/"
 @using WebApplication.Web.Components
 
+@rendermode InteractiveServer
+
 <PageTitle>Home</PageTitle>
 
 <PageHeader Value="Bencher" />
+
+<div style="height: 500px;">
+    <CodeEditor Language="javascript" InitialValue="function test(value){}" />
+</div>

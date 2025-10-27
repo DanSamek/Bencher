@@ -72,7 +72,7 @@ public class EngineStore : Store<Engine>
         var bytes = Engine.GetBuildScriptBytes(buildScript);
         GetDbSet()
             .Where(e => e.Id == engineId)
-            .ExecuteUpdateAsync(spc =>
+            .ExecuteUpdate(spc =>
                 spc.SetProperty(t => t.Name, name)
                     .SetProperty(t => t.GitUrl, gitUrl)
                     .SetProperty(t => t.BuildScript, bytes)
