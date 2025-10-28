@@ -1,32 +1,56 @@
 @inherits AuthorizedPageBase
 
 @using WebApplication.Stores
+@using WebApplication.Web.Components
 
 @inject EngineStore EngineStore
 
-<EditForm Model="_formData" OnValidSubmit="AddEngine" FormName="AddEngine">
-    <DataAnnotationsValidator/>
-    <InputText @bind-Value="@_formData.Name" Id="Name"></InputText>
-    <ValidationMessage For="@(() => _formData.Name)"/>
+@* NOTE: Similar code in the EditEngineForm and EngineDetail. *@
 
-    <InputText @bind-Value="@_formData.GitUrl" Id="GitUrl"></InputText>
-    <ValidationMessage For="@(() => _formData.GitUrl)"/>
+<EditForm Model="_formData" OnSubmit="AddEngine" FormName="AddEngine">
+    <DataAnnotationsValidator/>
+    <div class="form-floating mb-3">
+        <InputText class="form-control" @bind-Value="@_formData.Name" Id="Name" />
+        <label for="Name" class="form-label">Name</label>
+        <ValidationMessage For="@(() => _formData.Name)"/>
+    </div>
     
-    <InputTextArea @bind-Value="@_formData.BuildScript" Id="BuildScript" /> @*TODO monaco editor?*@
-    <ValidationMessage For="@(() => _formData.BuildScript)"/>
+    <div class="form-floating mb-3">
+        <InputText class="form-control" @bind-Value="@_formData.GitUrl" Id="GitUrl"></InputText>
+        <label for="Name" class="form-label">Git url</label>
+        <ValidationMessage For="@(() => _formData.GitUrl)"/>
+    </div>
     
-    <button type="submit" class="btn btn-primary" value="Save">Add</button>
+    <div class="form-floating mb-3 code-editor-form">
+        <span style="color: rgba(var(--bs-body-color-rgb), .65);">Build script</span>
+        <div class="editor-box">
+            <CodeEditor @ref="_codeEditor" Language="shell"/>
+        </div>
+        <ValidationMessage For="@(() => _formData.BuildScript)"/>
+    </div>
+    <button type="submit" class="btn btn-primary ms-auto d-block" value="Save">Add</button>
 </EditForm>
 
 @code {
     private EngineFormModel _formData = new EngineFormModel();
+    private CodeEditor _codeEditor = null!;
     
     [Parameter, EditorRequired]
     public required Action OnEngineAdd { get; set; }
     
-    private void AddEngine()
+    private async Task AddEngine(EditContext context)
     {
-        // TODO validate gitlab uri.
+        if (context.Model is not EngineFormModel model)
+        {
+            throw new Exception("Invalid form model.");
+        }
+        
+        model.BuildScript = await _codeEditor.GetValue();
+        if (!context.Validate())
+        {
+            return;
+        }
+        
         EngineStore.Add(_formData.Name, _formData.GitUrl, _formData.BuildScript, UserId!);
         OnEngineAdd.Invoke();
     }

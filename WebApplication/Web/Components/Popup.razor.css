@@ -1,0 +1,13 @@
+.modal-dialog{
+    z-index: 1055;
+}
+
+.modal{
+    display: block;
+}
+
+@media (min-width: 992px) {
+    .modal-dialog {
+        max-width: 950px;
+    }
+}
