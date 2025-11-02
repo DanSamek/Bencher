@@ -1,0 +1,72 @@
+@inherits AuthorizedPageBase
+
+@page "/Tests/Add"
+
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using System.Linq.Expressions
+@using Microsoft.AspNetCore.Authorization
+@using WebApplication.Components.Pages.Tests
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@inject TestStore TestStore
+
+@attribute [Authorize]
+
+<PageTitle>Create test</PageTitle>
+<PageHeader Value="Create test" />
+
+<EditForm Model="@_formData" OnValidSubmit="CreateTest" >
+    <DataAnnotationsValidator />
+    <div>
+        <InputTextArea bind-Value="@_formData.Description"/> 
+        <ValidationMessage For="() => _formData.Description" />
+    </div>
+    
+    @* Test branches *@
+    <div>
+        <div>
+            
+        </div>
+        
+        <div>
+            
+        </div>
+    </div>
+    
+    @* SPRT settings new-existing *@
+    <div>
+        
+    </div>
+    
+    @* Test options *@
+    <span>Test options</span>
+    <div>
+        @InputText("Time management", _formData.TestSettings.TimeManagement, () => _formData.TestSettings.TimeManagement);
+    </div>
+    
+</EditForm>
+
+@code {
+    private CreateTestModel _formData = new();
+    private void CreateTest()
+    {
+        // TestStore.Add();
+    }
+    
+    private RenderFragment InputText(string name, string bind, Expression<Func<string>> @for) =>
+        @<div class="form-floating mb-3">
+            <InputText class="form-control" @bind-Value="@bind" Id="@name"/>
+            <label for="@name" class="form-label">@name</label>
+            <ValidationMessage For="@(() => @for)"/>
+        </div>;
+
+    private RenderFragment TestBranchForm(Branch branch) =>
+        @<div>
+            @InputText("Branch name", branch.Name, () => branch.Name);
+        </div>;
+
+
+}
