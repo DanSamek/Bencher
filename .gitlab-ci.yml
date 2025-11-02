@@ -18,21 +18,24 @@ build_web_app:
   script:
     - cd WebApplication
     - dotnet build
-  only:
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
 
 build_worker:
   stage: build
   script:
     - cd Worker
     - dotnet build
-  only:
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
 
 test_web_app:
   stage: test
   script:
     - cd WebApplication.Tests
     - dotnet test
-  only:
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'

@@ -144,6 +144,7 @@ public class TestStore : Store<Test>
         var result = 
             GetDbSet()
                 .AsNoTracking()
+                .Where(t => t.Engine.Id == engineId)
                 .OrderByDescending(t => t.Created)
                 .Take(count)
                 .ToArray();

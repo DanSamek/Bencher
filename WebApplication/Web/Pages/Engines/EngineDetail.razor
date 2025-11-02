@@ -1,29 +1,46 @@
 @using WebApplication.Data.Models
 @using WebApplication.Stores
+@using WebApplication.Web.Components
 
 @inject TestStore TestStore
 
-<p>Git url: @Engine.GitUrl</p>
-<p>Build script:</p>
-<div>
-    <code>
-        @Engine.GetBuildScriptString() @* TODO monaco editor *@
-    </code>
-</div>
-<p>Recent tests:</p>
+@* NOTE: Similar code in the EditEngineForm and AddEngineForm. *@
+
+<EditForm Model="@(new object())">
+    <DataAnnotationsValidator/>
+    <div class="form-floating mb-3">
+        <InputText class="form-control" @bind-Value="@Engine.Name" Id="Name" disabled />
+        <label for="Name" class="form-label">Name</label>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <InputText class="form-control" @bind-Value="@Engine.GitUrl" Id="GitUrl" disabled />
+        <label for="Name" class="form-label">Git url</label>
+    </div>
+    
+    <div class="form-floating mb-3 code-editor-form">
+        <span>Build script</span>
+        <div class="editor-box">
+            <CodeEditor Language="shell" InitialValue="@Engine.GetBuildScriptString()" Readonly />
+        </div>
+    </div>
+</EditForm>
+
+@* TODO ! *@
+<p class="grey-form-text">Recent tests</p>
 @{
     var recentTests = TestStore.RecentTests(Engine.Id, 10);
 }
 @foreach(var test in recentTests) 
 {
-    @* TODO some test stats. *@
-    @* - Same component from test lists. *@
+    @* TODO test links*@
     <p>@test.Id</p>
 }
 
 @code {
-    
+    /// <summary>
+    /// Engine for detail.
+    /// </summary>
     [Parameter, EditorRequired]
     public required Engine Engine { get; set; }
-    
 }

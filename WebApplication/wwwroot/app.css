@@ -58,3 +58,13 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+
+/* forms in the engine management */
+.modal form .code-editor-form > span, .grey-form-text{
+    color: rgba(var(--bs-body-color-rgb), .65);
+}
+
+.modal form .editor-box{
+    height: 400px;
+}

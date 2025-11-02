@@ -13,6 +13,10 @@
 
 @attribute [Authorize]
 
+<PageTitle>Manage engines</PageTitle>
+
+<Alert @ref="_alert" Danger Text="It is not possible to edit an engine with not finished tests." />
+
 <CascadingValue Value="this">
     <PageHeader Value="Engine management"/>
 
@@ -31,16 +35,21 @@
 
     <div class="pt-3">
         <h3>All engines</h3>
-        @foreach (var engine in _engines)
-        {
-            <EngineRow Engine="engine" OnEngineDelete="ReloadState"/>
-        }
+        <table class="table table-borderless">
+            <tbody>
+                @foreach (var engine in _engines)
+                {
+                    <EngineRow Engine="engine" OnEngineDelete="ReloadState" OnEngineUpdate="ReloadState" OnAnyNotFinishedTest="() => _alert?.Show()"/>
+                }
+            </tbody>
+        </table>
     </div>
 
 </CascadingValue>
 @code {
     private List<Engine> _engines = [];
     private Popup? _popup;
+    private Alert? _alert;
     
     
     /// <inheritdoc /> 
