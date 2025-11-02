@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using WebApplication.Components.Components;
 
 namespace WebApplication.Components;
 
@@ -13,4 +14,9 @@ public class CustomComponentBase : ComponentBase
     
     [Inject] 
     public required NavigationManager NavigationManager { get; set; }
+
+    /// <summary>
+    /// Id if the component.
+    /// </summary>
+    protected uint Id = IdGenerator.GetId();
 }

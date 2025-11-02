@@ -1,11 +1,9 @@
 @inherits CustomComponentBase
 
-@using WebApplication.Components.Components
-
 @if (_visible)
 {
-    <div id="@_id" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="@TitleId()" aria-hidden="true" style="display: block">
-        <div class="modal-dialog" role="document"  style="z-index:1055">
+    <div id="@Id" class="modal fade show" tabindex="-1" role="dialog" aria-labelledby="@TitleId()">
+        <div class="modal-dialog" role="document" >
             <div class="modal-content">
                 <div class="modal-header d-flex justify-content-between">
                     <h5 class="modal-title" id="@TitleId()">@Title</h5>
@@ -38,7 +36,6 @@
 }
 
 @code {
-    private uint _id = IdGenerator.GetId();
     private bool _visible = false;
     
     /// <summary>
@@ -83,7 +80,7 @@
         StateHasChanged();
     }
     
-    private string TitleId() => $"title_{_id}";
+    private string TitleId() => $"title_{Id}";
     private bool ShowFooter() => SaveButtonText is not null || CloseButtonText is not null;
 
 }

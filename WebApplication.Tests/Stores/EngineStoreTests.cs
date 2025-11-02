@@ -1,4 +1,5 @@
 using System.Text;
+using WebApplication.Data.Models;
 using WebApplication.Stores;
 using WebApplication.Tests.Builders;
 
@@ -78,6 +79,56 @@ public class EngineStoreTests : TestBase
         Assert.That(test.Name, Is.EqualTo("stockfish"));
         Assert.That(test.GitUrl, Is.EqualTo("https://github.com/DanSamek/Stockfish"));
         Assert.That(Encoding.ASCII.GetString(test.BuildScript), Is.EqualTo("make -j profile-build"));
+    }
+    
+    /// <summary>
+    /// Tests for <see cref="EngineStore.Update(int, string , string, string)" />.
+    /// </summary>
+    [Test]
+    public void Update()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateUser("test_user")
+                .AddEngine("test_engine")
+            .Close();
         
+        var store = new EngineStore(Factory);
+        var engineId = Factory.CreateDbContext().Engines.First().Id;
+        store.Update(engineId, "test", "https://test.com","build - script");
+
+        var engine = Factory.CreateDbContext().Engines.First();
+        Assert.That(engine.Name, Is.EqualTo("test"));
+        Assert.That(engine.GitUrl, Is.EqualTo("https://test.com"));
+        Assert.That(engine.GetBuildScriptString(), Is.EqualTo("build - script"));
+    }
+    
+    /// <summary>
+    /// Tests for <see cref="EngineStore.AnyNotFinishedTest" />.
+    /// </summary>
+    [TestCase(TestState.Paused, true)]
+    [TestCase(TestState.Autobenched, true)]
+    [TestCase(TestState.Running, true)]
+    [TestCase(TestState.Finished, false)]
+    [TestCase(TestState.Stopped, false)]
+    public void AnyNotFinishedTest_SomeRunning(TestState testState, bool expected)
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                        .AddTest("test_1", "test_book", "base_branch", "test_branch", state: testState)
+                        .Close()
+                    .Close()
+                .Close()
+            .Close();
+
+        var store = new EngineStore(Factory);
+        var engineId = Factory.CreateDbContext().Engines.First().Id;
+        var result = store.AnyNotFinishedTest(engineId);
+        
+        Assert.That(result, Is.EqualTo(expected));
     }
 }

@@ -768,7 +768,7 @@ public class TestStoreTests : TestBase
         .Close();
 
         var testStore = new TestStore(Factory);
-        var testId = Factory.CreateDbContext().Tests.First()!.Id;
+        var testId = Factory.CreateDbContext().Tests.First().Id;
         var test = testStore.GetById(testId);
         
         Assert.That(test, Is.Not.Null);
@@ -776,6 +776,36 @@ public class TestStoreTests : TestBase
         Assert.That(test.TestBranch, Is.Not.Null);
         Assert.That(test.BaseBranch, Is.Not.Null);
         Assert.That(test.Settings, Is.Not.Null);
+    }
+
+    /// <summary>
+    /// Test for <see cref="TestStore.RecentTests" />
+    /// </summary>
+    [Test]
+    public void RecentTests()
+    {
+        var engineBuilder = new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch");
+        
+        for (var i = 0; i < 5; i++)
+        {
+            engineBuilder
+                .AddTest($"test_{i}", "test_book", "base_branch", "test_branch");
+        }
+        
+        var testStore = new TestStore(Factory);
+        var engine = Factory.CreateDbContext().Engines.First();
+        var recent = testStore.RecentTests(engine.Id, 3);
+
+        Assert.That(recent, Has.Count.EqualTo(3));
+        Assert.That(recent[0].Name, Is.EqualTo("test_4"));
+        Assert.That(recent[1].Name, Is.EqualTo("test_3"));
+        Assert.That(recent[2].Name, Is.EqualTo("test_2"));
     }
     
     private static Test GetTestByName(TestContextFactory factory, string name)
