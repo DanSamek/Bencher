@@ -1,0 +1,66 @@
+@inherits AuthorizedPageBase
+
+@using System.ComponentModel.DataAnnotations
+@using WebApplication.API
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+
+@inject OpeningBookStore OpeningBookStore 
+
+<EditForm Model="_formData" OnValidSubmit="AddOpeningBook" FormName="AddOpeningBook">
+    <DataAnnotationsValidator/>
+    
+    <div class="form-floating mb-3">
+        <InputNumber TValue="int" class="form-control" @bind-Value="_formData.Depth" Id="Depth"></InputNumber>
+        <label for="Depth" class="form-label">Depth</label>
+        <ValidationMessage For="@(() => _formData.Depth)"/>
+    </div>
+    
+    <div class="mb-3">
+        <InputFile class="form-control" OnChange="OnFileChanged" Id="File"></InputFile>
+    </div> 
+    
+    <button type="submit" class="btn btn-primary ms-auto d-block" value="Save">Add</button>
+</EditForm>
+
+@code {
+    private OpeningBookFormModel _formData = new OpeningBookFormModel();
+    
+    [Parameter, EditorRequired]
+    public required Action OnOpeningBookAdd { get; set; }
+    
+    private void AddOpeningBook(EditContext context)
+    {
+        OpeningBookStore.Add(UserId!, _formData.Name, _formData.Data, _formData.Depth, _formData.OpeningBookType);
+        OnOpeningBookAdd.Invoke();
+    }
+
+    private async Task OnFileChanged(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        // TODO filetype.
+        _formData.OpeningBookType = file.ContentType == nameof(OpeningBookType.EPD).ToLower() ? OpeningBookType.EPD : OpeningBookType.PGN;
+        _formData.Name = file.Name;
+        
+        await using var stream = file.OpenReadStream();
+        _formData.Data = new byte[stream.Length];
+        await stream.ReadExactlyAsync(_formData.Data, 0, (int)stream.Length);
+    }
+
+    private class OpeningBookFormModel
+    {
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; set; } = null!;
+        
+        [Required]
+        public byte[] Data { get; set; } = null!;
+
+        [Required]
+        [Min(0)]
+        public int Depth { get; set; }
+        
+        [Required]
+        public OpeningBookType OpeningBookType { get; set; }
+    }
+}

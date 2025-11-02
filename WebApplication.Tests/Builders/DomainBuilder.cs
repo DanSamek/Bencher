@@ -52,6 +52,25 @@ public class DomainBuilder
         return this;
     }
 
+    public DomainBuilder CreateBook(string name, string username)
+    {
+        var user = _context.Users.First(u => u.UserName == username);
+        var book = new OpeningBook
+        {
+            Name = name,
+            Data = [0x69],
+            Type = OpeningBookType.EPD,
+            Depth = 0,
+            Tests = [],
+            User = user
+        };
+        
+        _context.OpeningBooks.Add(book);
+        _context.SaveChanges();
+        return this;
+    }
+    
+
     public DomainBuilder CreateSprtSettings()
     {
         var settings = new SprtSettings

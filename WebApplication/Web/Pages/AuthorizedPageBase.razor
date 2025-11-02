@@ -1,10 +1,8 @@
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using WebApplication.Data.Models
 
 @inject UserManager<ApplicationUser> UserManager
-
-@attribute [Authorize]
+@* !!! NOTE: @attribute [Authorize] has to be set in the invidiual pages. !!! *@
 
 @code {
     /// <summary>

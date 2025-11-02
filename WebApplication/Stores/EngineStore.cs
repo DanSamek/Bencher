@@ -21,12 +21,12 @@ public class EngineStore : Store<Engine>
     /// <summary>
     /// Returns all engines for the user's id. [not tracked]
     /// </summary>
-    public List<Engine> GetEnginesForUser(string userId)
+    public IReadOnlyList<Engine> GetEnginesForUser(string userId)
     {
         var engines = GetDbSet()
             .AsNoTracking()
             .Where(e => e.User.Id == userId)
-            .ToList();
+            .ToArray();
         
         return engines;
     }

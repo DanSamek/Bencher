@@ -1,0 +1,76 @@
+@inherits AuthorizedPageBase
+
+@page "/OpeningBooks/Manage"
+
+@using Microsoft.AspNetCore.Authorization
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@inject OpeningBookStore OpeningBookStore
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+<PageTitle>Manage opening books</PageTitle>
+
+<Alert @ref="_alert" Danger Text="It is not possible to delete an opening book with not finished tests." />
+
+<PageHeader Value="Manage opening books" />
+
+<button type="button" class="btn btn-primary d-flex align-items-center gap-2" @onclick="ShowPopup">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"></path>
+    </svg>
+    Add opening book
+</button>
+
+<div class="pt-3">
+    <h3>All opening books</h3>
+    <table class="table table-borderless">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Depth</th>
+            <th>Type</th>
+            <th class="d-flex justify-content-end">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var openingBook in _openingBooks)
+        {
+            <OpeningBookRow OpeningBook="openingBook" OnOpeningBookDeleted="ReloadState" OnAnyNotFinishedTest="() => _alert?.Show()"/>
+        }
+        </tbody>
+    </table>
+</div>
+
+<Popup @ref="_popup" Title="Add opening book">
+    <ChildContent>
+        <AddOpeningBookForm OnOpeningBookAdd="ReloadState" />
+    </ChildContent>
+</Popup>
+
+@code {
+    private IReadOnlyList<OpeningBook> _openingBooks = [];
+    private Popup? _popup;
+    private Alert? _alert;
+    
+    protected override void OnParametersSet()
+    {
+        if (UserId is not null)
+        {
+            ReloadState();
+        }
+    }
+    
+    private void ReloadState()
+    {
+        _openingBooks = OpeningBookStore.GetOpeningBooksForUser(UserId!);
+        _popup?.Close();
+        StateHasChanged();
+    }
+
+    private void ShowPopup() => _popup?.Show();
+}

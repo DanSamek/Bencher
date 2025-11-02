@@ -17,7 +17,7 @@
             <ul class="navbar-nav mb-2 mb-lg-0">
                 <AuthorizeView>
                     <Authorized>
-                        <ReloadLink Url="Account/Manage">
+                        <ReloadLink Url="/Account/Manage">
                             <span>@context.User.Identity?.Name</span>
                         </ReloadLink>
                         <ThemeSelector />
@@ -29,15 +29,21 @@
                             @ManageEnginesIcon()
                         </ReloadLink>
 
-                        <ReloadLink Url="Account/Logout">
+                        <ReloadLink Url="/OpeningBooks/Manage">
+                            @* @ManageEnginesIcon()*@
+                            <span>Manage opening books</span>
+                        </ReloadLink>
+                        
+                        <ReloadLink Url="/Account/Logout">
                             @LogoutIcon()
                         </ReloadLink>
+                        
                     </Authorized>
                     <NotAuthorized>
-                        <ReloadLink Url="Account/Register">
+                        <ReloadLink Url="/Account/Register">
                             <span>Register</span>
                         </ReloadLink>
-                        <ReloadLink Url="Account/Login">
+                        <ReloadLink Url="/Account/Login">
                             <span>Login</span>
                         </ReloadLink>
                     </NotAuthorized>
@@ -57,7 +63,7 @@
             <CascadingValue Value="true">
                 <AuthorizeView>
                     <Authorized>
-                        <ReloadLink Url="Account/Manage">
+                        <ReloadLink Url="/Account/Manage">
                             @ProfileIcon()
                             <span>@context.User.Identity?.Name</span>
                         </ReloadLink>
@@ -71,18 +77,23 @@
                             @ManageEnginesIcon()
                             <span>Manage engines</span>
                         </ReloadLink>
+                        
+                        <ReloadLink Url="/OpeningBooks/Manage">
+                            @*@ManageEnginesIcon()*@
+                            <span>Manage opening books</span>
+                        </ReloadLink>
 
-                        <ReloadLink Url="Account/Logout">
+                        <ReloadLink Url="/Account/Logout">
                             @LogoutIcon()
                             <span>Logout</span>
                         </ReloadLink>
                     </Authorized>
                     <NotAuthorized>
-                        <ReloadLink Url="Account/Register">
+                        <ReloadLink Url="/Account/Register">
                             @RegisterIcon()
                             <span>Register</span>
                         </ReloadLink>
-                        <ReloadLink Url="Account/Login">
+                        <ReloadLink Url="/Account/Login">
                             @LoginIcon()
                             <span>Login</span>
                         </ReloadLink>

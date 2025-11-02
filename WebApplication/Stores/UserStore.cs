@@ -26,24 +26,6 @@ public class UserStore : Store<ApplicationUser>
         => Context.Users.FirstOrDefault(u => u.AccessToken == accessToken);
     
     /// <summary>
-    /// Gets all users.  TODO remove
-    /// </summary>
-    public List<ApplicationUser> GetAllUsers()
-    {
-        var result = Context.Users.ToList();
-        return result;
-    }
-    
-    /// <summary>
-    /// Deletes user [only for testing purposes - TODO DeleteUserById]
-    /// </summary>
-    public void DeleteUser(ApplicationUser user)
-    {
-        Context.Users.Remove(user);
-        SaveChanges();
-    }
-    
-    /// <summary>
     /// Creates an access token for a user.
     /// </summary>
     /// <param name="userId">Id of the user.</param>

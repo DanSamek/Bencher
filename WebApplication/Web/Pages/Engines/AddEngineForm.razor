@@ -10,14 +10,14 @@
 <EditForm Model="_formData" OnSubmit="AddEngine" FormName="AddEngine">
     <DataAnnotationsValidator/>
     <div class="form-floating mb-3">
-        <InputText class="form-control" @bind-Value="@_formData.Name" Id="Name" />
+        <InputText class="form-control" @bind-Value="@_formData.Name" Id="Name"  />
         <label for="Name" class="form-label">Name</label>
         <ValidationMessage For="@(() => _formData.Name)"/>
     </div>
     
     <div class="form-floating mb-3">
         <InputText class="form-control" @bind-Value="@_formData.GitUrl" Id="GitUrl"></InputText>
-        <label for="Name" class="form-label">Git url</label>
+        <label for="GitUrl" class="form-label">Git url</label>
         <ValidationMessage For="@(() => _formData.GitUrl)"/>
     </div>
     
