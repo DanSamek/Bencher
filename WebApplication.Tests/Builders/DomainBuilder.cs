@@ -35,12 +35,11 @@ public class DomainBuilder
         return userBuilder;
     }
 
-    public DomainBuilder CreateBook(string name)
+    public DomainBuilder CreateBook(string name, byte[]? content = null)
     {
         var book = new OpeningBook
         {
             Name = name,
-            Data = [0x69],
             Type = OpeningBookType.EPD,
             Depth = 0,
             Tests = []
@@ -49,8 +48,45 @@ public class DomainBuilder
         _context.OpeningBooks.Add(book);
         _context.SaveChanges();
         
+        book.Data = new OpeningBookContent()
+        {
+            OpeningBookId = book.Id,
+            Data = content ?? [0x69],
+        };  
+        
+        _context.OpeningBooks.Update(book);
+        _context.SaveChanges();
+        
         return this;
     }
+
+    public DomainBuilder CreateBook(string name, string username)
+    {
+        var user = _context.Users.First(u => u.UserName == username);
+        var book = new OpeningBook
+        {
+            Name = name,
+            Type = OpeningBookType.EPD,
+            Depth = 0,
+            Tests = [],
+            User = user
+        };
+        
+        _context.OpeningBooks.Add(book);
+        _context.SaveChanges();
+        
+        book.Data = new OpeningBookContent()
+        {
+            OpeningBookId = book.Id,
+            Data = [0x69],
+        };
+        
+        
+        _context.OpeningBooks.Update(book);
+        _context.SaveChanges();
+        return this;
+    }
+    
 
     public DomainBuilder CreateSprtSettings()
     {

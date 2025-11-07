@@ -20,11 +20,12 @@ public partial class WorkerController : ControllerBase
     private readonly TestStore _testStore;
     private readonly TestBranchStore _testBranchStore;
     private readonly AutobenchStateStore _autobenchStateStore;
+    private readonly OpeningBookStore _openingBookStore;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public WorkerController(UserStore userStore, WorkerLogStore workerLogStore, PentaStore pentaStore, TestStore testStore, TestBranchStore testBranchStore, AutobenchStateStore autobenchStateStore)
+    public WorkerController(UserStore userStore, WorkerLogStore workerLogStore, PentaStore pentaStore, TestStore testStore, TestBranchStore testBranchStore, AutobenchStateStore autobenchStateStore, OpeningBookStore openingBookStore)
     {
         _userStore = userStore;
         _workerLogStore = workerLogStore;
@@ -32,6 +33,7 @@ public partial class WorkerController : ControllerBase
         _testStore = testStore;
         _testBranchStore = testBranchStore;
         _autobenchStateStore = autobenchStateStore;
+        _openingBookStore = openingBookStore;
     }
         
     /// <summary>

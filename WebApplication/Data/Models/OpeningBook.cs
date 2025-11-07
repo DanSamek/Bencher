@@ -13,12 +13,12 @@ public class OpeningBook : DoId
     [Required]
     [MaxLength(50)]
     public required string Name { get; set; }
-    
+
     /// <summary>
-    /// Opening book data.
+    /// Opening book file content.
+    /// NOTE: This ensures, that EF won't load entire file into a memory.
     /// </summary>
-    [Required]
-    public required byte[] Data { get; set; }
+    public OpeningBookContent Data { get; set; } = null!;
     
     /// <summary>
     /// Type of the opening book.

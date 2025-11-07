@@ -423,7 +423,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     /// We expect, that penta stats will be updated + no dataraces when updates.
     /// </summary>
     [Test]
-    public async Task Results_Multithreaded()
+    public void Results_Multithreaded()
     {
         var workerThreadsCounts = new[] { 12, 10, 1, 1, 1, 12, 1, 2, 4, 5, 4, 4, 4, 2};
         var bag = new ConcurrentBag<SimplePenta>();
@@ -487,7 +487,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             {
                 var controller = new WorkerController(new UserStore(Factory), new WorkerLogStore(Factory),
                     new PentaStore(Factory),
-                    new TestStore(Factory), new TestBranchStore(Factory), new AutobenchStateStore(Factory));
+                    new TestStore(Factory), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory));
 
                 var simplePenta = SimplePenta.Generate(iterPairs);
                 bag.Add(simplePenta);
