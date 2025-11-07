@@ -1,0 +1,89 @@
+@inherits AuthorizedPageBase
+
+@using System.ComponentModel.DataAnnotations
+@using WebApplication.API
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+
+@inject OpeningBookStore OpeningBookStore 
+
+<EditForm Model="_formData" OnValidSubmit="AddOpeningBook" FormName="AddOpeningBook">
+    <DataAnnotationsValidator/>
+    
+    <div class="form-floating mb-3">
+        <InputNumber TValue="int" class="form-control" @bind-Value="_formData.Depth" Id="Depth"></InputNumber>
+        <label for="Depth" class="form-label">Depth</label>
+        <ValidationMessage For="@(() => _formData.Depth)"/>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <InputFile class="form-control" OnChange="OnFileChanged" Id="File" />
+        @if (_invalidFileType)
+        {
+            <div class="text-danger">
+                File type is invalid, expected .epd or .pgn filetype.
+            </div>
+        }
+    </div> 
+    
+    <button type="submit" class="btn btn-primary ms-auto d-block" value="Save">Add</button>
+</EditForm>
+
+@code {
+    private OpeningBookFormModel _formData = new OpeningBookFormModel();
+    private bool _invalidFileType;
+
+    private static readonly string LowerEpd = $".{nameof(OpeningBookType.EPD).ToLower()}";
+    private static readonly string LowerPgn = $".{nameof(OpeningBookType.PGN).ToLower()}";
+
+    private const int MAX_OPENING_BOOK_SIZE = 100 * 1024 * 1024; // TODO validate DB
+    
+    /// <summary>
+    /// Action when opening book is added.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required Action OnOpeningBookAdd { get; set; }
+    
+    private void AddOpeningBook(EditContext context)
+    {
+        OpeningBookStore.Add(UserId!, _formData.Name, _formData.Data, _formData.Depth, _formData.OpeningBookType);
+        OnOpeningBookAdd.Invoke();
+    }
+
+    private async Task OnFileChanged(InputFileChangeEventArgs args)
+    {
+        _invalidFileType = false;
+        var file = args.File;
+        
+        var extension = Path.GetExtension(file.Name);
+        if (extension != LowerEpd && extension != LowerPgn)
+        {
+            _invalidFileType = true;
+            return;
+        } 
+        
+        _formData.OpeningBookType = extension == LowerEpd ? OpeningBookType.EPD : OpeningBookType.PGN;
+        _formData.Name = file.Name;
+
+        using var stream = file.OpenReadStream(MAX_OPENING_BOOK_SIZE); 
+        _formData.Data = new byte[stream.Length];
+        await stream.ReadExactlyAsync(_formData.Data, 0, (int)stream.Length);
+    }
+
+    private class OpeningBookFormModel
+    {
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; set; } = null!;
+        
+        [Required]
+        public byte[] Data { get; set; } = null!;
+
+        [Required]
+        [Min(0)]
+        public int Depth { get; set; }
+        
+        [Required]
+        public OpeningBookType OpeningBookType { get; set; }
+    }
+}

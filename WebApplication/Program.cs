@@ -55,7 +55,6 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 #region Stores
 
-
 builder.Services.AddScoped<AutobenchStateStore>();
 builder.Services.AddScoped<EngineStore>();
 builder.Services.AddScoped<PentaStore>();
@@ -63,6 +62,7 @@ builder.Services.AddScoped<TestBranchStore>();
 builder.Services.AddScoped<TestStore>();
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<WorkerLogStore>();
+builder.Services.AddScoped<OpeningBookStore>();
 
 #endregion
 

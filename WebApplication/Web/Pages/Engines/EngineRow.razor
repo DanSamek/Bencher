@@ -65,7 +65,7 @@
     public required Action OnEngineDelete { get; set; } 
     
     /// <summary>
-    /// Action when engine has not finished test - edit.
+    /// Action when engine has not finished test - edit/delete.
     /// </summary>
     [Parameter, EditorRequired]
     public required Action OnAnyNotFinishedTest { get; set; }
@@ -78,20 +78,37 @@
     
     private void RemoveEngine()
     {
+        var anyRunningTest =  AnyNotFinishedTest();
+        if (anyRunningTest)
+        {
+            return;
+        }
+        
         EngineStore.DeleteById(Engine.Id);
         OnEngineDelete.Invoke();
     }
     
     private void EditEngine()
     {
-        var anyRunningTest = EngineStore.AnyNotFinishedTest(Engine.Id);
+        var anyRunningTest =  AnyNotFinishedTest();
         if (anyRunningTest)
         {
-            OnAnyNotFinishedTest.Invoke();
             return;
         }
         _editPopup?.Show();
     }
+
+    private bool AnyNotFinishedTest()
+    {
+        var anyRunningTest = EngineStore.AnyNotFinishedTest(Engine.Id);
+        if (anyRunningTest)
+        {
+            OnAnyNotFinishedTest.Invoke();
+        }
+
+        return anyRunningTest;
+    }
+    
     
     private void ShowEngineDetail()
     {

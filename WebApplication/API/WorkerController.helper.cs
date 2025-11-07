@@ -23,7 +23,8 @@ public partial class WorkerController
     {
         var testBranch = _testBranchStore.GetById(test.TestBranchId);
         var baseBranch = _testBranchStore.GetById(test.BaseBranchId);
-        
+
+        var content = _openingBookStore.LoadContent(test.OpeningBook.Id);
         var result = new GetTestNonAutobenchResponse
         {
             ConnectionId = workerLog.Id,
@@ -36,7 +37,7 @@ public partial class WorkerController
             NumberOfThreads = test.NumberOfThreads,
             TimeManagement = test.TimeManagement,
             NumberOfGames = workerLog.TotalNumberOfGames,
-            OpeningBook = new OpeningBookDto(test.OpeningBook.Name, test.OpeningBook.Data, test.OpeningBook.Depth)
+            OpeningBook = new OpeningBookDto(test.OpeningBook.Name, content, test.OpeningBook.Depth)
         };
         
         return Ok(result);
