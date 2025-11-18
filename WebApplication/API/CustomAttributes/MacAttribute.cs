@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 
 namespace WebApplication.API;
 
 /// <summary>
 /// Custom attribute for mac validations.
-/// TODO maybe regex ?
 /// </summary>
 public class MacAttribute : ValidationAttribute
 {

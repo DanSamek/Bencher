@@ -1,3 +1,5 @@
+using WebApplication;
+
 namespace Worker;
 
 /// <summary>
@@ -23,9 +25,9 @@ public static class AppAuthorization
         try
         {
             using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("AccessToken", userToken);
+            client.DefaultRequestHeaders.Add(Shared.WORKER_REQUEST_HEADER, userToken);
             // TODO: The SSL connection could not be established, see inner exception.
-            var result = await client.PostAsync($"{webApplicationUrl}/worker-api/validate", new StringContent(""));
+            var result = await client.PostAsync($"{webApplicationUrl}/{Shared.WORKER_API_PREFIX}/validate", new StringContent(""));
         }
         catch
         {

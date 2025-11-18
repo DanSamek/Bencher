@@ -119,7 +119,6 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
 }
 
 
-// NOTE: This can be mocked somehow, TODO.
 file class TestServiceProvider(TestContextFactory factory) : IServiceProvider
 {
     public object? GetService(Type serviceType) => factory.CreateDbContext();

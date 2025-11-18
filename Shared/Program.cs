@@ -1,0 +1,1 @@
+﻿Console.WriteLine("Shared constants for the solution");

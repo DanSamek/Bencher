@@ -45,7 +45,6 @@ public static class TestQueueExperiment
         };
         
         test.CalculateThreadScale();
-        //test.ThreadScale = test.NumberOfThreads * test.TimeManagement.Seconds(); // Todo maybe create .ctor for a test.
         return test;
     }
 

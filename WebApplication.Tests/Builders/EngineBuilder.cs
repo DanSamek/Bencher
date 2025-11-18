@@ -58,7 +58,7 @@ public class EngineBuilder
             HashSize = 16,
             TimeManagement = timeManagement,
             State = state,
-            Settings = _context.SprtSettings.First(), // TODO maybe as a parameter.
+            Settings = _context.SprtSettings.First(), 
             OpeningBook = _context.OpeningBooks.First(x => x.Name == bookName),
             Errors = [],
             WorkerLogs = [],
@@ -108,7 +108,7 @@ public class EngineBuilder
             HashSize = 16,
             TimeManagement = timeManagement,
             State = state,
-            Settings = _context.SprtSettings.First(), // TODO maybe as a parameter.
+            Settings = _context.SprtSettings.First(), 
             OpeningBook = _context.OpeningBooks.First(x => x.Name == bookName),
             Errors = [],
             WorkerLogs = [],
@@ -157,7 +157,7 @@ public class EngineBuilder
             HashSize = 16,
             TimeManagement = timeManagement,
             State = state,
-            Settings = context.SprtSettings.First(), // TODO maybe as a parameter.
+            Settings = context.SprtSettings.First(),
             OpeningBook = context.OpeningBooks.First(x => x.Name == bookName),
             Errors = [],
             WorkerLogs = [],
