@@ -16,7 +16,8 @@ public class WorkerLogStore : Store<WorkerLog>
     
     /// <summary>
     /// Gets <see cref="WorkerLog" /> by connectionId.
-    /// Note: loads with the <see cref="Test" /> entity and AutobenchState
+    /// Note: loads with the <see cref="Test" /> entity and AutobenchState.
+    /// Note: it's tracked.
     /// </summary>
     public WorkerLog? GetByConnectionId(int connectionId)
     {

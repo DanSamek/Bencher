@@ -332,6 +332,25 @@ public class TestStore : Store<Test>
         return result;
     }
     
+    /// <summary>
+    /// Sets test to PausedState if there are no active workers for a test.
+    /// </summary>
+    /// <returns>If the test is in the running state</returns>
+    public async Task<bool> SetPausedIfNoActiveWorkers(int testId)
+    {
+        var stillRunning = Context.WorkerLogs
+            .Any(wl => wl.Test.Id == testId && wl.State == WorkerLogState.Active);
+        
+        if (!stillRunning)
+        {
+            await GetDbSet()
+                .Where(t => t.Id == testId)
+                .ExecuteUpdateAsync(spc => spc.SetProperty(t => t.State, TestState.Paused));
+        }
+
+        return stillRunning;
+    }
+    
     private IQueryable<Test> Include()
         => Context.Tests
             .Include(t => t.Engine)
@@ -364,4 +383,5 @@ public class TestStore : Store<Test>
                 .Include(t => t.WorkerLogs)
                 .Include(t => t.OpeningBook)
                 .Include(t => t.AutobenchState);
+
 }

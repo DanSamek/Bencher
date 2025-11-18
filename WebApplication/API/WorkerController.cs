@@ -71,9 +71,13 @@ public partial class WorkerController : ControllerBase
         
         await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
         workerLog.NumberOfGames += toIncrement;
+        if (workerLog.NumberOfGames == workerLog.TotalNumberOfGames)
+        {
+            workerLog.State = WorkerLogState.Finished;
+        } 
         _workerLogStore.Update(workerLog);
         
-        // TODO set test state to paused if there is no active worker log.
+        var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
         
         // SPRT part. 
         var test = _testStore.GetById(workerLog.Test.Id)!;
@@ -83,7 +87,7 @@ public partial class WorkerController : ControllerBase
             await _testStore.SetFinishedState(test.Id);
         }
         
-        return Ok(new ResultsResponseDto(true));
+        return Ok(new ResultsResponseDto(running && statistics.Result == Sprt.SprtResult.Unknown));
     }
     
     /// <summary>
@@ -105,7 +109,10 @@ public partial class WorkerController : ControllerBase
         _workerLogStore.SaveChanges();
         _autobenchStateStore.SaveChanges();
         
-        // TODO set test state to paused if there is no active worker log.
+        if (result)
+        {
+            await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
+        }
         
         // If test is resolved, set this as a bench of the test branch.
         if (autobenchState.Resolved)

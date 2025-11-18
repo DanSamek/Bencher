@@ -958,6 +958,83 @@ public class TestStoreTests : TestBase
     {
         Assert.Pass("TODO when SPRT part is implemented.");
     }
+
+
+    /// <summary>
+    /// Tests <see cref="TestStore.SetPausedIfNoActiveWorkers"/>
+    /// Test is going to have active workers -> test should be still in the running state.
+    /// </summary>
+    [Test]
+    public async Task SetPausedIfNoActiveWorkers_ShouldBeRunning()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Running)
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .AddWorker(1)
+                        .Close()
+                    .Close()
+                .Close()
+            .Close();
+
+        var test = GetTestByName(Factory, "test_1");
+        Assert.That(test.State, Is.EqualTo(TestState.Running));
+        var store = CreateTestStore();
+        var running = await store.SetPausedIfNoActiveWorkers(test.Id);
+        
+        test = GetTestByName(Factory, "test_1");
+        
+        Assert.That(running);
+        Assert.That(test.State, Is.EqualTo(TestState.Running));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="TestStore.SetPausedIfNoActiveWorkers"/>
+    /// Test is going to have no active workers -> test should be in the paused state.
+    /// </summary>
+    [Test]
+    public async Task SetPausedIfNoActiveWorkers_ShouldBePaused()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Running)
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .AddWorker(1)
+                        .AddWorker(1)
+                        .Close()
+                    .Close()
+                .Close()
+            .Close();
+
+        var test = GetTestByName(Factory, "test_1");
+        Assert.That(test.State, Is.EqualTo(TestState.Running));
+        var store = CreateTestStore();
+        var running = await store.SetPausedIfNoActiveWorkers(test.Id);
+        Assert.That(running);
+        
+        test = GetTestByName(Factory, "test_1");
+        Assert.That(test.State, Is.EqualTo(TestState.Running));
+
+        await Factory.CreateDbContext()
+            .WorkerLogs
+            .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Finished));
+        
+        running = await store.SetPausedIfNoActiveWorkers(test.Id);
+        test = GetTestByName(Factory, "test_1");
+
+        Assert.That(!running);
+        Assert.That(test.State, Is.EqualTo(TestState.Paused));
+    }
     
     private static Test GetTestByName(TestContextFactory factory, string name)
     {

@@ -285,7 +285,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(resultDto2, Is.Not.Null);
         test = GetTestByConnectionId(resultDto.ConnectionId);
         Assert.That(test.AutobenchState!.Confidence, Is.Not.EqualTo(0.0));
-        Assert.That(test.State, Is.EqualTo(TestState.Autobenched));
+        Assert.That(test.State, Is.EqualTo(TestState.Paused));
     }
 
     /// <summary>
@@ -373,7 +373,6 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var resultDto2 = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
         Assert.That(resultDto2, Is.Not.Null);
     }
-
     
     /// <summary>
     /// Test for <see cref="WorkerController.Results" /> - test is running.
@@ -406,8 +405,10 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(responseDto, Is.Not.Null);
         Assert.That(responseDto.Running);
         
-        var testId = GetTestByConnectionId(resultDto.ConnectionId).Id;
-        var penta = Factory.CreateDbContext().Pentas.First(x => x.TestId == testId);
+        var test = GetTestByConnectionId(resultDto.ConnectionId);
+        var penta = Factory.CreateDbContext().Pentas.First(x => x.TestId == test.Id);
+        
+        Assert.That(test.State, Is.EqualTo(TestState.Running));
         Assert.Multiple(() =>
         {
             Assert.That(penta.Ll, Is.EqualTo(1));
@@ -625,9 +626,83 @@ public class WorkerControllerTests : WorkerControllerTestBase
             Assert.That(penta.Wd, Is.EqualTo(5));
             Assert.That(penta.Ww, Is.EqualTo(6));
         });
-        
     }
 
+    /// <summary>
+    /// Test for <see cref="WorkerController.Results" />.
+    /// We expect when no worker will be running the test, test will be in the paused state.
+    /// </summary>
+    [Test]
+    public async Task Results_NoActiveWorker()
+    {
+        LoginAs("user_2");
+        var resultDto = GetTest<GetTestNonAutobenchResponse>(false, 4);
+        RefreshController();
+        _ = Controller.RunningTest(new RunningTestDto
+        {
+            ConnectionId = resultDto.ConnectionId
+        });
+                
+        RefreshController();
+        var result = await Controller.Results(new ResultsDto
+        {
+            Ll = resultDto.NumberOfGames / 2,
+            Ld = 0,
+            Dd = 0,
+            Wl = 0,
+            Wd = 0,
+            Ww = 0,
+            ConnectionId = resultDto.ConnectionId
+        });
+
+        var responseDto = GetResponseValue<ResultsResponseDto, OkObjectResult>(result);
+        Assert.That(responseDto, Is.Not.Null);
+        Assert.That(!responseDto.Running);
+
+        var test = GetTestByConnectionId(resultDto.ConnectionId);
+        Assert.That(test.State, Is.EqualTo(TestState.Paused));
+    }
+    
+    
+    /// <summary>
+    /// Test for <see cref="WorkerController.Results" />
+    /// We expect when another worker will run the test, test will be in the running state.
+    /// </summary>
+    [Test]
+    public async Task Results_AnotherActiveWorker()
+    {
+        LoginAs("user_2");
+        var resultDto = GetTest<GetTestNonAutobenchResponse>(false, 4);
+        RefreshController();
+        LoginAs("user_2");
+        _ = GetTest<GetTestNonAutobenchResponse>(false, 4);
+        RefreshController();
+        _ = Controller.RunningTest(new RunningTestDto
+        {
+            ConnectionId = resultDto.ConnectionId
+        });
+                
+        RefreshController();
+        var result = await Controller.Results(new ResultsDto
+        {
+            Ll = resultDto.NumberOfGames / 2,
+            Ld = 0,
+            Dd = 0,
+            Wl = 0,
+            Wd = 0,
+            Ww = 0,
+            ConnectionId = resultDto.ConnectionId
+        });
+
+        var responseDto = GetResponseValue<ResultsResponseDto, OkObjectResult>(result);
+        Assert.That(responseDto, Is.Not.Null);
+        Assert.That(responseDto.Running);
+
+        var test = GetTestByConnectionId(resultDto.ConnectionId);
+        Assert.That(test.State, Is.EqualTo(TestState.Running));
+    }
+    
+    
     /// <summary>
     /// Test for <see cref="WorkerController.Error" /> - valid file upload.
     /// </summary>
@@ -768,6 +843,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             Name = "WORKSTATION_PC",
             NumberOfThreads = numberOfThreads
         };
+        
         var result = Controller.GetTest(dto);
         var resultDto = GetResponseValue<TDto, OkObjectResult>(result)!;
         return resultDto;

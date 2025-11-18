@@ -17,6 +17,7 @@ public class WorkerLog : DoId
     
     /// <summary>
     /// Initial state of the test.
+    /// TODO Why did i added that??
     /// </summary>
     [Required]
     public required InitialTestState InitialTestState { get; set; }
