@@ -33,6 +33,11 @@ public class Test : DoId
     public required DateTime Created { get; set; }
     
     /// <summary>
+    /// Time, when test ended. 
+    /// </summary>
+    public DateTime? Ended { get; set; }
+    
+    /// <summary>
     /// Priority of the test.
     /// Higher priority = will be tested first.
     /// </summary>

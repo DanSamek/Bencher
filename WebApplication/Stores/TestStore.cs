@@ -1,30 +1,43 @@
 using Microsoft.EntityFrameworkCore;
+using WebApplication.Components.Pages.Tests;
 using WebApplication.Data;
 using WebApplication.Data.Models;
+using WebApplication.SPRT;
 
 namespace WebApplication.Stores;
 
 public class TestStore : Store<Test>
 {
+    private readonly SprtSettingsStore _sprtSettingsStore;
+    private readonly OpeningBookStore _openingBookStore;
+    private readonly EngineStore _engineStore;
+    private readonly UserStore _userStore;
+    private readonly TestBranchStore _branchStore;
+    private readonly PentaStore _pentaStore;
+    
+    
     /// <summary>
     /// .Ctor
     /// </summary>
-    public TestStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) { }
+    public TestStore(IDbContextFactory<ApplicationDbContext> factory, SprtSettingsStore sprtSettingsStore, OpeningBookStore openingBookStore, EngineStore engineStore, UserStore userStore, TestBranchStore branchStore, PentaStore pentaStore) : base(factory)
+    {
+        _sprtSettingsStore = sprtSettingsStore;
+        _openingBookStore = openingBookStore;
+        _engineStore = engineStore;
+        _userStore = userStore;
+        _branchStore = branchStore;
+        _pentaStore = pentaStore;
+    }
     
     /// <inheritdoc /> 
     protected override DbSet<Test> GetDbSet() => Context.Tests;
     
     /// <inheritdoc />
-    /// NOTE: Loads all entities related to the test [not tracked!]
+    /// NOTE: Loads all entities related to the test [not tracked!].
     public override Test? GetById(int id)
     {
-        var result = Context.Tests
+        var result = IncludeForView()
             .AsNoTracking()
-            .Include(t => t.Penta)
-            .Include(t => t.AutobenchState)
-            .Include(t => t.BaseBranch)
-            .Include(t => t.TestBranch)
-            .Include(t => t.Settings)
             .FirstOrDefault(t => t.Id == id);
         
         return result;
@@ -117,6 +130,20 @@ public class TestStore : Store<Test>
     /// </summary>
     public async Task StopTest(int testId)
         => await SetState(testId, TestState.Stopped);
+
+    
+    /// <summary>
+    /// Sets test state as finished.
+    /// NOTE: Also Ended is updated to "now".
+    /// </summary>
+    public async Task SetFinishedState(int testId)
+    {
+        await GetDbSet()
+            .Where(t => t.Id == testId)
+            .ExecuteUpdateAsync(spc => spc
+                .SetProperty(t => t.State, TestState.Finished)
+                .SetProperty(t => t.Ended, DateTime.UtcNow));
+    }
     
     /// <summary>
     /// Sets a state for a test. 
@@ -152,6 +179,159 @@ public class TestStore : Store<Test>
         return result;
     }
     
+    /// <summary>
+    /// Creates a test.
+    /// </summary>
+    /// <param name="userId">Id of the user, that created the test.</param>
+    /// <param name="data">formData</param>
+    public Test Create(string userId, CreateTestFormModel data)
+    {
+        var sprtSettings = _sprtSettingsStore.
+            GetExistingSprtSettingsOrCreate(data.Elo0!.Value, data.Elo1!.Value, data.Alpha!.Value, data.Beta!.Value);
+        var openingBook = _openingBookStore.GetById(data.OpeningBookId!.Value)!;
+        var engine = _engineStore.GetById(data.EngineId!.Value)!;
+        var user = _userStore.GetById(userId)!;
+        
+        Attach(user);
+        Attach(engine);
+        Attach(openingBook);
+        Attach(sprtSettings);
+        
+        // TODO load this information from the git commit message.
+        var baseBranch = AddBranch(data.BaseBranchName, data.BaseBranchBench);
+        var testBranch = AddBranch(data.TestBranchName, data.TestBranchBench);
+        Attach(baseBranch);
+        Attach(testBranch);
+        
+        var test = new Test
+        {
+            Name = data.TestName,
+            Created = DateTime.UtcNow,
+            Priority = data.Priority!.Value,
+            NumberOfThreads = data.NumberOfThreads!.Value,
+            HashSize = data.HashSize!.Value,
+            TimeManagement = data.TimeManagement,
+            State = TestState.Paused,
+            Settings = sprtSettings,
+            OpeningBook = openingBook,
+            Errors = [],
+            WorkerLogs = [],
+            Engine = engine,
+            User = user,
+            Autobenched = data.Autobenched, 
+            BaseBranch = baseBranch,
+            BaseBranchId = baseBranch.Id,
+            TestBranch = testBranch,
+            TestBranchId = testBranch.Id
+        };
+
+        test = GetDbSet().Add(test).Entity;
+        SaveChanges();
+        
+        sprtSettings.Tests.Add(test);
+        baseBranch.BaseBranchOf = test;
+        testBranch.TestBranchOf = test;
+        var penta = _pentaStore.AddRet(new Penta
+        {
+            Test = test
+        });
+        test.Penta = penta;
+        
+        SaveChanges();
+        
+        if (!data.Autobenched) return test;
+        
+        var autobenchState = new AutobenchState
+        {
+            Test = test,
+            TestId = test.Id,
+            UserConfidence = data.Confidence!.Value
+        };
+        
+        autobenchState = Context.AutobenchStates.Add(autobenchState).Entity;
+        test.AutobenchState = autobenchState;
+        SaveChanges();
+        return test;
+
+        TestBranch AddBranch(string name, int bench)
+        {
+            return _branchStore.AddRet(new TestBranch
+            {
+                Bench = bench,
+                Name = name,
+                Engine = engine
+            });
+        }
+    }
+
+    /// <summary>
+    /// Result from <see cref="TestStore.GetRunningTests"> 
+    /// </summary> 
+    public record RunningTestResult(IReadOnlyList<Test> AutobenchedTests, IReadOnlyList<Test> RunningTests);
+    
+    /// <summary>
+    /// Returns all running tests (autobenched, normal ones)
+    /// </summary>
+    public RunningTestResult GetRunningTests()
+    {
+        var runningTests = GetByState(TestState.Running);
+        var autobenchedTests = GetByState(TestState.Autobenched);
+        return new RunningTestResult(autobenchedTests, runningTests);
+        
+        IReadOnlyList<Test> GetByState(TestState state) 
+            => IncludeForView()
+                .Where(t => t.State == state)
+                .ToArray();
+    }
+    
+    /// <summary>
+    /// Returns all ended tests.
+    /// So the test state is stopped or finished.
+    /// </summary>
+    public IReadOnlyList<Test> GetEndedTests()
+    {
+        var result = IncludeForView()
+            .Where(t => t.State == TestState.Finished || t.State == TestState.Stopped)
+            .OrderByDescending(t => t.Ended)
+            .ToArray();
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// Returns all paused tests.
+    /// </summary>
+    public IReadOnlyList<Test> GetPausedTests()
+    {
+        var result = IncludeForView()
+            .Where(t => t.State == TestState.Paused)
+            .ToArray();
+        
+        return result;
+    }
+
+    /// <summary>
+    /// Returns all passed tests.
+    /// </summary>
+    public IReadOnlyList<Test> GetPassedTests()
+    {
+        var finishedTests = IncludeForView()
+            .Where(t => t.State == TestState.Finished)
+            .OrderByDescending(t => t.Ended);
+        
+        var result = new List<Test>();
+        foreach (var finishedTest in finishedTests)
+        {
+            var sprtStatistics = Sprt.GetStatistics(finishedTest);
+            if (sprtStatistics.Result == Sprt.SprtResult.H1Accepted)
+            {
+                result.Add(finishedTest);
+            }
+        }
+        
+        return result;
+    }
+    
     private IQueryable<Test> Include()
         => Context.Tests
             .Include(t => t.Engine)
@@ -172,4 +352,16 @@ public class TestStore : Store<Test>
         => tests.Where(t => t.NumberOfThreads <= workerNumberOfThreads &&
                             (!t.Autobenched ? t.Autobenched == autobench : t.AutobenchState!.Resolved == !autobench));
 
+    private IQueryable<Test> IncludeForView()
+        =>
+            GetDbSet()
+                .Include(t => t.Engine)
+                .Include(t => t.User)
+                .Include(t => t.Penta)
+                .Include(t => t.Settings)
+                .Include(t => t.BaseBranch)
+                .Include(t => t.TestBranch)
+                .Include(t => t.WorkerLogs)
+                .Include(t => t.OpeningBook)
+                .Include(t => t.AutobenchState);
 }

@@ -1,0 +1,58 @@
+@using System.Globalization
+@using WebApplication.SPRT
+@using WebApplication.Web.Components
+@inject NavigationManager NavigationManager
+
+<tr style="cursor:pointer;" class="p-0 test-link-big d-none d-lg-table-row" @onclick="RedirectToTest">
+    <td><IconSpan><ChildContent>@Icons.UserIcon() @StringCut(Test.User.UserName!, MAX_USERNAME_SIZE)</ChildContent></IconSpan></td>
+    <td><IconSpan><ChildContent>@Icons.ManageEnginesIcon() @StringCut(Test.Engine.Name, MAX_TEST_SIZE)</ChildContent></IconSpan></td>
+    <td><IconSpan><ChildContent>@Icons.TestIcon() @StringCut(Test.Name, MAX_TEST_SIZE)</ChildContent></IconSpan></td>
+    <td><IconSpan><ChildContent>@Icons.ClockIcon() @Test.Created</ChildContent></IconSpan></td>
+    <td><IconSpan><ChildContent>@Icons.ArrowSpin() @Test.TimeManagement</ChildContent></IconSpan></td>
+    <td class="code">@Statistics("width: 230px;")</td>
+</tr>
+    
+<tr class="d-lg-none d-block test-link-mini w-100" @onclick="RedirectToTest">
+    <td class="ps-0 pe-0">
+        <div class="d-flex flex-column gap-2 align-items-center" style="cursor: pointer">
+            <div class="d-flex w-100 justify-content-evenly">
+                <span>@Icons.UserIcon() @StringCut(Test.User.UserName!, MAX_USERNAME_SIZE)</span>
+                <span>@Icons.ManageEnginesIcon() @StringCut(Test.Engine.Name, MAX_TEST_SIZE)</span>
+                <span>@Icons.TestIcon() @StringCut(Test.Name, MAX_TEST_SIZE)</span>
+                <span>@Icons.ArrowSpin() @Test.TimeManagement</span>
+            </div>
+            @Statistics()
+        </div>
+    </td>
+</tr>
+
+@code {
+    private const int MAX_USERNAME_SIZE = 5; 
+    private const int MAX_TEST_SIZE = 15; 
+    
+    /// <summary>
+    /// Test entity, that will be used to display information.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required Data.Models.Test Test { get; set; }
+
+    private RenderFragment Statistics(string? cssStyle = null)
+    {
+        var wdl = Test.Penta.ToWdl();
+        var statistics = Sprt.GetStatistics(Test);
+        var rawPenta = Test.Penta.ToRawPentanomial();
+        RenderFragment rf = @<text>
+                                 <code class="text-center" style="@cssStyle">
+                                     LLR: @statistics.Llr.ToString(CultureInfo.InvariantCulture) - @Test.Settings.ToString()<br/>
+                                     WDL: [@wdl.W, @wdl.L, @wdl.D] <br/>
+                                     Penta: [@rawPenta.Ll, @rawPenta.Ld, @rawPenta.Dd, @rawPenta.Wd, @rawPenta.Ww]
+                                 </code>
+                             </text>;
+        return rf;
+    }
+    
+    private void RedirectToTest() => NavigationManager.NavigateTo($"/Test/{Test.Id}", true);
+
+    private static string StringCut(string username, int maxSize) => username.Length <= maxSize ? username : $"{username[..maxSize]}..";
+    
+}

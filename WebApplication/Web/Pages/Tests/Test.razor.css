@@ -1,0 +1,7 @@
+::deep code{
+    border-radius: 0.5em;
+    outline: 1px solid;
+    display: block;
+    padding: 0.1em 0.6em;
+    width: fit-content;
+}

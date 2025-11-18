@@ -11,13 +11,13 @@ public class SprtSettings : DoId
     /// Null hypothesis.
     /// </summary>
     [Required]
-    public required int Elo0 { get; set; }
+    public required double Elo0 { get; set; }
     
     /// <summary>
     /// Alternative hypothesis.
     /// </summary>
     [Required]
-    public required int Elo1 { get; set; }
+    public required double Elo1 { get; set; }
     
     /// <summary>
     /// False positive confidence.
@@ -44,4 +44,12 @@ public class SprtSettings : DoId
     /// <param name="Type2ErrorBound">False negative.</param> 
     public record Bounds(double Type1ErrorBound, double Type2ErrorBound);
     public Bounds GetErrorBounds() => new Bounds(Math.Log(Beta / (1 - Alpha)), Math.Log((1 - Beta) / Alpha));
+    
+    /// <inheritdoc /> 
+    public override string ToString()
+    {
+        var bounds = GetErrorBounds();
+        var result = $"[{Elo0},{Elo1}], ({bounds.Type1ErrorBound:N},{bounds.Type2ErrorBound:N})";
+        return result;
+    }
 }

@@ -1,0 +1,27 @@
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@page "/Tests/Ended"
+
+@* TODO paging !!!*@
+
+@rendermode InteractiveServer
+
+@inject TestStore TestStore
+
+<PageTitle>Ended tests</PageTitle>
+<PageHeader Value="Ended tests" />
+
+<TestLinks Tests="_endedTests" />
+
+@code {
+
+    private IReadOnlyList<Data.Models.Test> _endedTests = [];
+    
+    /// <inheritdoc /> 
+    protected override void OnInitialized()
+    {
+        _endedTests = TestStore.GetEndedTests();
+        base.OnInitialized();
+    }
+}

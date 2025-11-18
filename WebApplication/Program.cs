@@ -7,6 +7,7 @@ using WebApplication.Components.Account;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 using WebApplication.API;
+using WebApplication.Services.GitBranchComparison;
 using WebApplication.Stores;
 using WebApplication.Web;
 
@@ -63,6 +64,8 @@ builder.Services.AddScoped<TestStore>();
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<WorkerLogStore>();
 builder.Services.AddScoped<OpeningBookStore>();
+builder.Services.AddScoped<SprtSettingsStore>();
+builder.Services.AddScoped<ErrorStore>();
 
 #endregion
 
@@ -73,6 +76,16 @@ builder.Services.AddHostedService<WorkerLogWatcher>();
 builder.Services.AddControllers();
 
 #endregion
+
+
+#region GitComparison
+
+builder.Services.AddSingleton<IGitBranchComparisonService, GitBranchComparisonService>();
+builder.Services.AddKeyedSingleton<IGitBranchComparison, GithubBranchComparison>(nameof(GithubBranchComparison));
+builder.Services.AddKeyedSingleton<IGitBranchComparison, GitlabBranchComparison>(nameof(GitlabBranchComparison));
+
+#endregion
+
 
 var app = builder.Build();
 

@@ -81,12 +81,14 @@ public partial class WorkerController : ControllerBase
         workerLog.NumberOfGames += toIncrement;
         _workerLogStore.Update(workerLog);
         
+        // TODO set test state to paused if there is no active worker log.
+        
         // SPRT part. 
         var test = _testStore.GetById(workerLog.Test.Id)!;
         var statistics = Sprt.GetStatistics(test);
         if (statistics.Result != Sprt.SprtResult.Unknown)
         {
-            await _testStore.SetState(test.Id, TestState.Finished);
+            await _testStore.SetFinishedState(test.Id);
         }
         
         return Ok(new ResultsResponseDto(true));
@@ -106,11 +108,12 @@ public partial class WorkerController : ControllerBase
 
         var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
         if (!result) await _testStore.StopTest(workerLog.Test.Id);
-
+        
         workerLog.State = WorkerLogState.Finished;
         _workerLogStore.SaveChanges();
-        
         _autobenchStateStore.SaveChanges();
+        
+        // TODO set test state to paused if there is no active worker log.
         
         // If test is resolved, set this as a bench of the test branch.
         if (autobenchState.Resolved)

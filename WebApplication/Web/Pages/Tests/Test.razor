@@ -1,0 +1,193 @@
+@inherits AuthorizedPageBase
+
+@page "/Test/{id:int}"
+
+@using WebApplication.Data.Models
+@using WebApplication.Services.GitBranchComparison
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@rendermode InteractiveServer
+
+@inject TestStore TestStore
+@inject NavigationManager NavigationManager
+@inject IGitBranchComparisonService GitBranchComparisonService
+
+<PageTitle>@_test!.Name</PageTitle>
+
+<div class="d-flex flex-lg-row justify-content-between flex-column mb-lg-0 mb-3">
+    <PageHeader Value="@_test!.Name"/>
+    <TestStatistics Test="_test" />
+</div>
+
+<div class="d-flex gap-1 flex-column" >
+    @if (_canEdit)
+    {   
+        <h3>Actions</h3>
+        <div class="d-flex gap-3 mb-3">
+            @if (_test.State != TestState.Stopped)
+            {
+                <button @onclick="StopTest" class="btn btn-primary">Stop</button>
+            }
+            <button @onclick="RemoveTest" class="btn btn-danger">Remove</button>
+            @{
+                var url = GitBranchComparisonService.GetDiffUrl(_test);
+            }
+            @if (url.Matched)
+            {
+                <a href="@url.DiffUrl" target="_blank">
+                    <button class="btn btn-primary">
+                        Show diff
+                    </button>
+                </a>
+            }
+        </div>
+    }
+
+    <HideUnhideContent>
+        <HeaderContent>
+            <h3>Test info</h3>
+        </HeaderContent>
+        <ChildContent>
+            <ul>
+                <li>Created by: @_test.User.UserName</li>
+                <li>State: @_test.State</li>
+                <li>Description: @NoneTextIfEmpty(_test.Description)</li>
+                <li>Autobenched: @_test.Autobenched</li>
+
+                @if (_test.Autobenched)
+                {
+                    <li>
+                        <span>AutobenchState</span>
+                        <ul>
+                            <li>Resolved: @_test.AutobenchState!.Resolved</li>
+                            <li>Confidence: @_test.AutobenchState.Confidence</li>
+                            <li>Expected bench: @_test.AutobenchState.Bench</li>
+                        </ul>
+                    </li>
+                }
+                <li>Opening book: @_test.OpeningBook.Name</li>
+                <li>Created: @_test.Created</li>
+                @if (_test.Ended is not null)
+                {
+                    <li>Ended: @_test.Ended</li>
+                }
+                <li>Threadscale: @_test.ThreadScale</li>
+            </ul>
+        </ChildContent>
+    </HideUnhideContent>
+
+    <HideUnhideContent>
+        <HeaderContent>
+            <h3>Options</h3>
+        </HeaderContent>
+        <ChildContent>
+            <ul>
+                <li>Hashsize: @_test.HashSize</li>
+                <li>Timemanagement: @_test.TimeManagement</li>
+                <li>NumberOfThreads: @_test.NumberOfThreads</li>
+                <li>Priority: @_test.Priority</li> @* TODO enable change *@
+            </ul>
+        </ChildContent>
+    </HideUnhideContent>
+
+    <HideUnhideContent>
+        <HeaderContent>
+            <h3>Branch info</h3>
+        </HeaderContent>
+        <ChildContent>
+            <h4>Base</h4>
+            <ul>
+                <li>Name: @_test.BaseBranch.Name</li>
+                <li>Bench: @_test.BaseBranch.Bench</li>
+            </ul>
+
+            <h4>Test</h4>
+            <ul>
+                <li>Name: @_test.TestBranch.Name</li>
+                <li>Bench: @_test.TestBranch.Bench</li>
+            </ul>
+        </ChildContent>
+    </HideUnhideContent>
+
+    <HideUnhideContent>
+        <HeaderContent>
+            <h4>SPRT settings</h4>
+        </HeaderContent>
+        <ChildContent>
+            <ul>
+                <li>Alpha: @_test.Settings.Alpha</li>
+                <li>Beta: @_test.Settings.Beta</li>
+                <li>Elo0: @_test.Settings.Elo0</li>
+                <li>Elo1: @_test.Settings.Elo1</li>
+            </ul>
+        </ChildContent>
+    </HideUnhideContent>
+
+    <HideUnhideContent>
+        <HeaderContent>
+            <h3>Workers</h3>
+        </HeaderContent>
+        <ChildContent>
+            <p>Workers - active (@_test.ActiveWorkerThreadCount() threads)</p>
+            @foreach (var workerLog in _test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Active))
+            {
+                @*TODO*@
+            }
+            <p>Workers - finished</p>
+            @foreach (var workerLog in _test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Finished))
+            {
+                @*TODO*@
+            }
+            <p>Workers - disconnected</p>
+            @foreach (var workerLog in _test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Disconnected))
+            {
+                @*TODO*@
+            }
+        </ChildContent>
+    </HideUnhideContent>
+</div>
+
+@* TODO LLR/Elo history as a graph. *@
+
+@code {
+    private Data.Models.Test? _test;
+    private bool _canEdit;
+    
+    /// <summary>
+    /// Id of the test.
+    /// </summary>  
+    [Parameter]
+    public required int Id { get; set; }
+
+    /// <inheritdoc /> 
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        RefreshTest();
+        if (_test is null)
+        {
+            NavigationManager.NavigateTo("/NotFound");   
+            return;
+        }
+        _canEdit = _test.User.Id == UserId;
+    }
+    
+    private void RemoveTest()
+    {
+        TestStore.Delete(_test!);
+        NavigationManager.NavigateTo("/", true);
+    }
+    
+    private async Task StopTest()
+    {
+        await TestStore.StopTest(_test!.Id);
+        RefreshTest();
+    }
+    
+    private void RefreshTest() => _test = TestStore.GetById(Id);
+
+    private static string NoneTextIfEmpty(string? value)
+        => value is null || value.Length == 0 ? "No description" : value;
+    
+}

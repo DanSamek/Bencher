@@ -1,0 +1,27 @@
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
+
+<li class="@CssClass" @onclick="@NavigateTo"><span style="cursor: pointer">@LinkText</span></li>
+
+@code {
+    /// <summary>
+    /// CSS class for the element.
+    /// </summary>
+    [CascadingParameter]
+    public required string CssClass { get; set; }
+    
+    /// <summary>
+    /// Redirect url.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required string Url { get; set; }
+    
+    /// <summary>
+    /// Text that will be displayed.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required string LinkText { get; set; }
+    
+    private void NavigateTo() => NavigationManager.NavigateTo(Url, true);
+}

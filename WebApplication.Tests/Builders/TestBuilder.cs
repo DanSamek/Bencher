@@ -55,5 +55,23 @@ public class TestBuilder
         return this;
     }
 
+    public TestBuilder AddError(ApplicationDbContext context, DateTime date)
+    {
+        context.Attach(_test);
+        var wl = context.WorkerLogs.First(wl => wl.Test.Id == _test.Id);
+        var error = new Error
+        {
+            Time = date.ToUniversalTime(),
+            Log = [0x1, 0x2, 0x4],
+            Test = _test,
+            WorkerLog = wl,
+            
+        };
+        context.Errors.Add(error);
+        context.SaveChanges();
+        return this;
+    }
+    
     public EngineBuilder Close() => _engineBuilder;
+
 }

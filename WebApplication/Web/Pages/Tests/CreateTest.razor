@@ -1,0 +1,158 @@
+@page "/Test/Create"
+
+@inherits AuthorizedPageBase
+
+@using Microsoft.AspNetCore.Authorization
+@using WebApplication.Components.Pages.Tests
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@attribute [Authorize]
+
+@rendermode InteractiveServer
+
+@inject EngineStore EngineStore
+@inject OpeningBookStore OpeningBookStore
+@inject TestStore TestStore
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create test</PageTitle>
+<PageHeader Value="Create test" />
+
+<EditForm class="form-control" Model="_formModel" OnSubmit="OnSubmit">
+    <DataAnnotationsValidator/>
+    
+    <div class="form-floating mb-3">
+        <InputSelect class="form-control" Id="Engine" @bind-Value="_formModel.EngineId">
+            <option value="@((int?)null)" selected>Not selected</option>
+            @foreach (var engine in _engines)
+            {
+                <option value="@engine.Id">@engine.Name</option>
+            }
+        </InputSelect>
+        <label for="Engine" class="form-label">Engine</label>
+        <ValidationMessage For="() => _formModel.EngineId"/>
+    </div>
+    
+    <div class="form-check mb-3">
+        <InputCheckbox class="form-check-input" @bind-Value="@_formModel.Autobenched" Id="Autobenched"/>
+        <label class="form-check-label" for="Autobenched">Autobenched</label>
+    </div>
+    
+    <div class="form-floating mb-3">
+        @if (_formModel.Autobenched)
+        {
+            <SimpleInputNumber TNumber="double?" @bind-Value="@_formModel.Confidence" Name="Confidence" For="() => _formModel.Confidence"/>
+            <span class="message warningMessage">@_autobenchErrorMessage</span>
+        }
+    </div>
+    
+    <SimpleInputText @bind-Value="@_formModel.TestName" Name="Name" For="@(() => _formModel.TestName)"/>
+    
+    <div class="form-floating mb-3">
+        <InputTextArea class="form-control" @bind-Value="@_formModel.Description" Id="Description" />
+        <label for="Description" class="form-label">Description</label>
+        <ValidationMessage For="@(() => _formModel.Description)"/>
+    </div>
+    
+    <div class="form-floating mb-3 d-flex flex-row justify-content-evenly gap-3">
+        <div class="w-100">
+            <p>Base branch</p>
+            <SimpleInputText @bind-Value="@_formModel.BaseBranchName" Name="Branch name" For="() => _formModel.BaseBranchName"/>
+            <SimpleInputNumber TNumber="int" @bind-Value="@_formModel.BaseBranchBench" Name="Bench" For="() => _formModel.BaseBranchBench"/>
+        </div>
+        
+        <div class="w-100">
+            <p>Test branch</p>
+            <SimpleInputText @bind-Value="@_formModel.TestBranchName" Name="Branch name" For="() => _formModel.TestBranchName"/>
+            @if (!_formModel.Autobenched)
+            {
+                <SimpleInputNumber TNumber="int" @bind-Value="@_formModel.TestBranchBench" Name="Bench" For="() => _formModel.TestBranchBench"/>
+            }
+        </div>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <p>Test options</p>
+        <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.Priority" Name="Priority" For="() => _formModel.Priority"/>
+        <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.HashSize" Name="HashSize" For="() => _formModel.HashSize"/>
+        <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.NumberOfThreads" Name="Number of threads" For="() => _formModel.NumberOfThreads"/>
+        <SimpleInputText @bind-Value="@_formModel.TimeManagement" Name="Time management" For="() => _formModel.TimeManagement"/>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <InputSelect class="form-control" Id="OpeningBook" @bind-Value="_formModel.OpeningBookId">
+            <option value="@((int?)null)"selected>Not selected</option>
+            @foreach (var openingBook in _openingBooks)
+            {
+                <option value="@openingBook.Id">@openingBook.Name</option>
+            }
+        </InputSelect>
+        <label for="OpeningBook" class="form-label">Openingbook</label>
+        <ValidationMessage For="() => _formModel.OpeningBookId"/>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <p>SPRT settings</p>
+        <div class="d-flex flex-row justify-content-evenly gap-3">
+            <div class="w-100">
+                <SimpleInputNumber TNumber="double?" @bind-Value="@_formModel.Elo0" Name="Elo0" For="() => _formModel.Elo0"/>
+                <SimpleInputNumber TNumber="double?" @bind-Value="@_formModel.Alpha" Name="Alpha" For="() => _formModel.Alpha"/>
+            </div>
+            
+            <div class="w-100">
+                <SimpleInputNumber TNumber="double?" @bind-Value="@_formModel.Elo1" Name="Elo1" For="() => _formModel.Elo1"/>
+                <SimpleInputNumber TNumber="double?" @bind-Value="@_formModel.Beta" Name="Beta" For="() => _formModel.Beta"/>
+            </div>
+        </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary ms-auto d-block" value="Save">Create</button>
+</EditForm>
+    
+@code{
+    private const string CONFIDENCE_IS_NULL = "Confidence is required if autobench is set.";
+    
+    private readonly CreateTestFormModel _formModel = new CreateTestFormModel();
+    private IReadOnlyList<Engine> _engines = [];
+    private IReadOnlyList<OpeningBook> _openingBooks = [];
+    private bool _loaded;
+    private string? _autobenchErrorMessage;
+    
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (_loaded) return;
+        
+        LoadFromDb();
+        _loaded = true;
+    }
+    
+    private void LoadFromDb()
+    {
+        _engines = EngineStore.GetEnginesForUser(UserId!);
+        var openingBooks = new List<OpeningBook>();
+        openingBooks.AddRange(OpeningBookStore.GetSharedOpeningBooks());
+        openingBooks.AddRange(OpeningBookStore.GetOpeningBooksForUser(UserId!));
+        _openingBooks = openingBooks;
+    }
+    
+    private void OnSubmit(EditContext context)
+    {
+        _autobenchErrorMessage = null;
+        var result = context.Validate();
+        if (!result) return;
+        
+        var data = (context.Model as CreateTestFormModel)!;
+        if (data is { Autobenched: true, Confidence: null })
+        {
+            _autobenchErrorMessage = CONFIDENCE_IS_NULL;
+            return;
+        }
+        
+        var test = TestStore.Create(UserId!, data);
+        NavigationManager.NavigateTo($"/Test/{test.Id}", true);
+        
+    }
+}
