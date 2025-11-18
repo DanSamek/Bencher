@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using WebApplication.Extensions;
 
 namespace WebApplication.Data.Models;
 
@@ -163,10 +164,4 @@ public class Test : DoId
         
         return result;
     }
-}
-
-file static class StringExtensions
-{
-    public static int Seconds(this string s) => int.Parse(s.Split("+")[0]); // TODO avoid allocation.
-
 }
