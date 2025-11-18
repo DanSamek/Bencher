@@ -374,6 +374,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(resultDto2, Is.Not.Null);
     }
 
+    
     /// <summary>
     /// Test for <see cref="WorkerController.Results" /> - test is running.
     /// We expect, that penta stats will be updated.
@@ -486,8 +487,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             while (numberOfPairs > 0)
             {
                 var controller = new WorkerController(new UserStore(Factory), new WorkerLogStore(Factory),
-                    new PentaStore(Factory),
-                    new TestStore(Factory), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory));
+                    new PentaStore(Factory), CreateTestStore(), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory));
 
                 var simplePenta = SimplePenta.Generate(iterPairs);
                 bag.Add(simplePenta);

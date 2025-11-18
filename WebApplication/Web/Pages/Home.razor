@@ -1,10 +1,35 @@
 ﻿@page "/"
+
+@using WebApplication.Stores
 @using WebApplication.Web.Components
+@using WebApplication.Web.Pages.Tests
+
+@inject TestStore TestStore
 
 @rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Bencher - chess engine testing framework</PageTitle>
+<PageHeader Value="Bencher - chess engine testing framework" />
 
-<PageHeader Value="Bencher" />
+<h3 class="mb-3">Paused tests [@_pausedTests.Count]</h3>
+<TestLinks Tests="_pausedTests" />
 
-@code { }
+<h3 class="mb-3 mt-3">Autobenched tests [@_autobenchedTests.Count]</h3>
+<TestLinks Tests="_autobenchedTests" />
+
+<h3 class="mb-3 mt-3">Running tests [@_runningTests.Count]</h3>
+<TestLinks Tests="_runningTests" />
+
+@code {
+    private IReadOnlyList<Data.Models.Test> _pausedTests = [];
+    private IReadOnlyList<Data.Models.Test> _runningTests = [];
+    private IReadOnlyList<Data.Models.Test> _autobenchedTests = [];
+    
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        (_runningTests, _autobenchedTests) = TestStore.GetRunningTests();
+        _pausedTests = TestStore.GetPausedTests();
+        base.OnParametersSet();
+    }
+}

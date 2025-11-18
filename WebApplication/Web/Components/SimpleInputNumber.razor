@@ -1,0 +1,52 @@
+@typeparam TNumber
+
+@using System.Linq.Expressions
+@inherits CustomComponentBase
+
+@{
+    var nameWithId = $"{Name}{Id}";
+}
+<div class="form-floating mb-3">
+    <InputNumber TValue="TNumber" class="form-control" ValueExpression="() => _inputValue" Value="@_inputValue" ValueChanged="OnValueChanged" Id="@nameWithId"></InputNumber>
+    <label for="@nameWithId" class="form-label">@Name</label>
+    <ValidationMessage For="For"/>
+</div>
+
+@code {
+    private TNumber _inputValue = default!;
+    
+    /// <summary>
+    /// Input name.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required string Name { get; set; }
+    
+    /// <summary>
+    /// Callback, when value of the input is changed.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required EventCallback<TNumber> ValueChanged { get; set; }
+    
+    /// <summary>
+    /// Initial value of the editor.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required TNumber Value { get; set; }
+    
+    /// <summary>
+    /// <see cref="ValidationMessage{TValue}.For"/>
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required Expression<Func<TNumber>> For { get; set; }
+    
+    protected override void OnParametersSet()
+    {
+        _inputValue = Value;
+    }
+
+    private async Task OnValueChanged(TNumber value)
+    {
+        _inputValue = value;
+        await ValueChanged.InvokeAsync(_inputValue);
+    }
+}

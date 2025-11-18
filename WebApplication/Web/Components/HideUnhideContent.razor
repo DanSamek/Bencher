@@ -1,0 +1,41 @@
+<div>
+    <div class="d-flex gap-3">
+        @HeaderContent
+        <button class="btn btn-secondary pb-1 pt-1" style="height:max-content;" @onclick="OnButtonClick">@ButtonText()</button>
+    </div>
+    @if (!_hidden)
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    private bool _hidden;
+    /// <summary>
+    /// Content to hide/unhide.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required RenderFragment ChildContent { get; set; }
+    
+    /// <summary>
+    /// Content, that will be shown with the button.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required RenderFragment HeaderContent { get; set; }
+
+    /// <summary>
+    /// Initial state of the component [hidden content, or shown].
+    /// By default is content hidden.
+    /// </summary>
+    [Parameter]
+    public bool InitialHidden { get; set; } = true;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        _hidden = InitialHidden;
+    }
+
+    private string ButtonText() => _hidden ? "Show" : "Hide";
+    private void OnButtonClick() => _hidden = !_hidden;
+}

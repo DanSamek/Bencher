@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using WebApplication.Data.Models;
+using WebApplication.Stores;
 
 namespace WebApplication.Tests;
 
@@ -26,7 +27,19 @@ public class TestBase
         factory.SetConnectionString(_container.GetConnectionString());
         return factory;
     }
+    
+    
+    /// <summary>
+    /// Creates TestStore instance. 
+    /// </summary>
+    protected TestStore CreateTestStore()
+    {
+        var testStore = new TestStore(Factory, new SprtSettingsStore(Factory), new OpeningBookStore(Factory),
+            new EngineStore(Factory), new UserStore(Factory), new TestBranchStore(Factory), new PentaStore(Factory));
 
+        return testStore;
+    }
+    
     private void ClearDb()
     {
         var context = Factory.CreateDbContext();

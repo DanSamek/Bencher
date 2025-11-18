@@ -29,7 +29,7 @@ public class TestStoreTests : TestBase
                 .Close()
             .Close();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(requestAutobenched, 1);
         
         if (shouldBeNull)
@@ -62,7 +62,7 @@ public class TestStoreTests : TestBase
             .Close()
             .Close();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(requestAutobenched, 1);
         if (shouldBeNull)
         {
@@ -86,7 +86,7 @@ public class TestStoreTests : TestBase
             .CreateBook("test_book")
             .CreateSprtSettings();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         
         for (var i = 0; i < 5; i++)
         {
@@ -109,7 +109,7 @@ public class TestStoreTests : TestBase
             Assert.That(result, Is.Not.Null);
             nextTests.Add(result.Name);
             
-            var tmpStore = new TestStore(Factory);
+            var tmpStore = CreateTestStore();
             tmpStore.SetRunningState(result);
         }
         
@@ -128,7 +128,7 @@ public class TestStoreTests : TestBase
             .CreateSprtSettings()
             .Close();
 
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
 
         for (var i = 0; i < 5; i++)
         {
@@ -154,7 +154,7 @@ public class TestStoreTests : TestBase
             Assert.That(result, Is.Not.Null);
             nextTests.Add(result.Name);
 
-            var tmpStore = new TestStore(Factory);
+            var tmpStore = CreateTestStore();
             tmpStore.SetRunningState(result);
         }
 
@@ -183,7 +183,7 @@ public class TestStoreTests : TestBase
                 .Close()
             .Close();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(false, 1);
         Assert.That(nextTest, Is.Null);
     }
@@ -219,7 +219,7 @@ public class TestStoreTests : TestBase
         Assert.That(3, Is.EqualTo(Factory.CreateDbContext().Tests.Count(t => t.Autobenched)));
         Assert.That(3, Is.EqualTo(Factory.CreateDbContext().Tests.Include(t => t.AutobenchState).Count(t => t.AutobenchState != null)));
 
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 1);
         Assert.That(nextTest, Is.Null);
     }
@@ -247,7 +247,7 @@ public class TestStoreTests : TestBase
             .Close()
         .Close();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(false, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_2"));
@@ -287,7 +287,7 @@ public class TestStoreTests : TestBase
         Assert.That(3, Is.EqualTo(factory.CreateDbContext().Tests.Count(t => t.Autobenched)));
         Assert.That(3, Is.EqualTo(factory.CreateDbContext().Tests.Include(t => t.AutobenchState).Count(t => t.AutobenchState != null)));
 
-        var testStore = new TestStore(factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_2"));
@@ -323,7 +323,7 @@ public class TestStoreTests : TestBase
 
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(false, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_2"));
@@ -356,7 +356,7 @@ public class TestStoreTests : TestBase
 
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_2"));
@@ -394,7 +394,7 @@ public class TestStoreTests : TestBase
 
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(false, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_4"));
@@ -432,7 +432,7 @@ public class TestStoreTests : TestBase
         
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_4"));
@@ -467,7 +467,7 @@ public class TestStoreTests : TestBase
 
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(false, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_3"));
@@ -500,7 +500,7 @@ public class TestStoreTests : TestBase
         
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 1);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_3"));
@@ -535,7 +535,7 @@ public class TestStoreTests : TestBase
 
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(false, 16);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_1"));
@@ -570,7 +570,7 @@ public class TestStoreTests : TestBase
         
         using var context = Factory.CreateDbContext();
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 16);
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_1"));
@@ -601,7 +601,7 @@ public class TestStoreTests : TestBase
         var test = GetTestByName(Factory,"test_1");
         Assert.That(test.State,Is.EqualTo(TestState.Running));
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         await testStore.StopTest(test.Id);
 
         test = GetTestByName(Factory,"test_1");
@@ -631,7 +631,7 @@ public class TestStoreTests : TestBase
             .Close()
         .Close();
         
-        var store = new TestStore(Factory);
+        var store = CreateTestStore();
         var test = GetTestByName(Factory,"test_1");
         Assert.That(test.State, Is.EqualTo(initialState));
         store.SetRunningState(test);
@@ -675,7 +675,7 @@ public class TestStoreTests : TestBase
             context.SaveChanges();
             
             var tmpTest = GetTestByNameAutobenched(Factory, "test_1");
-            var tmpStore = new TestStore(Factory);
+            var tmpStore = CreateTestStore();
             tmpStore.SetRunningState(tmpTest);
         }
         
@@ -707,7 +707,7 @@ public class TestStoreTests : TestBase
         
         var test = GetTestByName(Factory,"test_1");
         Assert.That(test.State, Is.EqualTo(initialState));
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         
         await testStore.SetState(test.Id, expectedState);
         test = GetTestByName(Factory,"test_1");
@@ -739,7 +739,7 @@ public class TestStoreTests : TestBase
         var test = GetTestByName(Factory,"test_1");
         Assert.That(test.State, Is.EqualTo(initialState));
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         testStore.SetState(test, expectedState);
         
         test = GetTestByName(Factory,"test_1");
@@ -767,7 +767,7 @@ public class TestStoreTests : TestBase
             .Close()
         .Close();
 
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var testId = Factory.CreateDbContext().Tests.First().Id;
         var test = testStore.GetById(testId);
         
@@ -798,7 +798,7 @@ public class TestStoreTests : TestBase
                 .AddTest($"test_{i}", "test_book", "base_branch", "test_branch");
         }
         
-        var testStore = new TestStore(Factory);
+        var testStore = CreateTestStore();
         var engine = Factory.CreateDbContext().Engines.First();
         var recent = testStore.RecentTests(engine.Id, 3);
 
@@ -806,6 +806,157 @@ public class TestStoreTests : TestBase
         Assert.That(recent[0].Name, Is.EqualTo("test_4"));
         Assert.That(recent[1].Name, Is.EqualTo("test_3"));
         Assert.That(recent[2].Name, Is.EqualTo("test_2"));
+    }
+
+    /// <summary>
+    /// Tests <see cref="TestStore.GetRunningTests" />.
+    /// </summary>
+    [Test]
+    public void GetRunningTests()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Running)
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .AddWorker(1)
+                        .Close()
+                    .AddTest("test_2", "test_book", "base_branch", "test_branch")
+                        .Close()
+                    .AddTest("test_3", "test_book", "base_branch", "test_branch")
+                        .Close()
+                .Close()
+            .Close()
+        .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_4", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1, state: TestState.Autobenched, workerThreads: [1]);
+        
+        var store = CreateTestStore();
+
+        var (autobenchedTests, runningTests) = store.GetRunningTests();
+        var tests = new List<Test>(autobenchedTests);
+        tests.AddRange(runningTests);
+        
+        tests = tests.OrderBy(t => t.Name).ToList();
+        Assert.That(tests, Has.Count.EqualTo(2));
+        Assert.That(tests[0].Name, Is.EqualTo("test_1"));
+        Assert.That(tests[1].Name, Is.EqualTo("test_4"));
+    }
+
+    
+    /// <summary>
+    /// Tests <see cref="TestStore.GetEndedTests"/>
+    /// </summary>
+    [Test]
+    public void GetEndedTests()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+                .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Finished)
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .AddWorker(1)
+                        .Close()
+                    .AddTest("test_2", "test_book", "base_branch", "test_branch")
+                        .Close()
+                    .AddTest("test_3", "test_book", "base_branch", "test_branch")
+                        .Close()
+                    .Close()
+                .Close()
+            .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_4", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1, state: TestState.Stopped, workerThreads: [1]);
+        
+        var store = CreateTestStore();
+
+        var endedTests= store.GetEndedTests();
+        endedTests = endedTests.OrderBy(t => t.Name).ToList();
+        Assert.That(endedTests, Has.Count.EqualTo(2));
+        Assert.That(endedTests[0].Name, Is.EqualTo("test_1"));
+        Assert.That(endedTests[1].Name, Is.EqualTo("test_4"));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="TestStore.GetPausedTests"/>
+    /// </summary>
+    [Test]
+    public void GetPausedTests()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Finished)
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .AddWorker(1)
+                        .Close()
+                    .AddTest("test_2", "test_book", "base_branch", "test_branch")
+                        .Close()
+                    .AddTest("test_3", "test_book", "base_branch", "test_branch")
+                        .Close()
+                    .Close()
+              .Close()
+        .Close();
+        
+        var store = CreateTestStore();
+        var pausedTests= store.GetPausedTests();
+        pausedTests = pausedTests.OrderBy(t => t.Name).ToList();
+        Assert.That(pausedTests, Has.Count.EqualTo(2));
+        Assert.That(pausedTests[0].Name, Is.EqualTo("test_2"));
+        Assert.That(pausedTests[1].Name, Is.EqualTo("test_3"));
+    }
+    
+    
+    /// <summary>
+    /// Tests <see cref="TestStore.SetFinishedState"/>
+    /// </summary>
+    [Test]
+    public async Task SetFinishedState()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Running)
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .AddWorker(1)
+                        .Close()
+                    .Close()
+                .Close()
+            .Close();
+        
+        var store = CreateTestStore();
+        var test = GetTestByName(Factory, "test_1"); 
+        Assert.That(test.State, Is.EqualTo(TestState.Running));
+        
+        await store.SetFinishedState(test.Id);
+        test = GetTestByName(Factory, "test_1"); 
+        Assert.That(test.State, Is.EqualTo(TestState.Finished));
+    }
+
+    /// <summary>
+    /// Tests <see cref="TestStore.GetPassedTests" />. 
+    /// </summary>
+    [Test]
+    public void GetPassedTests()
+    {
+        Assert.Pass("TODO when SPRT part is implemented.");
     }
     
     private static Test GetTestByName(TestContextFactory factory, string name)

@@ -1,0 +1,52 @@
+@using System.Linq.Expressions
+@inherits CustomComponentBase
+
+@{
+    var nameWithId = $"{Name}{Id}";
+}
+<div class="form-floating mb-3">
+    <InputText class="form-control" ValueExpression="() => _inputValue" Value="@_inputValue" ValueChanged="OnValueChanged" Id="@nameWithId"></InputText>
+    <label for="@nameWithId" class="form-label">@Name</label>
+    <ValidationMessage For="For"/>
+</div>
+
+@code {
+    private string? _inputValue;
+    
+    /// <summary>
+    /// Input name.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required string Name { get; set; }
+    
+    /// <summary>
+    /// Callback, when value of the input is changed.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required EventCallback<string?> ValueChanged { get; set; }
+    
+    /// <summary>
+    /// Initial value of the editor.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required string? Value { get; set; }
+    
+    /// <summary>
+    /// <see cref="ValidationMessage{TValue}.For"/>
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required Expression<Func<string>> For { get; set; }
+    
+    protected override void OnParametersSet()
+    {
+        _inputValue = Value;
+    }
+
+    private async Task OnValueChanged(string? value)
+    {
+        _inputValue = value;
+        await ValueChanged.InvokeAsync(_inputValue);
+    }
+
+
+}

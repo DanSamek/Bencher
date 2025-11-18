@@ -1,0 +1,27 @@
+@using System.Globalization
+@using WebApplication.SPRT
+
+@Statistics()
+
+@code {
+    /// <summary>
+    /// Test entity, that will be used to display information.
+    /// </summary>
+    [EditorRequired, Parameter]
+    public required Data.Models.Test Test { get; set; }
+    
+    private RenderFragment Statistics()
+     {
+         var wdl = Test.Penta.ToWdl();
+         var statistics = Sprt.GetStatistics(Test);
+         var rawPenta = Test.Penta.ToRawPentanomial();
+         RenderFragment rf = @<text>
+                                  <code class="text-center">
+                                      LLR: @statistics.Llr.ToString(CultureInfo.InvariantCulture) - @Test.Settings.ToString()<br/>
+                                      WDL: [@wdl.W, @wdl.L, @wdl.D] <br/>
+                                      Penta: [@rawPenta.Ll, @rawPenta.Ld, @rawPenta.Dd, @rawPenta.Wd, @rawPenta.Ww]
+                                  </code>
+                              </text>;
+         return rf;
+     }
+}

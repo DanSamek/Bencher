@@ -16,6 +16,7 @@ public class Error : DoId
     /// <summary>
     /// Log of the error.
     /// Worker app will upload xxx.txt
+    /// TODO !!!! As in OpeningBook.cs
     /// </summary>
     [Required]
     public required byte[] Log { get; set; }

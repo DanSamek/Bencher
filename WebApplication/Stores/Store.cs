@@ -50,7 +50,15 @@ where T : class
         dbSet.Update(entity);
         SaveChanges();
     }
-    
+
+    /// <inheritdoc /> 
+    public T AddRet(T entity)
+    {
+        var dbSet = GetDbSet();
+        var result = dbSet.Add(entity);
+        return result.Entity;
+    }
+
     /// <inheritdoc />
     public void Delete(T entity)
     {

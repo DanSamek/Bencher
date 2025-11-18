@@ -1,0 +1,17 @@
+<table class="table table-borderless">
+    <tbody>
+        @foreach (var test in Tests)
+        {
+            <TestLink Test="test"/>
+        }
+    </tbody>
+</table>
+
+@code {
+    
+    /// <summary>
+    /// Tests to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<Data.Models.Test> Tests { get; set; }
+}

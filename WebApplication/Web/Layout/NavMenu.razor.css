@@ -24,7 +24,7 @@
     font-size: 1.1rem;
 }
 
-.bi {
+::deep .bi {
     display: inline-block;
     position: relative;
     width: 1.25rem;

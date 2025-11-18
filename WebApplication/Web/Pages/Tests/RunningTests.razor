@@ -1,0 +1,29 @@
+@inherits CustomComponentBase
+
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@page "/Tests/Running"
+
+@* TODO paging !!!*@
+
+@rendermode InteractiveServer
+
+@inject TestStore TestStore
+
+<PageTitle>Running tests</PageTitle>
+<PageHeader Value="Running tests" />
+    
+<TestLinks Tests="_runningTests" />
+
+@code {
+    private IReadOnlyList<Data.Models.Test> _runningTests = [];
+    private IReadOnlyList<Data.Models.Test> _autobenchedTests = [];
+    
+    /// <inheritdoc /> 
+    protected override void OnInitialized()
+    {
+        (_autobenchedTests, _runningTests) = TestStore.GetRunningTests();
+        base.OnInitialized();
+    }
+}

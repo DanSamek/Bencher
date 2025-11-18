@@ -1,0 +1,9 @@
+<span class="d-flex align-items-center gap-2">@ChildContent</span>
+
+@code {
+    /// <summary>
+    /// Content in the span (icon + text).
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required RenderFragment ChildContent { get; set; }
+}

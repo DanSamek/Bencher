@@ -23,6 +23,12 @@ where T : class
     void Add(T entity);
 
     /// <summary>
+    /// Adds the entity and also returns the entity.
+    /// Note, another store has to call Attach()!
+    /// </summary>
+    T AddRet(T entity);
+    
+    /// <summary>
     /// Deletes an entity. 
     /// </summary>
     void Delete(T entity);

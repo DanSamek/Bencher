@@ -1,0 +1,29 @@
+@page "/Errors"
+
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@rendermode InteractiveServer
+
+@inject ErrorStore ErrorStore
+
+@* TODO paging !! *@
+
+<PageTitle>Errors</PageTitle>
+<PageHeader Value="Errors" />
+
+@foreach (var error in _errors)
+{
+    <span>@error.Id -- TODO</span>
+}
+
+@code {
+    private IReadOnlyList<Data.Models.Error> _errors = [];
+    
+    /// <inheritdoc /> 
+    protected override void OnInitialized()
+    {
+        _errors = ErrorStore.GetErrors();
+        base.OnInitialized();
+    }
+}

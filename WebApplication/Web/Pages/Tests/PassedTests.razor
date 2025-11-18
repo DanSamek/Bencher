@@ -1,0 +1,26 @@
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@page "/Tests/Passed"
+
+@* TODO paging !!!*@
+
+@rendermode InteractiveServer
+
+@inject TestStore TestStore
+
+<PageTitle>Passed tests</PageTitle>
+<PageHeader Value="Passed tests" />
+
+<TestLinks Tests="_passedTests" />
+
+@code {
+    private IReadOnlyList<Data.Models.Test> _passedTests = [];
+    
+    /// <inheritdoc /> 
+    protected override void OnInitialized()
+    {
+        _passedTests = TestStore.GetPassedTests();
+        base.OnInitialized();
+    }
+}
