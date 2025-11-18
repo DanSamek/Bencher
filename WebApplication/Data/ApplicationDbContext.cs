@@ -111,5 +111,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade);
         
         #endregion
+
+        #region Error
+        
+        builder.Entity<Error>()
+            .HasOne(e => e.Log)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        #endregion
+        
     }
 }

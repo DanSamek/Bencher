@@ -1,6 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using WebApplication.Stores;
 using WebApplication.Tests.Builders;
-using WebApplication.Data.Models;
 
 namespace WebApplication.Tests.Stores;
 
@@ -29,31 +29,25 @@ public class WorkerLogStoreTests : TestBase
         .Close();
         
         using var context = Factory.CreateDbContext();
-        var wl = context.WorkerLogs.First();
-        var test = context.Tests.First();
-
-        var error = new Error
-        {
-            Time = DateTime.UtcNow,
-            Log =
-            [
-                0x10,
-                0x11,
-                0x12,
-                0x13
-            ],
-            Test = test,
-            WorkerLog = wl
-        };
-        
+        var wlId = context.WorkerLogs.First().Id;
+        var year = DateTime.UtcNow.Year;
+     
         var store = new WorkerLogStore(Factory);
-        store.AddError(wl, error);
+        var workerLog = store.GetByConnectionId(wlId);
+        Assert.That(workerLog, Is.Not.Null);
+        store.AddError(workerLog,[0x10, 0x11, 0x12, 0x13 ]);
         
-        var errors = context.Errors.ToList();
+        var errors = context.Errors
+            .Include(e => e.Log)
+            .Include(e => e.Test)
+            .ToList();
+        
         Assert.That(errors, Is.Not.Null);
         Assert.That(errors, Is.Not.Empty);
-        Assert.That(errors[0].Log, Is.EquivalentTo(new byte[] {0x10, 0x11, 0x12, 0x13}));
-        Assert.That(errors[0].Time.Year, Is.EqualTo(error.Time.Year));
+        Assert.That(errors,Has.Count.EqualTo(1));
+        Assert.That(errors[0].Test.Name, Is.EqualTo("test_1"));
+        Assert.That(errors[0].Log.Data, Is.EquivalentTo(new byte[] {0x10, 0x11, 0x12, 0x13}));
+        Assert.That(errors[0].Time.Year, Is.EqualTo(year));
     }
 
     /// <summary>

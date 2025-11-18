@@ -48,16 +48,8 @@ public partial class WorkerController : ControllerBase
         using var memoryStream = new MemoryStream();
         errorDto.Log.CopyTo(memoryStream);
         
-        var error = new Error
-        {
-            Time = DateTime.UtcNow,
-            Log = memoryStream.ToArray(),
-            Test = workerLog.Test,
-            WorkerLog = workerLog
-        };
-
         workerLog.State = WorkerLogState.Finished;
-        _workerLogStore.AddError(workerLog, error);
+        _workerLogStore.AddError(workerLog, memoryStream.ToArray());
         _testStore.SetState(workerLog.Test, TestState.Stopped);
         return Ok(new ResponseBase());
     }

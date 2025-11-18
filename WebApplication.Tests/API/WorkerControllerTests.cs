@@ -659,10 +659,12 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var test = GetTestByConnectionId(resultDto.ConnectionId);
         var testError = Factory.CreateDbContext()
             .Errors
-            .Include(t => t.Test)
+            .Include(e => e.Test)
+            .Include(e => e.Log)
             .First(x => x.Test.Id == test.Id);
         
-        Assert.That(testError.Log, Is.EqualTo(new int[] {0x1, 0x2, 0x3, 0x4}));
+        Assert.That(Factory.CreateDbContext().Errors.Count(), Is.EqualTo(1));
+        Assert.That(testError.Log.Data, Is.EqualTo(new int[] {0x1, 0x2, 0x3, 0x4}));
     }
     
     /// <summary>
@@ -708,7 +710,30 @@ public class WorkerControllerTests : WorkerControllerTestBase
         {
             ConnectionId = resultDto.ConnectionId
         });
+        
+        var array = new byte [] {0x1, 0x2, 0x3, 0x4};
+        using var stream = new MemoryStream(array);
+        var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
+        
+        RefreshController();
+        var result = Controller.Error(new ErrorDto
+        {
+            Log = file,
+            ConnectionId = resultDto.ConnectionId
+        });
 
+        var response = GetResponseValue<ResponseBase, OkObjectResult>(result);
+        Assert.That(response, Is.Not.Null);
+        
+        var test = GetTestByConnectionId(resultDto.ConnectionId);
+        var testError = Factory.CreateDbContext()
+            .Errors
+            .Include(e => e.Test)
+            .Include(e => e.Log)
+            .First(x => x.Test.Id == test.Id);
+        
+        Assert.That(Factory.CreateDbContext().Errors.Count(), Is.EqualTo(1));
+        Assert.That(testError.Log.Data, Is.EqualTo(new int[] {0x1, 0x2, 0x3, 0x4}));
     }
     
     private int TestBranchBench(int testId)

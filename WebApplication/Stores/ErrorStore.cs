@@ -16,6 +16,7 @@ public class ErrorStore : Store<Error>
 
     /// <summary>
     /// Returns all errors ordered by time - last will be first.
+    /// ! Without data.
     /// </summary>
     public IReadOnlyList<Error> GetErrors()
         => GetDbSet()

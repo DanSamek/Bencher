@@ -62,13 +62,18 @@ public class TestBuilder
         var error = new Error
         {
             Time = date.ToUniversalTime(),
-            Log = [0x1, 0x2, 0x4],
             Test = _test,
             WorkerLog = wl,
             
         };
-        context.Errors.Add(error);
+        error = context.Errors.Add(error).Entity;
         context.SaveChanges();
+
+        error.Log = new ErrorContent
+        {
+            Data = [0x1, 0x2, 0x4],
+            ErrorId = error.Id
+        };
         return this;
     }
     

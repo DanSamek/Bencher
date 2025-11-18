@@ -32,10 +32,26 @@ public class WorkerLogStore : Store<WorkerLog>
     /// Adds error to the worker log.
     /// NOTE: WorkerLog has to be tracked.
     /// </summary>
-    public void AddError(WorkerLog workerLog, Error error)
+    public void AddError(WorkerLog workerLog, byte[] errorData)
     {
-        workerLog.Errors.Add(error);
+        var error = new Error
+        {
+            Time = DateTime.UtcNow,
+            Test = workerLog.Test,
+            WorkerLog = workerLog
+        };
+        
+        var entity = Context.Errors.Add(error).Entity;
+        workerLog.Errors.Add(entity);
         Context.WorkerLogs.Update(workerLog);
+        Context.SaveChanges();
+        
+        var logContent = new ErrorContent
+        {
+            Data = errorData,
+            ErrorId = entity.Id,
+        };
+        entity.Log = logContent;
         Context.SaveChanges();
     }
 }
