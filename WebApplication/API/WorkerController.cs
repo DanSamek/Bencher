@@ -40,17 +40,19 @@ public partial class WorkerController : ControllerBase
     /// Action for workers error of the test.
     /// </summary>
     [HttpPost("error")]
-    public IActionResult Error([FromBody] ErrorDto errorDto)
+    public async Task<IActionResult> Error([FromBody] ErrorDto errorDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(errorDto.ConnectionId);
         if (workerLog is null || errorDto.Log.Length > Shared.MAX_LOG_FILE_SIZE) return NotFound(new ResponseBase());
         
         using var memoryStream = new MemoryStream();
-        errorDto.Log.CopyTo(memoryStream);
+        await errorDto.Log.CopyToAsync(memoryStream);
         
         workerLog.State = WorkerLogState.Finished;
         _workerLogStore.AddError(workerLog, memoryStream.ToArray());
-        _testStore.SetState(workerLog.Test, TestState.Stopped);
+        
+        
+        await StopTest(workerLog.Test.Id);
         return Ok(new ResponseBase());
     }
     
@@ -84,6 +86,7 @@ public partial class WorkerController : ControllerBase
         var statistics = Sprt.GetStatistics(test);
         if (statistics.Result != Sprt.SprtResult.Unknown)
         {
+            await _workerLogStore.StopAllWorkers(workerLog.Test.Id);
             await _testStore.SetFinishedState(test.Id);
         }
         
@@ -103,7 +106,10 @@ public partial class WorkerController : ControllerBase
         if (autobenchState is null) return NotFound(new ResponseBase());
 
         var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
-        if (!result) await _testStore.StopTest(workerLog.Test.Id);
+        if (!result)
+        {
+            await StopTest(workerLog.Test.Id);
+        }
         
         workerLog.State = WorkerLogState.Finished;
         _workerLogStore.SaveChanges();
@@ -192,6 +198,12 @@ public partial class WorkerController : ControllerBase
         
         var result = new ValidateResponseDto(user.UserName!);
         return Ok(result);
+    }
+
+    private async Task StopTest(int testId)
+    {
+        await _testStore.StopTest(testId);
+        await _workerLogStore.StopAllWorkers(testId);
     }
 }
 

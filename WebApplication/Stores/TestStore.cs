@@ -59,7 +59,6 @@ public class TestStore : Store<Test>
     /// </summary>
     public Test? GetNextTestForWorker(bool autobench, int workerNumberOfThreads)
     {
-        
         // If there is not running test, we will pick a paused test with the highest priority.
         var anyRunningTest = AnyRunningTest(autobench);
         if (!anyRunningTest)

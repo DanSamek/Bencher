@@ -45,6 +45,9 @@ public class WorkerLogStore : Store<WorkerLog>
         var entity = Context.Errors.Add(error).Entity;
         workerLog.Errors.Add(entity);
         Context.WorkerLogs.Update(workerLog);
+        
+        var test = Context.Tests.First(t => t.Id == workerLog.Test.Id);
+        test.Errors.Add(entity);
         Context.SaveChanges();
         
         var logContent = new ErrorContent
@@ -54,5 +57,15 @@ public class WorkerLogStore : Store<WorkerLog>
         };
         entity.Log = logContent;
         Context.SaveChanges();
+    }
+
+    /// <summary>
+    /// Stops all workers (state is set to Finished).
+    /// </summary>
+    public async Task StopAllWorkers(int testId)
+    {
+        await GetDbSet()
+            .Where(wl => wl.Test.Id == testId && wl.State == WorkerLogState.Active)
+            .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Finished));
     }
 }

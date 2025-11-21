@@ -40,7 +40,7 @@ public class TestBase
         return testStore;
     }
     
-    private void ClearDb()
+    protected void ClearDb()
     {
         var context = Factory.CreateDbContext();
         context.OpeningBooks.ExecuteDelete();

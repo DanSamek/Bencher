@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WebApplication.Data.Models;
 using WebApplication.Stores;
 using WebApplication.Tests.Builders;
 
@@ -77,5 +78,50 @@ public class WorkerLogStoreTests : TestBase
         
         Assert.That(workerLog, Is.Not.Null);
         Assert.That(workerLog.Id, Is.EqualTo(wl.Id));
+    }
+
+    /// <summary>
+    /// Tests <see cref="WorkerLogStore.StopAllWorkers"/>.
+    /// </summary>
+    [Test]
+    public async Task StopAllWorkers()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("test_book")
+            .CreateSprtSettings()
+            .CreateUser("test_user")
+                .AddEngine("stockfish")
+                    .AddBranch("test_branch")
+                    .AddBranch("base_branch")
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch")
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .AddWorker(1)
+                        .AddWorker(2)
+                        .AddWorker(4)
+                        .AddWorker(8)
+                        .AddWorker(1)
+                        .Close()
+                    .Close()
+                .Close()
+            .Close();
+
+        var store = new WorkerLogStore(Factory);
+        var wl = Factory.CreateDbContext().WorkerLogs.First();
+        var workerLog = store.GetByConnectionId(wl.Id)!;
+
+        var runningWorkers = Factory.CreateDbContext()
+            .WorkerLogs
+            .Where(wl => wl.Test.Id == workerLog.Test.Id && wl.State == WorkerLogState.Active)
+            .ToArray();
+        
+        Assert.That(runningWorkers, Has.Length.EqualTo(5));
+        await store.StopAllWorkers(workerLog.Test.Id);
+        
+        var stoppedWorkers = Factory.CreateDbContext()
+            .WorkerLogs
+            .Where(wl => wl.Test.Id == workerLog.Test.Id && wl.State == WorkerLogState.Finished)
+            .ToArray();
+        
+        Assert.That(stoppedWorkers, Has.Length.EqualTo(5));
     }
 }

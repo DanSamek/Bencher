@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Primitives;
 using WebApplication.API;
 using WebApplication.API.Dtos.Requests;
 using WebApplication.API.Dtos.Responses;
@@ -673,10 +672,13 @@ public class WorkerControllerTests : WorkerControllerTestBase
     {
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false, 4);
+        
         RefreshController();
         LoginAs("user_2");
         _ = GetTest<GetTestNonAutobenchResponse>(false, 4);
+        
         RefreshController();
+        LoginAs("user_2");
         _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
@@ -702,16 +704,44 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(test.State, Is.EqualTo(TestState.Running));
     }
     
-    
     /// <summary>
     /// Test for <see cref="WorkerController.Error" /> - valid file upload.
     /// </summary>
     [Test]
-    public void Error()
+    public async Task Error()
     { 
+        ClearDb();
+        
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("uho")
+            .CreateSprtSettings()
+            .CreateUser("user_2")
+                .WithAccessToken("87654321")
+                .AddEngine("sentinel")
+                    .AddBranch("base_branch")   
+                    .AddBranch("test_branch")
+                    .AddTest("test_31", "uho", "base_branch", "test_branch")
+                        .EnsurePentaCreated(Factory.CreateDbContext())
+                        .Close()
+                    .Close()
+                .Close()
+            .Close();
+        
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
+        
         RefreshController();
+        LoginAs("user_2");
+        _ = GetTest<GetTestNonAutobenchResponse>(false);
+        
+        var test = GetTestByConnectionId(resultDto.ConnectionId);
+        var activeWorkerLogs = Factory.CreateDbContext()
+            .WorkerLogs
+            .Count(wl => wl.Test.Id == test.Id && wl.State == WorkerLogState.Active);
+        Assert.That(activeWorkerLogs, Is.EqualTo(2));
+        
+        RefreshController();
+        LoginAs("user_2");
         _ = Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
@@ -722,7 +752,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
         
         RefreshController();
-        var result = Controller.Error(new ErrorDto
+        var result = await Controller.Error(new ErrorDto
         {
             Log = file,
             ConnectionId = resultDto.ConnectionId
@@ -731,7 +761,6 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var response = GetResponseValue<ResponseBase, OkObjectResult>(result);
         Assert.That(response, Is.Not.Null);
         
-        var test = GetTestByConnectionId(resultDto.ConnectionId);
         var testError = Factory.CreateDbContext()
             .Errors
             .Include(e => e.Test)
@@ -740,6 +769,12 @@ public class WorkerControllerTests : WorkerControllerTestBase
         
         Assert.That(Factory.CreateDbContext().Errors.Count(), Is.EqualTo(1));
         Assert.That(testError.Log.Data, Is.EqualTo(new int[] {0x1, 0x2, 0x3, 0x4}));
+        
+        var finishedWorkerLogs = Factory.CreateDbContext()
+            .WorkerLogs
+            .Count(wl => wl.Test.Id == test.Id && wl.State == WorkerLogState.Finished);
+        
+        Assert.That(finishedWorkerLogs, Is.EqualTo(2));
     }
     
     /// <summary>
@@ -747,7 +782,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     /// We expect, that will be returned 404.
     /// </summary>
     [Test]
-    public void Error_InvalidConnectionId()
+    public async Task Error_InvalidConnectionId()
     { 
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
@@ -762,7 +797,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
         
         RefreshController();
-        var result = Controller.Error(new ErrorDto
+        var result = await Controller.Error(new ErrorDto
         {
             Log = file,
             ConnectionId = 5000000
@@ -776,10 +811,37 @@ public class WorkerControllerTests : WorkerControllerTestBase
     /// Test for <see cref="WorkerController.Error" />.
     /// </summary>
     [Test]
-    public void Error_Autobenched()
+    public async Task Error_Autobenched()
     { 
+        ClearDb();
+        
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("uho")
+            .CreateSprtSettings()
+            .CreateUser("user_2")
+                .WithAccessToken("87654321")
+                    .AddEngine("sentinel")
+                        .AddBranch("base_branch")   
+                        .AddBranch("test_branch")
+                    .Close()
+                .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_21", "uho", "base_branch", 
+            "test_branch", "sentinel", "user_2", Factory.CreateDbContext());
+        
         LoginAs("user_2");
         var resultDto = GetTest<GetTestAutobenchResponse>(true);
+        
+        RefreshController();
+        LoginAs("user_2");
+        _ = GetTest<GetTestAutobenchResponse>(true);
+        
+        var test = GetTestByConnectionId(resultDto.ConnectionId);
+        var activeWorkerLogs = Factory.CreateDbContext()
+            .WorkerLogs
+            .Count(wl => wl.Test.Id == test.Id && wl.State == WorkerLogState.Active);
+        Assert.That(activeWorkerLogs, Is.EqualTo(2));
+        
         RefreshController();
         _ = Controller.RunningTest(new RunningTestDto
         {
@@ -791,7 +853,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
         
         RefreshController();
-        var result = Controller.Error(new ErrorDto
+        var result = await Controller.Error(new ErrorDto
         {
             Log = file,
             ConnectionId = resultDto.ConnectionId
@@ -800,7 +862,6 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var response = GetResponseValue<ResponseBase, OkObjectResult>(result);
         Assert.That(response, Is.Not.Null);
         
-        var test = GetTestByConnectionId(resultDto.ConnectionId);
         var testError = Factory.CreateDbContext()
             .Errors
             .Include(e => e.Test)
@@ -809,6 +870,12 @@ public class WorkerControllerTests : WorkerControllerTestBase
         
         Assert.That(Factory.CreateDbContext().Errors.Count(), Is.EqualTo(1));
         Assert.That(testError.Log.Data, Is.EqualTo(new int[] {0x1, 0x2, 0x3, 0x4}));
+        
+        var finishedWorkerLogs = Factory.CreateDbContext()
+            .WorkerLogs
+            .Count(wl => wl.Test.Id == test.Id && wl.State == WorkerLogState.Finished);
+        
+        Assert.That(finishedWorkerLogs, Is.EqualTo(2));
     }
     
     private int TestBranchBench(int testId)
@@ -852,7 +919,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     private void SetAccessToken(string accessToken)
     {
         Controller.ControllerContext.HttpContext = new DefaultHttpContext();
-        Controller.HttpContext.Request.Headers.Add(new KeyValuePair<string, StringValues>(Shared.WORKER_REQUEST_HEADER, accessToken));
+        Controller.HttpContext.Request.Headers[Shared.WORKER_REQUEST_HEADER] = accessToken;
     }
     
     private Test GetTestByConnectionId(int id)
