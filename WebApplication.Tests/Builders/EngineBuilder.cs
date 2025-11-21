@@ -26,7 +26,7 @@ public class EngineBuilder
         {
             Bench = bench,
             Name = name,
-            Engine = _engine
+            Engine = _engine,
         };
 
         _context.TestBranches.Add(branch);
@@ -126,6 +126,21 @@ public class EngineBuilder
         var testBuilder = new TestBuilder(this, test, _user, _context);
         return testBuilder;
     }
+
+    public static void AddTestForUser(string name,
+        string bookName,
+        string baseBranchName,
+        string testBranchName,
+        string engineName,
+        string username,  
+        ApplicationDbContext context,
+        string timeManagement = "8+0.08", 
+        int priority = 0, 
+        int numberOfThreads = 1,
+        TestState state = TestState.Paused)
+    {
+        Create(name, bookName, baseBranchName, testBranchName, engineName, username, context, false,timeManagement, priority, numberOfThreads, state);
+    }
     
     public static void AddAutobenchedTestForUser(
         string name,
@@ -139,52 +154,13 @@ public class EngineBuilder
         int priority = 0, 
         int numberOfThreads = 1,
         TestState state = TestState.Paused,
-        int bench = 1000000,
         double userConfidence = 0.1,
         params int[] workerThreads)
     {
-        var engine = context.Engines.First(e => e.Name == engineName);
-        var user = context.Users.First(u => u.UserName == username);
-
-        var baseBranch = context.TestBranches.First(x => x.Name == baseBranchName);
-        var testBranch = context.TestBranches.First(x => x.Name == testBranchName);
-        var test = new Test
-        {
-            Name = name,
-            Created = DateTime.UtcNow,
-            Priority = priority,
-            NumberOfThreads = numberOfThreads,
-            HashSize = 16,
-            TimeManagement = timeManagement,
-            State = state,
-            Settings = context.SprtSettings.First(),
-            OpeningBook = context.OpeningBooks.First(x => x.Name == bookName),
-            Errors = [],
-            WorkerLogs = [],
-            Engine = engine,
-            BaseBranch = baseBranch,
-            BaseBranchId = baseBranch.Id,
-            TestBranch = testBranch,
-            TestBranchId = testBranch.Id,
-            User = user,
-            Autobenched = true
-        };
-        test = UpdateTest(context, test, user);
-        
-        var penta = context.Pentas.Add(new Penta
-        {
-            Test = test,
-            TestId = test.Id,
-        }).Entity;
-        
-        context.SaveChanges();
-        
-        test.Penta = penta;
-        context.SaveChanges();
+        var (test, user) = Create(name, bookName, baseBranchName, testBranchName, engineName, username, context,true, timeManagement, priority, numberOfThreads, state);
         
         var autobenchState = new AutobenchState
         {
-            Bench = bench,
             UserConfidence = userConfidence,
             Test = test,
             TestId = test.Id,
@@ -219,7 +195,6 @@ public class EngineBuilder
         
     }
     
-    
     private static Test UpdateTest(ApplicationDbContext context, Test test, ApplicationUser user)
     {
         test.CalculateThreadScale();
@@ -229,5 +204,61 @@ public class EngineBuilder
         user.Tests.Add(test);
         context.SaveChanges();
         return test;
+    }
+
+    private static (Test, ApplicationUser) Create(
+        string name,
+        string bookName,
+        string baseBranchName,
+        string testBranchName,
+        string engineName,
+        string username,  
+        ApplicationDbContext context,
+        bool autobenched,
+        string timeManagement = "8+0.08", 
+        int priority = 0, 
+        int numberOfThreads = 1,
+        TestState state = TestState.Paused)
+    {
+        
+        var engine = context.Engines.First(e => e.Name == engineName);
+        var user = context.Users.First(u => u.UserName == username);
+
+        var baseBranch = context.TestBranches.First(x => x.Name == baseBranchName);
+        var testBranch = context.TestBranches.First(x => x.Name == testBranchName);
+        var test = new Test
+        {
+            Name = name,
+            Created = DateTime.UtcNow,
+            Priority = priority,
+            NumberOfThreads = numberOfThreads,
+            HashSize = 16,
+            TimeManagement = timeManagement,
+            State = state,
+            Settings = context.SprtSettings.First(),
+            OpeningBook = context.OpeningBooks.First(x => x.Name == bookName),
+            Errors = [],
+            WorkerLogs = [],
+            Engine = engine,
+            BaseBranch = baseBranch,
+            BaseBranchId = baseBranch.Id,
+            TestBranch = testBranch,
+            TestBranchId = testBranch.Id,
+            User = user,
+            Autobenched = autobenched
+        };
+        test = UpdateTest(context, test, user);
+        
+        var penta = context.Pentas.Add(new Penta
+        {
+            Test = test,
+            TestId = test.Id,
+        }).Entity;
+        
+        context.SaveChanges();
+        
+        test.Penta = penta;
+        context.SaveChanges();
+        return (test, user);
     }
 }

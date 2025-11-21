@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 
@@ -48,10 +49,15 @@ public class TestBuilder
         context.Attach(_test);
         var penta = new Penta
         {
-            Test = _test
+            Test = _test,
+            TestId = _test.Id
         };
-        context.Pentas.Add(penta);
+        penta = context.Pentas.Add(penta).Entity;
         context.SaveChanges();
+        
+        _test.Penta = penta;
+        context.SaveChanges();
+        
         return this;
     }
 

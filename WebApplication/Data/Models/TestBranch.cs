@@ -10,7 +10,7 @@ public class TestBranch : DoId
     /// <summary>
     /// Version bench.
     /// </summary>
-    [Required] 
+    [Required]  
     public required int Bench { get; set; }
     
     /// <summary>

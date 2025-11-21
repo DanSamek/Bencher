@@ -18,7 +18,7 @@ public class AutobenchState : DoId
     /// </summary>
     [Required]
     public required int TestId { get; set; }
-    
+
     /// <summary>
     /// Probably correct bench [this value is taken from first response of the worker].
     /// </summary>
@@ -51,8 +51,9 @@ public class AutobenchState : DoId
     /// </summary>
     public bool UpdateConfidence(int workerBench)
     {
-        if (workerBench != Bench) return false;
+        if (workerBench != Bench && Bench != 0) return false;
         
+        Bench = workerBench;
         Confidence += UserConfidence;
         if (1.0 - Confidence <= 0.0001)
         {

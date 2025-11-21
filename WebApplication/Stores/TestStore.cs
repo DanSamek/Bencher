@@ -67,9 +67,9 @@ public class TestStore : Store<Test>
             return test;
         }
         
-        // Get maximum priority of running test.
+        // Get maximum priority of running tests.
         var runningPriority = Context.Tests
-            .Where(t => autobench ? t.State == TestState.Autobenched : t.State == TestState.Running)
+            .Where(t => t.State == TestState.Autobenched || t.State == TestState.Running)
             .Max(t => t.Priority);
 
         // Get a paused test with a same priority.
@@ -93,15 +93,15 @@ public class TestStore : Store<Test>
         if (autobench)
         {
             filteredRunningTests = filteredRunningTests
-                .OrderByDescending(t => t.ThreadScale);
+                .OrderByDescending(t => t.ThreadScale)
+                .OrderByLastConnectedWorker();
         }
         else
         {
             filteredRunningTests = filteredRunningTests
                 .OrderByDescending(t =>
                     (t.ThreadScale / 2) / (t.WorkerLogs.Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
-                        .Sum(wl => wl.NumberOfThreads))); // inlined Test.ActiveWorkerThreadCount() 
-
+                        .Sum(wl => wl.NumberOfThreads)));
         }
         
         var result = filteredRunningTests.FirstOrDefault();
@@ -364,12 +364,19 @@ public class TestStore : Store<Test>
     private Test? PausedTestWithHighestPriority(bool autobench, int workerNumberOfThreads)
         => WhereFilter(Include(), autobench,  workerNumberOfThreads)
             .OrderByDescending(t => t.Priority)
+            .OrderByLastConnectedWorker()
             .FirstOrDefault();
 
     private IQueryable<Test> WhereFilter(IQueryable<Test> tests, bool autobench, int workerNumberOfThreads)
-        => tests.Where(t => t.NumberOfThreads <= workerNumberOfThreads &&
-                            (!t.Autobenched ? t.Autobenched == autobench : t.AutobenchState!.Resolved == !autobench));
-
+    {
+        return tests
+            .Where(t => (autobench || t.NumberOfThreads <= workerNumberOfThreads) &&
+                        (!t.Autobenched
+                            ? t.Autobenched == autobench
+                            : t.AutobenchState!.Resolved ==
+                              !autobench)); 
+    }
+    
     private IQueryable<Test> IncludeForView()
         =>
             GetDbSet()
@@ -382,5 +389,19 @@ public class TestStore : Store<Test>
                 .Include(t => t.WorkerLogs)
                 .Include(t => t.OpeningBook)
                 .Include(t => t.AutobenchState);
+
+}
+
+file static class LinqExtensions
+{
+    public static IOrderedQueryable<Test> OrderByLastConnectedWorker(this IOrderedQueryable<Test> tests)
+    {
+        return tests.ThenBy(t =>
+            t.WorkerLogs
+                .Where(wl => wl.Test.Id == t.Id)
+                .Select(wl => wl.LastConnectTime)
+                .Max()
+            ?? DateTime.MinValue);   
+    }
 
 }

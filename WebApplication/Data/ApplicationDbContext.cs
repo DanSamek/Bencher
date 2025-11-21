@@ -103,6 +103,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade);
         
         #endregion
+        
         #region OpeningBook
         
         builder.Entity<OpeningBook>()

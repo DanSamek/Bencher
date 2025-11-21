@@ -190,7 +190,7 @@ public class TestStoreTests : TestBase
     
     /// <summary>
     /// Test with multiple stopped tests, but all of them requires more cores, than worker's cores.
-    /// Autobench variant.
+    /// Autobench variant - HERE is a catch, that autobench requires only ONE thread.
     /// </summary>
     [Test]
     public void GetNextTestForWorker_NotEnoughWorkerCores_Autobenched()
@@ -215,13 +215,13 @@ public class TestStoreTests : TestBase
         EngineBuilder.AddAutobenchedTestForUser("test_3", "test_book", "base_branch", "test_branch", "stockfish",
             "test_user", Factory.CreateDbContext(), numberOfThreads: 8);
         
-        Assert.That(3, Is.EqualTo(Factory.CreateDbContext().AutobenchStates.Count()));
-        Assert.That(3, Is.EqualTo(Factory.CreateDbContext().Tests.Count(t => t.Autobenched)));
-        Assert.That(3, Is.EqualTo(Factory.CreateDbContext().Tests.Include(t => t.AutobenchState).Count(t => t.AutobenchState != null)));
+        Assert.That(Factory.CreateDbContext().AutobenchStates.Count(),Is.EqualTo(3));
+        Assert.That(Factory.CreateDbContext().Tests.Count(t => t.Autobenched), Is.EqualTo(3));
+        Assert.That(Factory.CreateDbContext().Tests.Include(t => t.AutobenchState).Count(t => t.AutobenchState != null), Is.EqualTo(3));
 
         var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 1);
-        Assert.That(nextTest, Is.Null);
+        Assert.That(nextTest, Is.Not.Null);
     }
     
     /// <summary>
@@ -576,7 +576,6 @@ public class TestStoreTests : TestBase
         Assert.That(nextTest.Name, Is.EqualTo("test_1"));
     }
     #endregion
-
 
     /// <summary>
     /// Test if test will be stopped.

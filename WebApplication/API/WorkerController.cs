@@ -81,7 +81,7 @@ public partial class WorkerController : ControllerBase
         
         var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
         
-        // SPRT part. 
+        // SPRT part.
         var test = _testStore.GetById(workerLog.Test.Id)!;
         var statistics = Sprt.GetStatistics(test);
         if (statistics.Result != Sprt.SprtResult.Unknown)

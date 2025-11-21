@@ -289,11 +289,28 @@ public class WorkerControllerTests : WorkerControllerTestBase
 
     /// <summary>
     /// Test for <see cref="WorkerController.Autobench" /> - with a different autobench value as a stored one.
-    /// We expect, that AutobenchState Confidence will be still 0 and test state is stopped.
+    /// We expect, that AutobenchState Confidence will change but test will be in the stopped state.
     /// </summary>
     [Test]
     public async Task Autobench_DifferentFromUserValue()
     {
+        ClearDb();
+        
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("uho")
+            .CreateSprtSettings()
+            .CreateUser("user_2")
+                .WithAccessToken("87654321")
+                .AddEngine("sentinel")
+                    .AddBranch("base_branch")   
+                    .AddBranch("test_branch")   
+                    .Close()
+                .Close()
+            .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_21", "uho", "base_branch", 
+            "test_branch", "sentinel", "user_2", Factory.CreateDbContext());
+        
         LoginAs("user_2");
         var resultDto = GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
@@ -316,7 +333,25 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var resultDto2 = GetResponseValue<ResponseBase, OkObjectResult>(result);
         Assert.That(resultDto2, Is.Not.Null);
         test = GetTestByConnectionId(resultDto.ConnectionId);
-        Assert.That(test.AutobenchState!.Confidence, Is.EqualTo(0.0));
+        Assert.That(test.AutobenchState!.Confidence, Is.Not.EqualTo(0.0));
+        Assert.That(test.AutobenchState.Bench, Is.EqualTo(1));
+        Assert.That(test.State, Is.EqualTo(TestState.Paused));
+        
+        RefreshController();
+        LoginAs("user_2");
+        
+        resultDto = GetTest<GetTestAutobenchResponse>(true);
+        RefreshController();
+        Controller.RunningTest(new RunningTestDto{ConnectionId = resultDto.ConnectionId});
+        
+        RefreshController(); 
+        await Controller.Autobench(new AutobenchDto
+        {
+            Autobench = 2,
+            ConnectionId = resultDto.ConnectionId
+        });
+        
+        test = GetTestByConnectionId(resultDto.ConnectionId);
         Assert.That(test.State, Is.EqualTo(TestState.Stopped));
     }
     
@@ -878,6 +913,135 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(finishedWorkerLogs, Is.EqualTo(2));
     }
     
+    /// <summary>
+    /// Test for rolling of the tests [normal tests]
+    /// Scenario:
+    /// - 1 worker
+    /// - 3 tests with same priority, threadscale,..
+    /// We expect, that tests will be "rolled" - test1, test2, test3, test1, test2,..
+    /// </summary>
+    [Test]
+    public async Task EnsureRolling()
+    {
+        EngineBuilder.AddTestForUser("test_21", "uho", "base_branch", 
+            "test_branch", "sentinel", "user_2", Factory.CreateDbContext());
+
+        EngineBuilder.AddTestForUser("test_31", "uho", "base_branch", 
+            "test_branch", "sentinel", "user_2", Factory.CreateDbContext());
+        
+        var pentaCount = Factory.CreateDbContext().Pentas.Count(p => !p.Test.Autobenched);
+        Assert.That(pentaCount, Is.EqualTo(3));
+        
+        var rollingArray = new int[9];
+        for (var i = 0; i < rollingArray.Length; i++)
+        {
+            RefreshController();
+            LoginAs("user_2");
+            var dto = GetTest<GetTestNonAutobenchResponse>(false, 1);
+
+            RefreshController();
+            LoginAs("user_2");
+            Controller.RunningTest(new RunningTestDto
+            {
+                ConnectionId = dto.ConnectionId
+            });
+            
+            RefreshController();
+            LoginAs("user_2");
+            
+            var testId = GetTestByConnectionId(dto.ConnectionId).Id;
+            rollingArray[i] = testId;
+            
+            await Controller.Results(new ResultsDto
+            {
+                ConnectionId = dto.ConnectionId,
+                Ll = Shared.GAME_THREAD_COUNT_MULTIPLIER / 2,
+                Ld = 0,
+                Dd = 0,
+                Wl = 0,
+                Wd = 0,
+                Ww = 0
+            });
+        }
+
+        var countsGroups = rollingArray.GroupBy(x => x).ToArray();
+        foreach (var group in countsGroups)
+        {
+            Assert.That(group.Count(), Is.EqualTo(3));
+        }
+        
+        for (var i = 1; i < rollingArray.Length; i++)
+        {
+            Assert.That(rollingArray[i], Is.Not.EqualTo(rollingArray[i - 1]));
+        }
+    }
+    
+    /// <summary>
+    /// Test for rolling of the tests [autobench]
+    /// Scenario:
+    /// - 1 worker
+    /// - 3 tests with same priority, threadscale,..
+    /// We expect, that tests will be "rolled" - test1, test2, test3, test1, test2,..
+    /// </summary>
+    [Test]
+    public async Task EnsureRolling_Autobench()
+    {
+        ClearDb();
+
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("test_book")
+            .CreateSprtSettings()
+            .CreateUser("test_user")
+                .WithAccessToken("123456789")
+                .AddEngine("stockfish")
+                    .AddBranch("base_branch")
+                    .AddBranch("test_branch")
+                    .Close()
+                .Close()
+            .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_1", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1,  state: TestState.Paused, numberOfThreads: 1);
+
+        EngineBuilder.AddAutobenchedTestForUser("test_2", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1, state: TestState.Paused, numberOfThreads: 1);
+
+        EngineBuilder.AddAutobenchedTestForUser("test_3", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1, state: TestState.Paused, numberOfThreads: 1);
+
+        
+        var rollingArray = new int[9];
+
+        for (var i = 0; i < rollingArray.Length; i++)
+        {
+            RefreshController();
+            LoginAs("test_user");
+            var dto = GetTest<GetTestAutobenchResponse>(true);
+            
+            RefreshController();
+            LoginAs("test_user");
+            await Controller.Autobench(new AutobenchDto
+            {
+                Autobench = 12345678,
+                ConnectionId = dto.ConnectionId
+            });
+
+            var testId = GetTestByConnectionId(dto.ConnectionId).Id;
+            rollingArray[i] = testId;
+        }
+        
+        var countsGroups = rollingArray.GroupBy(x => x).ToArray();
+        foreach (var group in countsGroups)
+        {
+            Assert.That(group.Count(), Is.EqualTo(3));
+        }
+        
+        for (var i = 1; i < rollingArray.Length; i++)
+        {
+            Assert.That(rollingArray[i], Is.Not.EqualTo(rollingArray[i - 1]));
+        }
+    }
+    
     private int TestBranchBench(int testId)
     {
         var testBranchBench = Factory.CreateDbContext()
@@ -929,6 +1093,8 @@ public class WorkerControllerTests : WorkerControllerTestBase
             .AsNoTracking()
             .Include(workerLog => workerLog.Test)
                 .ThenInclude(t => t.AutobenchState)
+            .Include(t => t.Test)
+                .ThenInclude(t => t.Penta)
             .First(wl => wl.Id == id)
             .Test;
 

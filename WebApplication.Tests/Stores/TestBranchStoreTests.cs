@@ -25,7 +25,7 @@ public class TestBranchStoreTests : TestBase
         .Close();
         
         EngineBuilder.AddAutobenchedTestForUser("test_1", "test_book", "base_branch", 
-            "test_branch", "stockfish", "test_user",Factory.CreateDbContext(), bench: 123456789);
+            "test_branch", "stockfish", "test_user",Factory.CreateDbContext());
         
         var testId = Factory.CreateDbContext().Tests.First().Id;
         var store = new TestBranchStore(Factory);
