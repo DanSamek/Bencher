@@ -56,6 +56,8 @@
         <ValidationMessage For="@(() => _formModel.Description)"/>
     </div>
     
+    <SimpleInputNumber TNumber="int" @bind-Value="@_formModel.ExpectedNps" Name="Expected NPS" For="() => _formModel.ExpectedNps"/>
+    
     <div class="form-floating mb-3 d-flex flex-row justify-content-evenly gap-3">
         <div class="w-100">
             <p>Base branch</p>

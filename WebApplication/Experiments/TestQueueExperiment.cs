@@ -20,6 +20,7 @@ public static class TestQueueExperiment
         var random = new Random(n);
         var test = new Test
         {
+            ExpectedNps = 1,
             WorkerLogs = [],
             Engine = null!,
             User = null!,

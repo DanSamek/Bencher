@@ -24,6 +24,7 @@ public class Engine : DoId
     
     /// <summary>
     /// Build script for the linux.
+    /// TODO also load lazy!
     /// </summary>
     [Required]
     public required byte[] BuildScript { get; set; }

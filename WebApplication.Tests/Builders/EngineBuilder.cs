@@ -51,6 +51,7 @@ public class EngineBuilder
         var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
         {
+            ExpectedNps = 1,
             Name = name,
             Created = DateTime.UtcNow,
             Priority = priority,
@@ -95,12 +96,14 @@ public class EngineBuilder
                                  string timeManagement = "8+0.08", 
                                  int priority = 0, 
                                  int numberOfThreads = 1,
-                                 TestState state = TestState.Paused)
+                                 TestState state = TestState.Paused,
+                                 int expectedNps = 1)
     {
         var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
         var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
         {
+            ExpectedNps = 1,
             Name = name,
             Created = DateTime.UtcNow,
             Priority = priority,
@@ -120,7 +123,6 @@ public class EngineBuilder
             User = _user,
             Autobenched = false
         };
-       
         
         test = UpdateTest(_context, test, _user);
         var testBuilder = new TestBuilder(this, test, _user, _context);
@@ -228,6 +230,7 @@ public class EngineBuilder
         var testBranch = context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
         {
+            ExpectedNps = 1,
             Name = name,
             Created = DateTime.UtcNow,
             Priority = priority,

@@ -153,6 +153,14 @@ public class Test : DoId
     public required bool Autobenched { get; set; }
     
     /// <summary>
+    /// Expected NPS at the worker.
+    /// At worker we will scale time based on expected NPS.
+    /// NPS = nodes per second
+    /// </summary>
+    [Required]
+    public required int ExpectedNps { get; set; }
+    
+    /// <summary>
     /// Gets total number of active worker threads for the test.
     /// <see cref="WorkerLogs"/> has to be included (loaded from database).
     /// </summary>
