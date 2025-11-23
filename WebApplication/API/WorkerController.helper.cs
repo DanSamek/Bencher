@@ -27,6 +27,7 @@ public partial class WorkerController
         var content = _openingBookStore.LoadContent(test.OpeningBook.Id);
         var result = new GetTestNonAutobenchResponse
         {
+            ExpectedNps = test.ExpectedNps,
             ConnectionId = workerLog.Id,
             GitUrl = test.Engine.GitUrl,
             TestBranch = testBranch!.Name,
@@ -37,7 +38,8 @@ public partial class WorkerController
             NumberOfThreads = test.NumberOfThreads,
             TimeManagement = test.TimeManagement,
             NumberOfGames = workerLog.TotalNumberOfGames,
-            OpeningBook = new OpeningBookDto(test.OpeningBook.Name, content, test.OpeningBook.Depth)
+            OpeningBook = new OpeningBookDto(test.OpeningBook.Name, content, test.OpeningBook.Depth),
+            BuildScript = test.Engine.BuildScript
         };
         
         return Ok(result);

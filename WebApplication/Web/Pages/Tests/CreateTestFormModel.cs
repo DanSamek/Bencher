@@ -66,6 +66,10 @@ public class CreateTestFormModel
     
     [Required]
     public double? Elo0 { get; set; }
+    
+    [Required]
+    [Min(1)]
+    public int ExpectedNps { get; set; }
 }
 
 

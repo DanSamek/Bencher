@@ -27,7 +27,7 @@
         <div class="d-flex gap-3 mb-3">
             @if (_test.State != TestState.Stopped)
             {
-                <button @onclick="StopTest" class="btn btn-primary">Stop</button>
+                <button @onclick="StopTest" class="btn btn-warning">Stop</button>
             }
             <button @onclick="RemoveTest" class="btn btn-danger">Remove</button>
             @{
@@ -54,6 +54,7 @@
                 <li>State: @_test.State</li>
                 <li>Description: @NoneTextIfEmpty(_test.Description)</li>
                 <li>Autobenched: @_test.Autobenched</li>
+                <li>Expected NPS: @_test.ExpectedNps</li>
 
                 @if (_test.Autobenched)
                 {

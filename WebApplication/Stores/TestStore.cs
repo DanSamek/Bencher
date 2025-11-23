@@ -205,6 +205,7 @@ public class TestStore : Store<Test>
         
         var test = new Test
         {
+            ExpectedNps = data.ExpectedNps,
             Name = data.TestName,
             Created = DateTime.UtcNow,
             Priority = data.Priority!.Value,
@@ -224,7 +225,8 @@ public class TestStore : Store<Test>
             TestBranch = testBranch,
             TestBranchId = testBranch.Id
         };
-
+        test.CalculateThreadScale();
+        
         test = GetDbSet().Add(test).Entity;
         SaveChanges();
         

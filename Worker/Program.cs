@@ -12,9 +12,13 @@ public static class Program
             if (!success) continue;
             var result = await AppAuthorization.TryLogin(userToken, webApplicationUrl);
             logged = result.Success;
+            if (logged)
+            {
+                Console.WriteLine($"Logged as ${result.Username}");
+            }
         }
-
-        //var userOptions = LoadUserOptions();
+        
+        var userOptions = UserOptionsLoader.LoadParams();
     }
 }
 

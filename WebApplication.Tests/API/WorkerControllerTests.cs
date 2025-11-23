@@ -149,6 +149,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(resultDto, Is.Not.Null);
         Assert.That(resultDto.GitUrl, Is.EqualTo("git-url-stockfish"));
         Assert.That(resultDto.OpeningBook.Data, Is.EqualTo(new int[] { 0x69 }));
+        Assert.That(resultDto.ExpectedNps, Is.EqualTo(1));
 
         using var validationContext = Factory.CreateDbContext();
         Assert.That(validationContext.WorkerLogs.Count(), Is.EqualTo(1));

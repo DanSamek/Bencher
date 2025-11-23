@@ -39,6 +39,9 @@ public class GetTestNonAutobenchResponse : ResponseBase
     
     /// <inheritdoc cref="Data.Models.OpeningBook" /> 
     public required OpeningBookDto OpeningBook { get; set; }
+    
+    /// <inheritdoc cref="Data.Models.Test.ExpectedNps" /> 
+    public required int ExpectedNps { get; set; }
 }
 
 public record OpeningBookDto(string Name, byte[] Data, int Depth);
