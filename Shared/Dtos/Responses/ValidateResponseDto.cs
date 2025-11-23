@@ -1,4 +1,4 @@
-namespace WebApplication.API.Dtos.Responses;
+namespace Shared.Dtos.Responses;
 
 /// <summary>
 /// Response of the <see cref="WorkerController.Validate" /> 

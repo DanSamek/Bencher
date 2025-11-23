@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.API;
+namespace Shared.CustomAttributes;
 
 public class MinAttribute : RangeAttribute
 {

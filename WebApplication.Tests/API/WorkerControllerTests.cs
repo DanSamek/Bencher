@@ -2,9 +2,10 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Shared;
+using Shared.Dtos.Requests;
+using Shared.Dtos.Responses;
 using WebApplication.API;
-using WebApplication.API.Dtos.Requests;
-using WebApplication.API.Dtos.Responses;
 using WebApplication.Data.Models;
 using WebApplication.Stores;
 using WebApplication.Tests.Builders;
@@ -955,7 +956,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             await Controller.Results(new ResultsDto
             {
                 ConnectionId = dto.ConnectionId,
-                Ll = Shared.GAME_THREAD_COUNT_MULTIPLIER / 2,
+                Ll = Constants.GAME_THREAD_COUNT_MULTIPLIER / 2,
                 Ld = 0,
                 Dd = 0,
                 Wl = 0,
@@ -1083,7 +1084,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     private void SetAccessToken(string accessToken)
     {
         Controller.ControllerContext.HttpContext = new DefaultHttpContext();
-        Controller.HttpContext.Request.Headers[Shared.WORKER_REQUEST_HEADER] = accessToken;
+        Controller.HttpContext.Request.Headers[Constants.WORKER_REQUEST_HEADER] = accessToken;
     }
     
     private Test GetTestByConnectionId(int id)

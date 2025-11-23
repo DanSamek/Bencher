@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using WebApplication.API.Dtos.Responses;
+using Shared.Dtos.Responses;
 using WebApplication.Data.Models;
 
 namespace WebApplication.API;

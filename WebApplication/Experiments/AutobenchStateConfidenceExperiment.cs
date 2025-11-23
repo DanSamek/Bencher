@@ -1,4 +1,5 @@
-using WebApplication.API.Dtos.Requests;
+
+using Shared.Dtos.Requests;
 
 namespace WebApplication.Experiments;
 

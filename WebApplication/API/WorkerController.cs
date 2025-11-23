@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using WebApplication.API.Dtos.Requests;
-using WebApplication.API.Dtos.Responses;
+using Shared;
+using Shared.Dtos.Requests;
+using Shared.Dtos.Responses;
 using WebApplication.Data.Models;
 using WebApplication.SPRT;
 using WebApplication.Stores;
@@ -11,7 +12,7 @@ namespace WebApplication.API;
 /// Controller for worker -- server communication.
 /// </summary>
 [ApiController]
-[Route(Shared.WORKER_API_PREFIX)]
+[Route(Constants.WORKER_API_PREFIX)]
 public partial class WorkerController : ControllerBase
 {
     private readonly UserStore _userStore;
@@ -43,7 +44,7 @@ public partial class WorkerController : ControllerBase
     public async Task<IActionResult> Error([FromBody] ErrorDto errorDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(errorDto.ConnectionId);
-        if (workerLog is null || errorDto.Log.Length > Shared.MAX_LOG_FILE_SIZE) return NotFound(new ResponseBase());
+        if (workerLog is null || errorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE) return NotFound(new ResponseBase());
         
         using var memoryStream = new MemoryStream();
         await errorDto.Log.CopyToAsync(memoryStream);
@@ -152,7 +153,7 @@ public partial class WorkerController : ControllerBase
             ConnectTime = now,
             LastConnectTime = now,
             NumberOfGames = 0,
-            TotalNumberOfGames = getTestDto.NumberOfThreads * Shared.GAME_THREAD_COUNT_MULTIPLIER, 
+            TotalNumberOfGames = getTestDto.NumberOfThreads * Constants.GAME_THREAD_COUNT_MULTIPLIER, 
             NumberOfThreads = getTestDto.NumberOfThreads,
             Mac = getTestDto.Mac,
             User = user!, // User exists - middleware validated that.
@@ -210,5 +211,5 @@ public partial class WorkerController : ControllerBase
 file static class HttpContextExtensions
 {
     public static string GetUserToken(this HttpContext context)
-    => context.Request.Headers[Shared.WORKER_REQUEST_HEADER].ToString(); // Middleware validated, that user token is valid.
+    => context.Request.Headers[Constants.WORKER_REQUEST_HEADER].ToString(); // Middleware validated, that user token is valid.
 }

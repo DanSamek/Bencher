@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.API.Dtos.Requests;
+namespace Shared.Dtos.Requests;
 
 /// <summary>
 /// Request body for <see cref="WorkerController.Error" />  

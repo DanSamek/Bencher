@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication.API.Dtos;
+namespace Shared.Dtos.Requests;
 
 /// <summary>
 /// Base for all requests with ConnectionId.

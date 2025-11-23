@@ -1,4 +1,4 @@
-namespace WebApplication.API.Dtos.Responses;
+namespace Shared.Dtos.Responses;
 
 public class ResponseBase
 {

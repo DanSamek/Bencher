@@ -56,6 +56,7 @@ public class TestStore : Store<Test>
     ///         -> if test exists, we return.
     ///         -> otherwise we will select test by max ((test.ThreadScale / 2) / Test.ActiveWorkerThreadCount())
     /// NOTE: when a test is returned from the method, it's automatically set do running.
+    /// TODO update docs
     /// </summary>
     public Test? GetNextTestForWorker(bool autobench, int workerNumberOfThreads)
     {

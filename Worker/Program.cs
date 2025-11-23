@@ -16,6 +16,5 @@ public static class Program
 
         //var userOptions = LoadUserOptions();
     }
-    
 }
 

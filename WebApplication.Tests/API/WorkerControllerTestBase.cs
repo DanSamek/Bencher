@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Shared;
 using WebApplication.API;
 using WebApplication.Stores;
 
@@ -27,7 +28,7 @@ public class WorkerControllerTestBase : TestBase
     {
         var user = Factory.CreateDbContext().Users.First(u => u.UserName == username);
         Controller.ControllerContext.HttpContext = new DefaultHttpContext();
-        Controller.HttpContext.Request.Headers[Shared.WORKER_REQUEST_HEADER] = user.AccessToken!;
+        Controller.HttpContext.Request.Headers[Constants.WORKER_REQUEST_HEADER] = user.AccessToken!;
     }
     
     

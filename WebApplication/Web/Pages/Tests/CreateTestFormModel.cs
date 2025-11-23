@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using WebApplication.API;
+using Shared.CustomAttributes;
 
 namespace WebApplication.Components.Pages.Tests;
 

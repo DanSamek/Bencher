@@ -1,4 +1,4 @@
-namespace WebApplication.API.Dtos.Requests;
+namespace Shared.Dtos.Requests;
 
 /// <summary>
 /// Request body for <see cref="WorkerController.RunningTest" />  

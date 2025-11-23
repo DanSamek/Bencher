@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using Shared.CustomAttributes;
 
-namespace WebApplication.API.Dtos.Requests;
+namespace Shared.Dtos.Requests;
 
 /// <summary>
 /// Request body for <see cref="WorkerController.Results" />  

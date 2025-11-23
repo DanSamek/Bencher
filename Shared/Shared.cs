@@ -1,6 +1,6 @@
-namespace WebApplication;
+namespace Shared;
 
-public static class Shared
+public static class Constants
 {
     /// <summary>
     /// Users access token header key in the request.

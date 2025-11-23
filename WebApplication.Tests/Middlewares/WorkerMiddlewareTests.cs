@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Moq;
+using Shared;
 using WebApplication.API;
 using WebApplication.Stores;
 using WebApplication.Tests.Builders;
@@ -44,7 +45,7 @@ public class WorkerMiddlewareTests : TestBase
         // Only if not null
         if (usedAccessToken is not null)
         {
-            httpContext.Request.Headers[Shared.WORKER_REQUEST_HEADER] = usedAccessToken;
+            httpContext.Request.Headers[Constants.WORKER_REQUEST_HEADER] = usedAccessToken;
         }
 
         var wasInvokedNext = false;

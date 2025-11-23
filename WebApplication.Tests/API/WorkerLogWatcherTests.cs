@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Dtos.Requests;
+using Shared.Dtos.Responses;
 using WebApplication.API;
-using WebApplication.API.Dtos.Requests;
-using WebApplication.API.Dtos.Responses;
 using WebApplication.Data.Models;
 using WebApplication.Tests.Builders;
 

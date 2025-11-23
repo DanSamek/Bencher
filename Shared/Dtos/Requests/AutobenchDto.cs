@@ -1,7 +1,8 @@
-namespace WebApplication.API.Dtos.Requests;
+using Shared.CustomAttributes;
 
+namespace Shared.Dtos.Requests;
 /// <summary>
-/// Request body for <see cref="WorkerController.Autobench" />  
+/// Request body for WorkerController autobench.  
 /// </summary>
 public class AutobenchDto : WithConnectionId
 {

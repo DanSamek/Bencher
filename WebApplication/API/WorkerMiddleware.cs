@@ -1,4 +1,5 @@
 using log4net;
+using Shared;
 
 namespace WebApplication.API;
 
@@ -11,7 +12,7 @@ public class WorkerMiddleware : IMiddleware
     private static readonly ILog _logger =  LogManager.GetLogger(typeof(WorkerMiddleware));
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        var isWorkerApiRequest = context.Request.Path.Value?.Contains(Shared.WORKER_API_PREFIX) ?? false;
+        var isWorkerApiRequest = context.Request.Path.Value?.Contains(Constants.WORKER_API_PREFIX) ?? false;
         if (isWorkerApiRequest) 
         {
             var result = HandleWorkerApiRequest(context);
@@ -22,7 +23,7 @@ public class WorkerMiddleware : IMiddleware
 
     private static bool HandleWorkerApiRequest(HttpContext context)
     {
-        if (!context.Request.Headers.TryGetValue(Shared.WORKER_REQUEST_HEADER, out var userToken)) return SetUnauthorized();
+        if (!context.Request.Headers.TryGetValue(Constants.WORKER_REQUEST_HEADER, out var userToken)) return SetUnauthorized();
         
         var userStore = context.RequestServices.GetService<Stores.UserStore>();
         if (userStore is null)
