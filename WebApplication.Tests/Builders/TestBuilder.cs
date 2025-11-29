@@ -65,14 +65,14 @@ public class TestBuilder
     {
         context.Attach(_test);
         var wl = context.WorkerLogs.First(wl => wl.Test.Id == _test.Id);
-        var error = new Error
+        var error = new TestError
         {
             Time = date.ToUniversalTime(),
             Test = _test,
             WorkerLog = wl,
             
         };
-        error = context.Errors.Add(error).Entity;
+        error = context.TestErrors.Add(error).Entity;
         context.SaveChanges();
 
         error.Log = new ErrorContent

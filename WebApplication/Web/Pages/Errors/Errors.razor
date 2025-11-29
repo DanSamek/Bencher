@@ -5,7 +5,7 @@
 
 @rendermode InteractiveServer
 
-@inject ErrorStore ErrorStore
+@inject TestErrorStore TestErrorStore
 
 @* TODO paging !! *@
 
@@ -18,12 +18,12 @@
 }
 
 @code {
-    private IReadOnlyList<Data.Models.Error> _errors = [];
+    private IReadOnlyList<Data.Models.TestError> _errors = [];
     
     /// <inheritdoc /> 
     protected override void OnInitialized()
     {
-        _errors = ErrorStore.GetErrors();
+        _errors = TestErrorStore.GetErrors();
         base.OnInitialized();
     }
 }

@@ -524,7 +524,8 @@ public class WorkerControllerTests : WorkerControllerTestBase
             while (numberOfPairs > 0)
             {
                 var controller = new WorkerController(new UserStore(Factory), new WorkerLogStore(Factory),
-                    new PentaStore(Factory), CreateTestStore(), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory));
+                    new PentaStore(Factory), CreateTestStore(), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory),
+                    new WorkerErrorStore(Factory));
 
                 var simplePenta = SimplePenta.Generate(iterPairs);
                 bag.Add(simplePenta);
@@ -742,10 +743,10 @@ public class WorkerControllerTests : WorkerControllerTestBase
     }
     
     /// <summary>
-    /// Test for <see cref="WorkerController.Error" /> - valid file upload.
+    /// Test for <see cref="WorkerController.TestError" /> - valid file upload.
     /// </summary>
     [Test]
-    public async Task Error()
+    public async Task TestError()
     { 
         ClearDb();
         
@@ -785,13 +786,11 @@ public class WorkerControllerTests : WorkerControllerTestBase
         });
         
         var array = new byte [] {0x1, 0x2, 0x3, 0x4};
-        using var stream = new MemoryStream(array);
-        var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
         
         RefreshController();
-        var result = await Controller.Error(new ErrorDto
+        var result = await Controller.TestError(new TestErrorDto
         {
-            Log = file,
+            Log = array,
             ConnectionId = resultDto.ConnectionId
         });
 
@@ -799,12 +798,12 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(response, Is.Not.Null);
         
         var testError = Factory.CreateDbContext()
-            .Errors
+            .TestErrors
             .Include(e => e.Test)
             .Include(e => e.Log)
             .First(x => x.Test.Id == test.Id);
         
-        Assert.That(Factory.CreateDbContext().Errors.Count(), Is.EqualTo(1));
+        Assert.That(Factory.CreateDbContext().TestErrors.Count(), Is.EqualTo(1));
         Assert.That(testError.Log.Data, Is.EqualTo(new int[] {0x1, 0x2, 0x3, 0x4}));
         
         var finishedWorkerLogs = Factory.CreateDbContext()
@@ -815,11 +814,11 @@ public class WorkerControllerTests : WorkerControllerTestBase
     }
     
     /// <summary>
-    /// Test for <see cref="WorkerController.Error" /> - but ConnectionId is invalid.
+    /// Test for <see cref="WorkerController.TestError" /> - but ConnectionId is invalid.
     /// We expect, that will be returned 404.
     /// </summary>
     [Test]
-    public async Task Error_InvalidConnectionId()
+    public async Task TestError_InvalidConnectionId()
     { 
         LoginAs("user_2");
         var resultDto = GetTest<GetTestNonAutobenchResponse>(false);
@@ -830,13 +829,11 @@ public class WorkerControllerTests : WorkerControllerTestBase
         });
         
         var array = new byte [] {0x1, 0x2, 0x3, 0x4};
-        using var stream = new MemoryStream(array);
-        var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
         
         RefreshController();
-        var result = await Controller.Error(new ErrorDto
+        var result = await Controller.TestError(new TestErrorDto
         {
-            Log = file,
+            Log = array,
             ConnectionId = 5000000
         });
 
@@ -845,10 +842,10 @@ public class WorkerControllerTests : WorkerControllerTestBase
     }
     
     /// <summary>
-    /// Test for <see cref="WorkerController.Error" />.
+    /// Test for <see cref="WorkerController.TestError" />.
     /// </summary>
     [Test]
-    public async Task Error_Autobenched()
+    public async Task TestError_Autobenched()
     { 
         ClearDb();
         
@@ -886,13 +883,10 @@ public class WorkerControllerTests : WorkerControllerTestBase
         });
         
         var array = new byte [] {0x1, 0x2, 0x3, 0x4};
-        using var stream = new MemoryStream(array);
-        var file = new FormFile(stream, 0, array.Length, "log", "log.txt");
-        
         RefreshController();
-        var result = await Controller.Error(new ErrorDto
+        var result = await Controller.TestError(new TestErrorDto
         {
-            Log = file,
+            Log = array,
             ConnectionId = resultDto.ConnectionId
         });
 
@@ -900,12 +894,12 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(response, Is.Not.Null);
         
         var testError = Factory.CreateDbContext()
-            .Errors
+            .TestErrors
             .Include(e => e.Test)
             .Include(e => e.Log)
             .First(x => x.Test.Id == test.Id);
         
-        Assert.That(Factory.CreateDbContext().Errors.Count(), Is.EqualTo(1));
+        Assert.That(Factory.CreateDbContext().TestErrors.Count(), Is.EqualTo(1));
         Assert.That(testError.Log.Data, Is.EqualTo(new int[] {0x1, 0x2, 0x3, 0x4}));
         
         var finishedWorkerLogs = Factory.CreateDbContext()
@@ -1043,6 +1037,32 @@ public class WorkerControllerTests : WorkerControllerTestBase
             Assert.That(rollingArray[i], Is.Not.EqualTo(rollingArray[i - 1]));
         }
     }
+    
+    /// <summary>
+    /// Test for <see cref="WorkerController.WorkerError" /> - valid file [log] upload.
+    /// </summary>
+    [Test]
+    public void WorkerError()
+    {
+        LoginAs("user_2");
+        
+        var array = new byte [] {0x1, 0x11, 0x2};
+        using var stream = new MemoryStream(array);
+        var dto = new WorkerErrorDto
+        {
+            Log = array
+        };
+        Controller.WorkerError(dto);
+
+        var errors = Factory.CreateDbContext()
+            .WorkerErrors
+            .Include(error => error.Log)
+            .ToArray();
+        
+        Assert.That(errors, Has.Length.EqualTo(1));
+        Assert.That(errors[0].Log.Data, Is.EqualTo(array));
+    }
+    
     
     private int TestBranchBench(int testId)
     {

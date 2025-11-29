@@ -91,7 +91,7 @@ public class Test : DoId
     /// All errors for a test.
     /// </summary>
     [Required]
-    public required List<Error> Errors { get; set; } = [];
+    public required List<TestError> Errors { get; set; } = [];
 
     /// <summary>
     /// All worker logs for a test.
@@ -167,6 +167,7 @@ public class Test : DoId
     public int ActiveWorkerThreadCount()
     {
         var result = WorkerLogs
+            .Where(wl => wl.State == WorkerLogState.Active)
             .Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
             .Sum(wl => wl.NumberOfThreads);
         

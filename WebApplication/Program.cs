@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebApplication;
-using WebApplication.Components;
 using WebApplication.Components.Account;
 using WebApplication.Data;
 using WebApplication.Data.Models;
@@ -65,7 +64,8 @@ builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<WorkerLogStore>();
 builder.Services.AddScoped<OpeningBookStore>();
 builder.Services.AddScoped<SprtSettingsStore>();
-builder.Services.AddScoped<ErrorStore>();
+builder.Services.AddScoped<WorkerErrorStore>();
+builder.Services.AddScoped<TestErrorStore>();
 
 #endregion
 

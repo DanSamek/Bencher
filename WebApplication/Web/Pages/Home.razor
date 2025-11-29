@@ -28,7 +28,7 @@
     /// <inheritdoc />
     protected override void OnParametersSet()
     {
-        (_runningTests, _autobenchedTests) = TestStore.GetRunningTests();
+        (_autobenchedTests, _runningTests) = TestStore.GetRunningTests();
         _pausedTests = TestStore.GetPausedTests();
         base.OnParametersSet();
     }

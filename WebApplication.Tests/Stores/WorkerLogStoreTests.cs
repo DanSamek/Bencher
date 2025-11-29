@@ -38,7 +38,7 @@ public class WorkerLogStoreTests : TestBase
         Assert.That(workerLog, Is.Not.Null);
         store.AddError(workerLog,[0x10, 0x11, 0x12, 0x13 ]);
         
-        var errors = context.Errors
+        var errors = context.TestErrors
             .Include(e => e.Log)
             .Include(e => e.Test)
             .ToList();

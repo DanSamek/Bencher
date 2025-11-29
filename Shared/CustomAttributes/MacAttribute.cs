@@ -18,8 +18,6 @@ public class MacAttribute : ValidationAttribute
     public override bool IsValid(object? value)
     {
         if (value is not string str) return false;
-        var result = base.IsValid(value);
-        if (!result) return false;
         
         if (str.Length != MAC_CHAR_SIZE) return false;
         

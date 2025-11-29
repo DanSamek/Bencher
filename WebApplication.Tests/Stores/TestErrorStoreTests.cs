@@ -4,22 +4,22 @@ using WebApplication.Tests.Builders;
 namespace WebApplication.Tests.Stores;
 
 [TestFixture]
-public class ErrorStoreTests : TestBase
+public class TestErrorStoreTests : TestBase
 {
     /// <summary>
-    /// Test for <see cref="ErrorStore.GetErrors" />, but no error is in the database.
+    /// Test for <see cref="TestErrorStore.GetErrors" />, but no error is in the database.
     /// </summary>
     [Test]
     public void GetErrors_Empty()
     {
-        var store = new ErrorStore(Factory);
+        var store = new TestErrorStore(Factory);
         var errors = store.GetErrors();
         Assert.That(errors, Is.Not.Null);
         Assert.That(errors, Is.Empty);
     }
     
     /// <summary>
-    /// Test for <see cref="ErrorStore.GetErrors" />, with errors in the database.
+    /// Test for <see cref="TestErrorStore.GetErrors" />, with errors in the database.
     /// We expect, that errors will be returned by the newest ones.
     /// </summary>
     [Test]
@@ -43,7 +43,7 @@ public class ErrorStoreTests : TestBase
                 .Close()
             .Close();
         
-        var store = new ErrorStore(Factory);
+        var store = new TestErrorStore(Factory);
         var errors = store.GetErrors();
         Assert.That(errors, Is.Not.Null);
         Assert.That(errors, Has.Count.EqualTo(3));

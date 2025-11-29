@@ -22,11 +22,12 @@ public partial class WorkerController : ControllerBase
     private readonly TestBranchStore _testBranchStore;
     private readonly AutobenchStateStore _autobenchStateStore;
     private readonly OpeningBookStore _openingBookStore;
+    private readonly WorkerErrorStore _workerErrorStore;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public WorkerController(UserStore userStore, WorkerLogStore workerLogStore, PentaStore pentaStore, TestStore testStore, TestBranchStore testBranchStore, AutobenchStateStore autobenchStateStore, OpeningBookStore openingBookStore)
+    public WorkerController(UserStore userStore, WorkerLogStore workerLogStore, PentaStore pentaStore, TestStore testStore, TestBranchStore testBranchStore, AutobenchStateStore autobenchStateStore, OpeningBookStore openingBookStore, WorkerErrorStore workerErrorStore)
     {
         _userStore = userStore;
         _workerLogStore = workerLogStore;
@@ -35,30 +36,39 @@ public partial class WorkerController : ControllerBase
         _testBranchStore = testBranchStore;
         _autobenchStateStore = autobenchStateStore;
         _openingBookStore = openingBookStore;
+        _workerErrorStore = workerErrorStore;
     }
-        
+    
     /// <summary>
-    /// Action for workers error of the test.
+    /// Action for workers - when error occurs before running any tests.
+    /// For example missing dependencies [git,..]
     /// </summary>
-    [HttpPost("error")]
-    public async Task<IActionResult> Error([FromBody] ErrorDto errorDto)
+    /// <returns></returns>
+    [HttpPost("worker-error")]
+    public IActionResult WorkerError([FromBody] WorkerErrorDto workerErrorDto)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(errorDto.ConnectionId);
-        if (workerLog is null || errorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE) return NotFound(new ResponseBase());
-        
-        using var memoryStream = new MemoryStream();
-        await errorDto.Log.CopyToAsync(memoryStream);
+        _workerErrorStore.AddError(workerErrorDto.Log);
+        return Ok(new ResponseBase());
+    }
+    
+    /// <summary>
+    /// Action for workers - when error occurs when running test.
+    /// </summary>
+    [HttpPost("test-error")]
+    public async Task<IActionResult> TestError([FromBody] TestErrorDto testErrorDto)
+    {
+        var workerLog = _workerLogStore.GetByConnectionId(testErrorDto.ConnectionId);
+        if (workerLog is null || testErrorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE) return NotFound(new ResponseBase());
         
         workerLog.State = WorkerLogState.Finished;
-        _workerLogStore.AddError(workerLog, memoryStream.ToArray());
-        
+        _workerLogStore.AddError(workerLog, testErrorDto.Log);
         
         await StopTest(workerLog.Test.Id);
         return Ok(new ResponseBase());
     }
     
     /// <summary>
-    /// Action for workers classical SPRT results.
+    /// Action for workers - sending classical SPRT results.
     /// </summary>
     [HttpPost("results")]
     public async Task<IActionResult> Results([FromBody] ResultsDto resultsDto)
@@ -95,7 +105,7 @@ public partial class WorkerController : ControllerBase
     }
     
     /// <summary>
-    /// Action for workers autobench result.
+    /// Action for workers - sending autobench result.
     /// </summary>
     [HttpPost("autobench")]
     public async Task<IActionResult> Autobench([FromBody] AutobenchDto autobenchDto)
@@ -174,7 +184,7 @@ public partial class WorkerController : ControllerBase
     public IActionResult RunningTest([FromBody] RunningTestDto runningTestDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(runningTestDto.ConnectionId);
-        if (workerLog is null) return NotFound(new ResponseBase());
+        if (workerLog is null || workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase());
         _testStore.SetRunningState(workerLog.Test);
         
         workerLog.LastConnectTime = DateTime.UtcNow;
@@ -187,7 +197,7 @@ public partial class WorkerController : ControllerBase
     }
     
     /// <summary>
-    /// Validates users access token - used as simple login.
+    /// Validates users access token - used as a simple login.
     /// </summary>
     [HttpPost("validate")]
     public IActionResult Validate()

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication.Data;
 using WebApplication.Data.Models;
+using WebApplication.Stores;
 
 namespace WebApplication.API;
 
@@ -12,7 +13,6 @@ public class WorkerLogWatcher : BackgroundService
 {
     private const int LAST_CONNECT_TIME_MINUTES_MAX = 1;
     private const int WATCHER_PERIOD_MINUTES = 1;
-    
     
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(new TimeSpan(0, 0, WATCHER_PERIOD_MINUTES, 0));
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -32,10 +32,23 @@ public class WorkerLogWatcher : BackgroundService
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var lowerBoundTime = DateTime.UtcNow.Subtract(new TimeSpan(0, LAST_CONNECT_TIME_MINUTES_MAX, 0));
 
-            await context.WorkerLogs
-                .Where(wl => wl.LastConnectTime < lowerBoundTime)
-                .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Disconnected), cancellationToken: stoppingToken);
-            
+            var toDisconnectLogs = context.WorkerLogs
+                .Where(wl => wl.LastConnectTime < lowerBoundTime && wl.State == WorkerLogState.Active);
+
+            var testIdsMaybeNoWorkers = toDisconnectLogs
+                .Select(wl => wl.Test.Id)
+                .ToHashSet();
+
+            await toDisconnectLogs
+                .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Disconnected),
+                    cancellationToken: stoppingToken);
+
+            var store = scope.ServiceProvider.GetRequiredService<TestStore>();
+            foreach (var testId in testIdsMaybeNoWorkers)
+            {
+                await store.SetPausedIfNoActiveWorkers(testId);
+            }
+
             await _periodicTimer.WaitForNextTickAsync(stoppingToken);
         }
     }

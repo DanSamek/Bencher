@@ -366,6 +366,7 @@ public class TestStore : Store<Test>
     
     private Test? PausedTestWithHighestPriority(bool autobench, int workerNumberOfThreads)
         => WhereFilter(Include(), autobench,  workerNumberOfThreads)
+            .Where(t => t.State == TestState.Paused)
             .OrderByDescending(t => t.Priority)
             .OrderByLastConnectedWorker()
             .FirstOrDefault();

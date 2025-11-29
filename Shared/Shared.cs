@@ -12,6 +12,16 @@ public static class Constants
     /// </summary>
     public const string WORKER_API_PREFIX = "worker-api";
 
+    /// <summary>
+    /// Folder, where bencher worker expects engine binary.
+    /// </summary>
+    public const string BENCHER_BINARY_FOLDER = "bencher_bin";
+    
+    /// <summary>
+    /// Expected filename of the engine binary in the <see cref="BENCHER_BINARY_FOLDER"/>.
+    /// </summary>
+    public const string BENCHER_BINARY_NAME = "engine";
+    
     #region MaybeEnableAppSettingsJson
     
     /// <summary>

@@ -7,8 +7,8 @@ namespace WebApplication.Stores;
 /// Base class for all stores.
 /// Stores are used for entity updates.
 /// </summary>
-public abstract class Store<T> : IDisposable, IStore<T>
-where T : class
+public abstract class Store<T> : IDisposable, IStore<T> 
+    where T : class
 {
     /// <summary>
     /// Db context 
@@ -75,6 +75,9 @@ where T : class
         SaveChanges();
     }
 
+    /// <summary>
+    /// Attaches an entity to the context.
+    /// </summary>
     public void Attach(object entity) => Context.Attach(entity);
 
     protected abstract DbSet<T> GetDbSet();
