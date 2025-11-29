@@ -50,7 +50,7 @@ public class TestBase
         context.Tests.ExecuteDelete();
         context.SprtSettings.ExecuteDelete();
         context.Pentas.ExecuteDelete();
-        context.Errors.ExecuteDelete();
+        context.TestErrors.ExecuteDelete();
         context.WorkerLogs.ExecuteDelete();
         context.AutobenchStates.ExecuteDelete();
     }

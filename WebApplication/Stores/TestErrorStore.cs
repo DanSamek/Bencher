@@ -4,21 +4,21 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.Stores;
 
-public class ErrorStore : Store<Error>
+public class TestErrorStore : Store<TestError>
 {
     /// <summary>
     /// .Ctor
     /// </summary>
-    public ErrorStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory){}
+    public TestErrorStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory){}
 
     /// <inheritdoc /> 
-    protected override DbSet<Error> GetDbSet() => Context.Errors;
+    protected override DbSet<TestError> GetDbSet() => Context.TestErrors;
 
     /// <summary>
     /// Returns all errors ordered by time - last will be first.
     /// ! Without data.
     /// </summary>
-    public IReadOnlyList<Error> GetErrors()
+    public IReadOnlyList<TestError> GetErrors()
         => GetDbSet()
             .Include(e => e.Test)
             .Include(e => e.WorkerLog)

@@ -12,9 +12,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<OpeningBook> OpeningBooks { get; set; }
     public DbSet<SprtSettings> SprtSettings { get; set; }
     public DbSet<Penta> Pentas { get; set; }    
-    public DbSet<Error> Errors { get; set; }
+    public DbSet<TestError> TestErrors { get; set; }
     public DbSet<WorkerLog> WorkerLogs { get; set; }
     public DbSet<AutobenchState> AutobenchStates { get; set; }
+    
+    public DbSet<Error> WorkerErrors { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -115,7 +117,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         #region Error
         
-        builder.Entity<Error>()
+        builder.Entity<TestError>()
             .HasOne(e => e.Log)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

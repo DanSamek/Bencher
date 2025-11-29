@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 namespace WebApplication.Data.Models;
 
 /// <summary>
-/// Error entity.
+/// Error class for workers
+///     - used for errors without a test - for example missing references,..
 /// </summary>
 public class Error : DoId
 {
@@ -18,17 +19,4 @@ public class Error : DoId
     /// Worker app will upload xxx.txt
     /// </summary>
     public ErrorContent Log { get; set; } = null!;
-    
-    /// <summary>
-    /// Test, where this error happened.
-    /// </summary>
-    [Required]
-    public required Test Test { get; set; }
-    
-    /// <summary>
-    /// Worker information.
-    /// </summary>
-    [Required]
-    public required WorkerLog WorkerLog { get; set; }
-    
 }

@@ -21,7 +21,8 @@ public class WorkerControllerTestBase : TestBase
     protected void RefreshController()
     {
         Controller = new WorkerController(new UserStore(Factory), new WorkerLogStore(Factory), new PentaStore(Factory), 
-            CreateTestStore(), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory));
+            CreateTestStore(), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory),
+            new WorkerErrorStore(Factory));
     }
     
     protected void LoginAs(string username)

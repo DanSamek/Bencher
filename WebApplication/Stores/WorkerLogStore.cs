@@ -35,14 +35,14 @@ public class WorkerLogStore : Store<WorkerLog>
     /// </summary>
     public void AddError(WorkerLog workerLog, byte[] errorData)
     {
-        var error = new Error
+        var error = new TestError
         {
             Time = DateTime.UtcNow,
             Test = workerLog.Test,
             WorkerLog = workerLog
         };
         
-        var entity = Context.Errors.Add(error).Entity;
+        var entity = Context.TestErrors.Add(error).Entity;
         workerLog.Errors.Add(entity);
         Context.WorkerLogs.Update(workerLog);
         

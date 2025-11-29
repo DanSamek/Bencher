@@ -9,9 +9,7 @@ public class OpeningBookStore : Store<OpeningBook>
     /// <summary>
     /// .Ctor
     /// </summary>
-    public OpeningBookStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory)
-    {
-    }
+    public OpeningBookStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) {}
     
     /// <inheritdoc /> 
     protected override DbSet<OpeningBook> GetDbSet() => Context.OpeningBooks;

@@ -575,6 +575,62 @@ public class TestStoreTests : TestBase
         Assert.That(nextTest, Is.Not.Null);
         Assert.That(nextTest.Name, Is.EqualTo("test_1"));
     }
+    
+    /// <summary>
+    /// Test validates, that if there are not any paused/running/autobenched tests, null will be returned.
+    /// Normal test version.
+    /// </summary>
+    [TestCase(TestState.Finished)]
+    [TestCase(TestState.Stopped)]
+    public void GetNextTestForWorker_TestsStoppedOrFinished(TestState testState)
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("test_book")
+            .CreateSprtSettings()
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch");
+        
+        EngineBuilder.AddTestForUser("test_1", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1,  state: testState);
+        
+        using var context = Factory.CreateDbContext();
+        
+        var testStore = CreateTestStore();
+        var nextTest = testStore.GetNextTestForWorker(false, 16);
+        
+        Assert.That(nextTest, Is.Null);
+    }
+
+    
+    /// <summary>
+    /// Test validates, that if there are not any paused/running/autobenched tests, null will be returned.
+    /// Autobenched test version.
+    /// </summary>
+    [TestCase(TestState.Finished)]
+    [TestCase(TestState.Stopped)]
+    public void GetNextTestForWorker_TestsStoppedOrFinished_Autobenched(TestState testState)
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("test_book")
+            .CreateSprtSettings()
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch");
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_1", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1,  state: testState);
+        
+        using var context = Factory.CreateDbContext();
+        
+        var testStore = CreateTestStore();
+        var nextTest = testStore.GetNextTestForWorker(true, 16);
+        
+        Assert.That(nextTest, Is.Null);
+    }
+    
     #endregion
 
     /// <summary>

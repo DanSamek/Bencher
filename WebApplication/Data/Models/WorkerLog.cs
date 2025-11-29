@@ -61,7 +61,7 @@ public class WorkerLog : DoId
     /// <summary>
     /// All errors, that happened for this log.
     /// </summary>
-    public List<Error> Errors { get; set; } = [];
+    public List<TestError> Errors { get; set; } = [];
     
     /// <summary>
     /// User that belongs to a log.
