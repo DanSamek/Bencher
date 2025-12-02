@@ -1,4 +1,6 @@
-@page "/Errors"
+@page "/Errors/Tests"
+
+@inherits CustomComponentBase
 
 @using WebApplication.Stores
 @using WebApplication.Web.Components
@@ -6,16 +8,12 @@
 @rendermode InteractiveServer
 
 @inject TestErrorStore TestErrorStore
+    
+<PageTitle>Test errors</PageTitle>
+<PageHeader Value="Test errors"/>
 
 @* TODO paging !! *@
-
-<PageTitle>Errors</PageTitle>
-<PageHeader Value="Errors" />
-
-@foreach (var error in _errors)
-{
-    <span>@error.Id -- TODO</span>
-}
+<TestErrorsTable Errors="_errors" ShowTestId />
 
 @code {
     private IReadOnlyList<Data.Models.TestError> _errors = [];

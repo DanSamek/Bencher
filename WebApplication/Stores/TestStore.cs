@@ -205,6 +205,7 @@ public class TestStore : Store<Test>
         
         var test = new Test
         {
+            Description = data.Description,
             ExpectedNps = data.ExpectedNps,
             Name = data.TestName,
             Created = DateTime.UtcNow,

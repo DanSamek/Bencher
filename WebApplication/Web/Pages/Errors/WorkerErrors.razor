@@ -1,0 +1,46 @@
+@page "/Errors/Workers"
+
+@using WebApplication.Stores
+@using WebApplication.Web.Components
+
+@rendermode InteractiveServer
+
+@inject WorkerErrorStore WorkerErrorStore
+
+<PageTitle>Worker errors</PageTitle>
+<PageHeader Value="Worker errors"/>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Datetime</th>
+        <td>Log</td>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var error in _errors)
+    {
+        <tr>
+            <td>@error.Id</td>
+            <td>@error.Time</td>
+            @{
+                var fileName = $"error_{error.Time}";
+            }
+            <td><DownloadButton FileName="@fileName" DataLoader="() => WorkerErrorStore.LoadContent(error.Id)"/></td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    
+    private IReadOnlyList<Data.Models.Error> _errors = [];
+    
+    /// <inheritdoc /> 
+    protected override void OnInitialized()
+    {
+        _errors = WorkerErrorStore.GetErrors();
+        base.OnInitialized();
+    }
+}

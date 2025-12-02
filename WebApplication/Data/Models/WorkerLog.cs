@@ -9,11 +9,19 @@ namespace WebApplication.Data.Models;
 /// </summary>
 public class WorkerLog : DoId
 {
+    public const int MAX_NAME_LENGTH = 128;
+    /// <summary>
+    /// Machine name.
+    /// </summary>
+    [Required]
+    [MaxLength(MAX_NAME_LENGTH)]
+    public required string Name { get; set; }
+    
     /// <summary>
     /// Current state.
     /// </summary>
     [Required]
-    public required WorkerLogState  State { get; set; }
+    public required WorkerLogState State { get; set; }
     
     /// <summary>
     /// Initial state of the test.
@@ -60,6 +68,7 @@ public class WorkerLog : DoId
 
     /// <summary>
     /// All errors, that happened for this log.
+    /// TODO, this is going to be only one!
     /// </summary>
     public List<TestError> Errors { get; set; } = [];
     
@@ -74,4 +83,10 @@ public class WorkerLog : DoId
     /// </summary>
     [Required]
     public required Test Test { get; set; }
+
+    /// <summary>
+    /// Summary identifier of the worker.
+    /// </summary>
+    /// <returns></returns>
+    public string Identifier() => $"{Id}-{Name}-{NumberOfThreads}";
 }

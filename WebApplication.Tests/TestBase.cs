@@ -53,6 +53,8 @@ public class TestBase
         context.TestErrors.ExecuteDelete();
         context.WorkerLogs.ExecuteDelete();
         context.AutobenchStates.ExecuteDelete();
+        context.WorkerErrors.ExecuteDelete();
+        context.TestErrors.ExecuteDelete();
     }
 
     private static async Task<PostgreSqlContainer> CreateContainer()

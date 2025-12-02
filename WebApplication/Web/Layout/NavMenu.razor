@@ -20,7 +20,6 @@
                         <ReloadLink Url="/Account/Manage">
                             <span>@context.User.Identity?.Name</span>
                         </ReloadLink>
-                        <ThemeSelector/>
 
                         <ReloadLink Url="/Account/AccessToken">
                             @Icons.AccessTokenIcon()
@@ -30,20 +29,9 @@
                             @Icons.CreateTestIcon()
                         </ReloadLink>
                         
-                        <div class="dropdown nav-link">
-                            <a class="dropdown-toggle" style="color: var(--bs-nav-link-color)" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                                @Icons.TestIcon()
-                            </a>
-
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                                <CascadingValue TValue="string" Value=@("dropdown-item")>
-                                    <ReloadListItem Url="/Tests/Running" LinkText="Running tests"/>
-                                    <ReloadListItem Url="/Tests/Ended" LinkText="Ended tests"/>
-                                    <ReloadListItem Url="/Tests/Passed" LinkText="Passed tests"/>
-                                </CascadingValue>
-                            </ul>
-                        </div>
-                        
+                        @TestsFragment()
+                        @ErrorsFragment()
+                       
                         <ReloadLink Url="/Engines/Manage">
                             @Icons.ManageEnginesIcon()
                         </ReloadLink>
@@ -52,18 +40,26 @@
                             @Icons.ManageOpeningBooksIcon()
                         </ReloadLink>
                         
+                        <ThemeSelector/>
+                        
                         <ReloadLink Url="/Account/Logout">
                             @Icons.LogoutIcon()
                         </ReloadLink>
 
                     </Authorized>
                     <NotAuthorized>
-                        <ReloadLink Url="/Account/Register">
-                            <span>Register</span>
-                        </ReloadLink>
+                        @TestsFragment()
+                        @ErrorsFragment()
+                        
                         <ReloadLink Url="/Account/Login">
                             <span>Login</span>
                         </ReloadLink>
+                        
+                        <ReloadLink Url="/Account/Register">
+                            <span>Register</span>
+                        </ReloadLink>
+                        
+                        <ThemeSelector/>
                     </NotAuthorized>
                 </AuthorizeView>
             </ul>
@@ -81,8 +77,6 @@
             <CascadingValue Value="true">
                 <AuthorizeView>
                     <Authorized>
-                        <ThemeSelector/>
-                        
                         <ReloadLink Url="/Account/Manage">
                             @Icons.ProfileIcon()
                             <span>@context.User.Identity?.Name</span>
@@ -92,7 +86,7 @@
                             @Icons.AccessTokenIcon()
                             <span>Access token</span>
                         </ReloadLink>
-                        
+
                         <ReloadLink Url="/Test/Create">
                             @Icons.CreateTestIcon()
                             <span>Create test</span>
@@ -108,19 +102,8 @@
                             <span>Manage opening books</span>
                         </ReloadLink>
 
-                        <div class="nav-item nav-link">
-                            <div class="d-flex gap-1">
-                                @Icons.TestIcon()
-                                <p class="mb-1">Tests</p>
-                            </div>
-                            <ul class="list-group list-group-flush">
-                                <CascadingValue TValue="string" Value=@("list-group-item")>
-                                    <ReloadListItem Url="/Tests/Running" LinkText="Running tests"/>
-                                    <ReloadListItem Url="/Tests/Ended" LinkText="Ended tests"/>
-                                    <ReloadListItem Url="/Tests/Passed" LinkText="Passed tests"/>
-                                </CascadingValue>
-                            </ul>
-                        </div>
+                        @TestsFragmentMobile()
+                        @ErrorsFragmentMobile()
 
                         <ReloadLink Url="/Account/Logout">
                             @Icons.LogoutIcon()
@@ -128,18 +111,94 @@
                         </ReloadLink>
                     </Authorized>
                     <NotAuthorized>
-                        <ReloadLink Url="/Account/Register">
-                            @Icons.RegisterIcon()
-                            <span>Register</span>
-                        </ReloadLink>
+                        @TestsFragmentMobile()
+                        @ErrorsFragmentMobile()
+                        
                         <ReloadLink Url="/Account/Login">
                             @Icons.LoginIcon()
                             <span>Login</span>
                         </ReloadLink>
+                        
+                        <ReloadLink Url="/Account/Register">
+                            @Icons.RegisterIcon()
+                            <span>Register</span>
+                        </ReloadLink>
                     </NotAuthorized>
                 </AuthorizeView>
+                <ThemeSelector AdditionalClasses="d-flex justify-content-end border-top border-1 border-secondary"/>
             </CascadingValue>
         </ul>
     </div>
 </div>
 
+@code{
+
+    private RenderFragment TestsFragment()
+        => @<text>
+                <div class="dropdown nav-link">
+                    <a class="dropdown-toggle" style="color: var(--bs-nav-link-color)" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                        @Icons.TestIcon()
+                    </a>
+
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <CascadingValue TValue="string" Value=@("dropdown-item")>
+                            <ReloadListItem Url="/Tests/Running" LinkText="Running tests"/>
+                            <ReloadListItem Url="/Tests/Ended" LinkText="Ended tests"/>
+                            <ReloadListItem Url="/Tests/Passed" LinkText="Passed tests"/>
+                        </CascadingValue>
+                    </ul>
+                </div>
+            </text>;
+
+    private RenderFragment TestsFragmentMobile()
+        => @<text>
+                <div class="nav-item nav-link">
+                    <div class="d-flex gap-1">
+                        @Icons.TestIcon()
+                        <p class="mb-1">Tests</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <CascadingValue TValue="string" Value=@("list-group-item")>
+                            <ReloadListItem Url="/Tests/Running" LinkText="Running tests"/>
+                            <ReloadListItem Url="/Tests/Ended" LinkText="Ended tests"/>
+                            <ReloadListItem Url="/Tests/Passed" LinkText="Passed tests"/>
+                        </CascadingValue>
+                    </ul>
+                </div>
+            </text>;
+
+    
+    private RenderFragment ErrorsFragment()
+        => @<text>
+                <div class="dropdown nav-link">
+                    <a class="dropdown-toggle" style="color: var(--bs-nav-link-color)" href="#" role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown" aria-expanded="false">
+                        @Icons.ErrorIcon()
+                    </a>
+
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink2">
+                        <CascadingValue TValue="string" Value=@("dropdown-item")>
+                            <ReloadListItem Url="/Errors/Workers" LinkText="Worker errors"/>
+                            <ReloadListItem Url="/Errors/Tests" LinkText="Test errors"/>
+                        </CascadingValue>
+                    </ul>
+                </div>
+        </text>;
+    
+    
+    private RenderFragment ErrorsFragmentMobile()
+        => @<text>
+                <div class="nav-item nav-link">
+                    <div class="d-flex gap-1">
+                        @Icons.ErrorIcon()
+                        <p class="mb-1">Errors</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <CascadingValue TValue="string" Value=@("list-group-item")>
+                            <ReloadListItem Url="/Errors/Workers" LinkText="Worker errors"/>
+                            <ReloadListItem Url="/Errors/Tests" LinkText="Test errors"/>
+                        </CascadingValue>
+                    </ul>
+                </div>
+    </text>;
+
+}

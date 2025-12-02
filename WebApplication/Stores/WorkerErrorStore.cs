@@ -32,4 +32,25 @@ public class WorkerErrorStore : Store<Error>
         entity.Log = logContent;
         Context.SaveChanges();
     }
+    
+    /// <summary>
+    /// Returns all errors ordered by time - the last will be the first.
+    /// ! Without log.
+    /// </summary>
+    public IReadOnlyList<Error> GetErrors()
+        => GetDbSet()
+            .OrderByDescending(t => t.Time)
+            .ToArray();
+
+    
+    /// <summary>
+    /// Loads worker error content.
+    /// </summary>
+    public byte[] LoadContent(int errorId)
+        => GetDbSet()
+            .Include(e => e.Log)
+            .Where(e => e.Id == errorId)
+            .Select(e => e.Log.Data)
+            .First();
+    
 }

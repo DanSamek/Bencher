@@ -1,0 +1,42 @@
+@using WebApplication.Data.Models
+
+@if (!WorkerLogs.Any())
+{
+    <span>No workers to display</span>
+    return;
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Identifier</th>
+            <th>MAC</th>
+            <th>Games</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var workerLog in WorkerLogs)
+        {
+            <tr>
+                <td>@workerLog.Identifier()</td>
+                <td>@workerLog.Mac</td>
+                @if (workerLog.InitialTestState == InitialTestState.Normal)
+                {
+                    <td>@workerLog.NumberOfGames / @workerLog.TotalNumberOfGames</td>   
+                }
+                else
+                {
+                    <td>No games when autobench</td> 
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    /// <summary>
+    /// Workerlogs to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required IEnumerable<WorkerLog> WorkerLogs { get; set; }
+}

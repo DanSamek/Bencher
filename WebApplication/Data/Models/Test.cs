@@ -5,6 +5,7 @@ namespace WebApplication.Data.Models;
 
 /// <summary>
 /// Test entity.
+/// TODO add more fastchess options - simply textfield
 /// </summary>
 public class Test : DoId
 {

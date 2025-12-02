@@ -1,27 +1,41 @@
 const THEME_KEY = 'theme';
 const LIGHT_THEME_VALUE = 'light';
-
-function setTheme(theme) {
-    localStorage.setItem(THEME_KEY, theme);
-    ensureTheme(theme);
-}
+const DARK_THEME_VALUE = 'dark';
 
 function getTheme() {
     const theme = localStorage.getItem(THEME_KEY);
     return theme == null ? LIGHT_THEME_VALUE : theme;
 }
 
-function ensureTheme(theme) {
+function loadTheme(theme){
     document.documentElement.setAttribute('data-bs-theme', theme);
 }
 
-document.addEventListener("DOMContentLoaded", function (event) {
-    ensureTheme(getTheme());
-});
+function displayCorrectTheme(theme) {
+    const themeSelectors = document.querySelectorAll(".theme-selector");
+    themeSelectors.forEach(themeSelector => {
+        const light = themeSelector.querySelector('.light');
+        const dark = themeSelector.querySelector('.dark');
+
+        const config = theme === LIGHT_THEME_VALUE
+            ? [dark, light]
+            : [light, dark];
+        
+        config[1].style.display = 'none';
+        config[0].style.display = 'block';  
+    })
+}
+
+function setTheme(theme) {
+    localStorage.setItem(THEME_KEY, theme);
+    loadTheme(theme);
+    displayCorrectTheme(theme);
+}
+
+loadTheme(getTheme()); // ensures no flicking light -> dark when loading.
 
 
 const editorMap = new Map();
-
 function registerMonacoEditor(elementId, language, initialValue, readonly) {
     require.config({ paths: { 'vs': 'lib/monaco-editor/min/vs' }});
     require(['vs/editor/editor.main'], function() {
