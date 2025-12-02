@@ -5,6 +5,11 @@ namespace WebApplication.Data.Models;
 
 /// <summary>
 /// User entity.
+/// TODO maybe add also roles?
+/// At least:
+///     - Admin/Verified/NotVerified
+/// When when user is created we should "verify", that user can add stuff.
+/// TODO load from .env admin password and create him.
 /// </summary>
 public class ApplicationUser : IdentityUser
 {

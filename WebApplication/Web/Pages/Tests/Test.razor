@@ -10,6 +10,7 @@
 @rendermode InteractiveServer
 
 @inject TestStore TestStore
+@inject TestErrorStore TestErrorStore
 @inject NavigationManager NavigationManager
 @inject IGitBranchComparisonService GitBranchComparisonService
 
@@ -43,110 +44,68 @@
             }
         </div>
     }
-
-    <HideUnhideContent>
-        <HeaderContent>
-            <h3>Test info</h3>
-        </HeaderContent>
-        <ChildContent>
-            <ul>
-                <li>Created by: @_test.User.UserName</li>
-                <li>State: @_test.State</li>
-                <li>Description: @NoneTextIfEmpty(_test.Description)</li>
-                <li>Autobenched: @_test.Autobenched</li>
-                <li>Expected NPS: @_test.ExpectedNps</li>
-
-                @if (_test.Autobenched)
-                {
-                    <li>
-                        <span>AutobenchState</span>
-                        <ul>
-                            <li>Resolved: @_test.AutobenchState!.Resolved</li>
-                            <li>Confidence: @_test.AutobenchState.Confidence</li>
-                            <li>Expected bench: @_test.AutobenchState.Bench</li>
-                        </ul>
-                    </li>
-                }
-                <li>Opening book: @_test.OpeningBook.Name</li>
-                <li>Created: @_test.Created</li>
-                @if (_test.Ended is not null)
-                {
-                    <li>Ended: @_test.Ended</li>
-                }
-                <li>Threadscale: @_test.ThreadScale</li>
-            </ul>
-        </ChildContent>
-    </HideUnhideContent>
-
-    <HideUnhideContent>
-        <HeaderContent>
-            <h3>Options</h3>
-        </HeaderContent>
-        <ChildContent>
-            <ul>
-                <li>Hashsize: @_test.HashSize</li>
-                <li>Timemanagement: @_test.TimeManagement</li>
-                <li>NumberOfThreads: @_test.NumberOfThreads</li>
-                <li>Priority: @_test.Priority</li> @* TODO enable change *@
-            </ul>
-        </ChildContent>
-    </HideUnhideContent>
-
-    <HideUnhideContent>
-        <HeaderContent>
-            <h3>Branch info</h3>
-        </HeaderContent>
-        <ChildContent>
-            <h4>Base</h4>
-            <ul>
-                <li>Name: @_test.BaseBranch.Name</li>
-                <li>Bench: @_test.BaseBranch.Bench</li>
-            </ul>
-
-            <h4>Test</h4>
-            <ul>
-                <li>Name: @_test.TestBranch.Name</li>
-                <li>Bench: @_test.TestBranch.Bench</li>
-            </ul>
-        </ChildContent>
-    </HideUnhideContent>
-
-    <HideUnhideContent>
-        <HeaderContent>
-            <h4>SPRT settings</h4>
-        </HeaderContent>
-        <ChildContent>
-            <ul>
-                <li>Alpha: @_test.Settings.Alpha</li>
-                <li>Beta: @_test.Settings.Beta</li>
-                <li>Elo0: @_test.Settings.Elo0</li>
-                <li>Elo1: @_test.Settings.Elo1</li>
-            </ul>
-        </ChildContent>
-    </HideUnhideContent>
-
-    <HideUnhideContent>
-        <HeaderContent>
-            <h3>Workers</h3>
-        </HeaderContent>
-        <ChildContent>
-            <p>Workers - active (@_test.ActiveWorkerThreadCount() threads)</p>
-            @foreach (var workerLog in _test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Active))
+    
+    <h3>Test info</h3>
+    <table class="table">
+        <tbody>
+            <KeyValueTableRow Key="Created by" Value="@_test.User.UserName" />
+            <KeyValueTableRow Key="State" Value="@_test.State" />
+            <KeyValueTableRow Key="Description" Value="@NoneTextIfEmpty(_test.Description)" />
+            <KeyValueTableRow Key="Autobenched" Value="@_test.State" />
+            <KeyValueTableRow Key="Expected NPS" Value="@_test.ExpectedNps" />
+            <KeyValueTableRow Key="Opening book" Value="@_test.OpeningBook.Name" />
+            <KeyValueTableRow Key="Created date" Value="@_test.Created" />
+            <KeyValueTableRow Key="Ended date" Value=@(_test.Ended is not null ? _test.Ended.ToString() : "Not ended") />
+            <KeyValueTableRow Key="Threadscale" Value="@_test.ThreadScale" />
+            @if (_test.Autobenched)
             {
-                @*TODO*@
+                <KeyValueTableRow Key="AutobenchState" ValueCss="padding-right: 0; padding-left: 0;" Value="AutobenchStateFragment()" /> 
             }
-            <p>Workers - finished</p>
-            @foreach (var workerLog in _test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Finished))
-            {
-                @*TODO*@
-            }
-            <p>Workers - disconnected</p>
-            @foreach (var workerLog in _test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Disconnected))
-            {
-                @*TODO*@
-            }
-        </ChildContent>
-    </HideUnhideContent>
+            <KeyValueTableRow Key="Hashsize" Value="@_test.HashSize" />
+            <KeyValueTableRow Key="Time management" Value="@_test.TimeManagement" />
+            <KeyValueTableRow Key="NumberOfThreads" Value="@_test.NumberOfThreads" />
+            <KeyValueTableRow Key="Priority" Value="@_test.Priority" /> @* TODO enable change *@
+            
+            @BranchFragment("Base branch", _test.BaseBranch)
+            @BranchFragment("Test branch",_test.TestBranch)
+            
+            <KeyValueTableRow Key="Alpha" Value="_test.Settings.Alpha"/> 
+            <KeyValueTableRow Key="Beta" Value="_test.Settings.Beta"/> 
+            <KeyValueTableRow Key="Elo0" Value="_test.Settings.Elo0"/> 
+            <KeyValueTableRow Key="Elo1" Value="_test.Settings.Elo1"/> 
+        </tbody>
+    </table>
+    
+    <div class="pb-3">
+        <HideUnhideContent>
+            <HeaderContent>
+                <h3>Errors (@_errors.Count)</h3>
+            </HeaderContent>
+            <ChildContent>
+                <TestErrorsTable Errors="_errors"/>
+            </ChildContent>
+        </HideUnhideContent>
+    </div>
+    
+    <div class="pb-3">
+        <HideUnhideContent>
+            <HeaderContent>
+                <h3>Workers</h3>
+            </HeaderContent>
+            <ChildContent>
+                <div class="d-flex gap-3 flex-column">
+                    <h4>Active workers (@_test.ActiveWorkerThreadCount() threads)</h4>
+                    <WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Active)"/>
+
+                    <h4>Finished</h4>
+                    <WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Finished)"/>
+
+                    <h4>Disconnected</h4>
+                    <WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Disconnected)"/>
+                </div>
+            </ChildContent>
+        </HideUnhideContent>
+    </div>
 </div>
 
 @* TODO LLR/Elo history as a graph. *@
@@ -154,9 +113,10 @@
 @code {
     private Data.Models.Test? _test;
     private bool _canEdit;
+    private IReadOnlyList<TestError> _errors = [];
     
     /// <summary>
-    /// Id of the test.
+    /// Id of the test. 
     /// </summary>  
     [Parameter]
     public required int Id { get; set; }
@@ -172,6 +132,7 @@
             return;
         }
         _canEdit = _test.User.Id == UserId;
+        _errors = TestErrorStore.GetErrorsForTest(Id);
     }
     
     private void RemoveTest()
@@ -190,5 +151,34 @@
 
     private static string NoneTextIfEmpty(string? value)
         => value is null || value.Length == 0 ? "No description" : value;
-    
+
+
+    private RenderFragment AutobenchStateFragment() =>
+        @<text>
+             <table class="table">
+                 <tbody>
+                     @{
+                         var css = "padding-right: 0; padding-left: 0;";
+                     }
+                     <KeyValueTableRow Key="Resolved" ValueCss="@css" Value="@_test!.AutobenchState!.Resolved"/>
+                     <KeyValueTableRow Key="UserConfidence" ValueCss="@css" Value="@_test.AutobenchState.UserConfidence"/>
+                     <KeyValueTableRow Key="Confidence" ValueCss="@css"  Value="@_test.AutobenchState.Confidence.ToString("N")"/>
+                     @{
+                         var toDisplayBench = _test.AutobenchState.Bench == 0 ? "unknown" : _test.AutobenchState.Bench.ToString();
+                     }
+                     <KeyValueTableRow Key="Expected bench" ValueCss="@css" Value="@toDisplayBench"/>
+                 </tbody>
+             </table>
+         </text>;
+
+
+    private RenderFragment BranchFragment(string branchPrefix, TestBranch branch) =>
+        @<text>
+             @{
+                 var keyBranchName = $"{branchPrefix} name";
+                 var keyBranchBench = $"{branchPrefix} bench";
+             }
+             <KeyValueTableRow Key="@keyBranchName" Value="@branch.Name"/>
+             <KeyValueTableRow Key="@keyBranchBench" Value="@branch.Bench"/>
+         </text>;
 }

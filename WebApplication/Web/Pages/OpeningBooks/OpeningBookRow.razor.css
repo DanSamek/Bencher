@@ -1,0 +1,6 @@
+
+@media all and (max-width: 340px) {
+    .opening-book-row .actions-buttons{
+        flex-wrap: wrap;
+    }   
+}

@@ -26,6 +26,7 @@ public class TestBuilder
     {
         var wl = new WorkerLog
         {
+            Name = "TEST WORKER",
             Mac = "AA:BB:CC:DD:EE:FF",
             NumberOfGames = 0,
             TotalNumberOfGames = 64,
@@ -61,7 +62,7 @@ public class TestBuilder
         return this;
     }
 
-    public TestBuilder AddError(ApplicationDbContext context, DateTime date)
+    public TestBuilder AddError(ApplicationDbContext context, DateTime date, byte[]? data = null)
     {
         context.Attach(_test);
         var wl = context.WorkerLogs.First(wl => wl.Test.Id == _test.Id);
@@ -77,7 +78,7 @@ public class TestBuilder
 
         error.Log = new ErrorContent
         {
-            Data = [0x1, 0x2, 0x4],
+            Data = data ?? [0x1, 0x2, 0x4],
             ErrorId = error.Id
         };
         return this;

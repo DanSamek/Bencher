@@ -1,0 +1,50 @@
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+@inject TestErrorStore TestErrorStore
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Id</th>
+        @if (ShowTestId)
+        {
+            <th>Test id</th>
+        }
+        <th>Datetime</th>
+        <td>Log</td>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var error in Errors)
+    {
+        <tr>
+            <td>@error.Id</td>
+            
+            @if (ShowTestId)
+            {
+                var testPath = $"/Test/{error.Test.Id}";
+                <td><ReloadLink Url="@testPath">@error.Test.Id</ReloadLink></td>
+            }
+            <td>@error.Time</td>
+            @{
+                var fileName = $"error_{error.Time}_{error.Test.Id}";
+            }
+            <td><DownloadButton FileName="@fileName" DataLoader="() => TestErrorStore.LoadContent(error.Id)"/></td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    /// <summary>
+    /// Test errors to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required IEnumerable<TestError> Errors { get; set; }
+    
+    /// <summary>
+    /// If test id column should be rendered.
+    /// </summary>
+    [Parameter]
+    public bool ShowTestId { get; set; }
+}

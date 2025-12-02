@@ -176,6 +176,7 @@ public class EngineBuilder
         {
             var wl = new WorkerLog
             {
+                Name = "TEST WORKER",
                 Mac = "AA:BB:CC:DD:EE:FF",
                 NumberOfGames = 0,
                 TotalNumberOfGames = 64,

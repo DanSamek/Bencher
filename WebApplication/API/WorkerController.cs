@@ -158,6 +158,7 @@ public partial class WorkerController : ControllerBase
         var now = DateTime.UtcNow;
         var wl = new WorkerLog
         {
+            Name = getTestDto.Name.Length <= WorkerLog.MAX_NAME_LENGTH ? getTestDto.Name : getTestDto.Name[..(WorkerLog.MAX_NAME_LENGTH - 1)],
             InitialTestState = getTestDto.Autobench ? InitialTestState.Autobenched : InitialTestState.Normal,
             State = WorkerLogState.Active,
             ConnectTime = now,

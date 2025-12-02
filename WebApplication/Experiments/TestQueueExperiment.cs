@@ -75,6 +75,7 @@ public static class TestQueueExperiment
             testToAddWorker!.WorkerLogs.Add(
                 new WorkerLog
                 {
+                    Name = "TEST WORKER",
                     Id = 0,
                     NumberOfThreads = workerThreads[iteration],
                     Mac = "",

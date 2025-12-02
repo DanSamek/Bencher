@@ -1,0 +1,27 @@
+@typeparam T
+
+<tr>
+    <td>@Key</td>
+    @* ??? *@
+    <td style="@ValueCss">
+    @if (Value is RenderFragment rf)
+    {
+        @rf
+    }
+    else
+    {
+        @Value   
+    }
+    </td>
+</tr>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Key { get; set; }
+    
+    [Parameter, EditorRequired]
+    public T? Value { get; set; }
+    
+    [Parameter]
+    public string? ValueCss { get; set; } 
+}
