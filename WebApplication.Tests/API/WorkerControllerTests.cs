@@ -39,7 +39,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
                 .AddBranch("base_branch")
                 .AddBranch("test_branch")
                 .AddBranch("test_branch_2")
-                .AddTest("test_31", "uho", "base_branch", "test_branch")
+                .AddTest("test_31", "uho", "base_branch", "test_branch", additionalFastchessOptions: "--a --b")
                     .EnsurePentaCreated(Factory.CreateDbContext())
                     .Close()
                 .Close()
@@ -150,6 +150,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(resultDto.GitUrl, Is.EqualTo("git-url-stockfish"));
         Assert.That(resultDto.OpeningBook.Data, Is.EqualTo(new int[] { 0x69 }));
         Assert.That(resultDto.ExpectedNps, Is.EqualTo(1));
+        Assert.That(resultDto.AdditionalFastchessOptions, Is.EqualTo("--a --b"));
 
         using var validationContext = Factory.CreateDbContext();
         Assert.That(validationContext.WorkerLogs.Count(), Is.EqualTo(1));

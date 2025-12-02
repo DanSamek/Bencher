@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Shared.CustomAttributes;
+using WebApplication.Data.Models;
 
 namespace WebApplication.Components.Pages.Tests;
 
@@ -8,8 +9,10 @@ public class CreateTestFormModel
 {
     [Required]
     [DisplayName("Test name")]
+    [MaxLength(Test.NAME_MAX_LENGTH)]
     public string TestName { get; set; } = null!;
     
+    [MaxLength(Test.DESCRIPTION_MAX_LENGTH)]
     public string? Description { get; set; }
     
     [Required]
@@ -45,6 +48,7 @@ public class CreateTestFormModel
     
     [Required]
     [RegularExpression("^\\d+\\+\\d+\\.\\d+")]
+    [MaxLength(Test.TM_MAX_LENGTH)]
     public string TimeManagement { get; set; } = null!;
     
     public bool Autobenched { get; set; }
@@ -70,6 +74,10 @@ public class CreateTestFormModel
     [Required]
     [Min(1)]
     public int ExpectedNps { get; set; }
+    
+    [MaxLength(Test.FASTCHESS_OPTIONS_MAX_LENGTH)]
+    [DisplayName("Additional fast chess options")]
+    public string? AdditionalFastchessOptions { get; set; }
 }
 
 

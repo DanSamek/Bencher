@@ -65,6 +65,7 @@
             <KeyValueTableRow Key="Time management" Value="@_test.TimeManagement" />
             <KeyValueTableRow Key="NumberOfThreads" Value="@_test.NumberOfThreads" />
             <KeyValueTableRow Key="Priority" Value="@_test.Priority" /> @* TODO enable change *@
+            <KeyValueTableRow Key="Additional fastchess options" Value="@(string.IsNullOrEmpty(_test.AdditionalFastchessOptions)? "None" : _test.AdditionalFastchessOptions)" />
             
             @BranchFragment("Base branch", _test.BaseBranch)
             @BranchFragment("Test branch",_test.TestBranch)
@@ -161,10 +162,13 @@
                          var css = "padding-right: 0; padding-left: 0;";
                      }
                      <KeyValueTableRow Key="Resolved" ValueCss="@css" Value="@_test!.AutobenchState!.Resolved"/>
-                     <KeyValueTableRow Key="UserConfidence" ValueCss="@css" Value="@_test.AutobenchState.UserConfidence"/>
-                     <KeyValueTableRow Key="Confidence" ValueCss="@css"  Value="@_test.AutobenchState.Confidence.ToString("N")"/>
                      @{
-                         var toDisplayBench = _test.AutobenchState.Bench == 0 ? "unknown" : _test.AutobenchState.Bench.ToString();
+                         var confidence = _test.AutobenchState.Resolved ? 1 : _test.AutobenchState.Confidence;
+                     }
+                     <KeyValueTableRow Key="UserConfidence" ValueCss="@css" Value="@_test.AutobenchState.UserConfidence"/>
+                     <KeyValueTableRow Key="Confidence" ValueCss="@css"  Value="@confidence.ToString("N")"/>
+                     @{
+                         var toDisplayBench = _test.AutobenchState.Bench == 0 ? "Unknown" : _test.AutobenchState.Bench.ToString();
                      }
                      <KeyValueTableRow Key="Expected bench" ValueCss="@css" Value="@toDisplayBench"/>
                  </tbody>

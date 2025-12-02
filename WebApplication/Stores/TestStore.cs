@@ -205,6 +205,7 @@ public class TestStore : Store<Test>
         
         var test = new Test
         {
+            AdditionalFastchessOptions = data.AdditionalFastchessOptions,
             Description = data.Description,
             ExpectedNps = data.ExpectedNps,
             Name = data.TestName,
@@ -268,7 +269,7 @@ public class TestStore : Store<Test>
     }
 
     /// <summary>
-    /// Result from <see cref="TestStore.GetRunningTests"> 
+    /// Result from <see cref="TestStore.GetRunningTests" /> 
     /// </summary> 
     public record RunningTestResult(IReadOnlyList<Test> AutobenchedTests, IReadOnlyList<Test> RunningTests);
     
