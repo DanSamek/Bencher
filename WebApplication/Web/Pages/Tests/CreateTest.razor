@@ -20,7 +20,7 @@
 <PageTitle>Create test</PageTitle>
 <PageHeader Value="Create test" />
 
-<EditForm class="form-control" Model="_formModel" OnSubmit="OnSubmit">
+<EditForm class="form-control mb-4" Model="_formModel" OnSubmit="OnSubmit">
     <DataAnnotationsValidator/>
     
     <div class="form-floating mb-3">
@@ -81,6 +81,12 @@
         <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.HashSize" Name="HashSize" For="() => _formModel.HashSize"/>
         <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.NumberOfThreads" Name="Number of threads" For="() => _formModel.NumberOfThreads"/>
         <SimpleInputText @bind-Value="@_formModel.TimeManagement" Name="Time management" For="() => _formModel.TimeManagement"/>
+    </div>
+    
+    <div class="form-floating mb-3">
+        <InputTextArea class="form-control" @bind-Value="@_formModel.AdditionalFastchessOptions" Id="AdditionalFcO" />
+        <label for="AdditionalFcO" class="form-label">Additional fastchess options</label>
+        <ValidationMessage For="@(() => _formModel.AdditionalFastchessOptions)"/>
     </div>
     
     <div class="form-floating mb-3">

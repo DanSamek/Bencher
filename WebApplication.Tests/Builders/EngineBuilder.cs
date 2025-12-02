@@ -97,12 +97,14 @@ public class EngineBuilder
                                  int priority = 0, 
                                  int numberOfThreads = 1,
                                  TestState state = TestState.Paused,
-                                 int expectedNps = 1)
+                                 int expectedNps = 1,
+                                 string? additionalFastchessOptions = null)
     {
         var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
         var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
         {
+            AdditionalFastchessOptions = additionalFastchessOptions,
             ExpectedNps = 1,
             Name = name,
             Created = DateTime.UtcNow,

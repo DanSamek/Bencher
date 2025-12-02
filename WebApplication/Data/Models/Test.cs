@@ -5,10 +5,13 @@ namespace WebApplication.Data.Models;
 
 /// <summary>
 /// Test entity.
-/// TODO add more fastchess options - simply textfield
 /// </summary>
 public class Test : DoId
 {
+    public const int FASTCHESS_OPTIONS_MAX_LENGTH = 1024;
+    public const int DESCRIPTION_MAX_LENGTH = 1024;
+    public const int NAME_MAX_LENGTH = 128;
+    public const int TM_MAX_LENGTH = 32;
     /// <summary>
     /// Calculates thread scale.
     /// Note, we can call it in .Ctor, but TimeManagement can be null.
@@ -19,13 +22,13 @@ public class Test : DoId
     /// Test name.
     /// </summary>
     [Required]
-    [MaxLength(128)]
+    [MaxLength(NAME_MAX_LENGTH)]
     public required string Name { get; set; }
     
     /// <summary>
     /// Test description.
     /// </summary>
-    [MaxLength(1024)]
+    [MaxLength(DESCRIPTION_MAX_LENGTH)]
     public string? Description { get; set; }
     
     /// <summary>
@@ -38,6 +41,13 @@ public class Test : DoId
     /// Time, when test ended. 
     /// </summary>
     public DateTime? Ended { get; set; }
+    
+    /// <summary>
+    /// Additional fastchess options that should be set at the worker.
+    /// The user has to be sure, that options are correct.
+    /// </summary>
+    [MaxLength(FASTCHESS_OPTIONS_MAX_LENGTH)]
+    public string? AdditionalFastchessOptions { get; set; }
     
     /// <summary>
     /// Priority of the test.
@@ -62,7 +72,7 @@ public class Test : DoId
     /// Timemanagement that will be used for the test.
     /// </summary>
     [Required]
-    [MaxLength(30)]
+    [MaxLength(TM_MAX_LENGTH)]
     public required string TimeManagement { get; set; }
     
     /// <summary>

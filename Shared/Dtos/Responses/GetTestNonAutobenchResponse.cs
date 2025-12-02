@@ -42,6 +42,9 @@ public class GetTestNonAutobenchResponse : ResponseBase
     
     /// <inheritdoc cref="Data.Models.Test.ExpectedNps" /> 
     public required int ExpectedNps { get; set; }
+    
+    /// <inheritdoc cref="Data.Models.Test.AdditionalFastChessOptions" /> 
+    public string? AdditionalFastchessOptions { get; set; }
 }
 
 public record OpeningBookDto(string Name, byte[] Data, int Depth);

@@ -27,6 +27,7 @@ public partial class WorkerController
         var content = _openingBookStore.LoadContent(test.OpeningBook.Id);
         var result = new GetTestNonAutobenchResponse
         {
+            AdditionalFastchessOptions = test.AdditionalFastchessOptions,
             ExpectedNps = test.ExpectedNps,
             ConnectionId = workerLog.Id,
             GitUrl = test.Engine.GitUrl,
