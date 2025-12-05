@@ -1,0 +1,115 @@
+@using WebApplication.Components.Components
+@typeparam TRow
+
+<div>
+    <table class="table @AdditionalCssClass">
+        @if (HeaderContent is not null)
+        {
+            @HeaderContent
+        }
+        
+        <tbody>
+        @if (_renderedRows.Count > 0)
+        {
+            @foreach (var row in _renderedRows)
+            {
+                @RowContent(row)
+            }    
+        }
+        else
+        {
+            <span>No data to display</span>
+        }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center w-100 gap-3">
+        @if (_dataIndex != 0)
+        {
+            <button class="btn btn-secondary" @onclick="OnPreviousPageClicked">
+                @Icons.ChevronLeft()
+            </button>
+        }
+        
+        @if (_renderedRows.Count == WebConstants.PAGE_SIZE)
+        {
+            <button class="btn btn-secondary" @onclick="OnNextPageClicked">
+                @Icons.ChevronRight()
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private IReadOnlyList<TRow> _renderedRows = [];
+    private int _dataIndex = 0;
+
+    /// <summary>
+    /// Initital data index for page.
+    /// </summary>
+    [Parameter]
+    public int InitialDataIndex { get; set; } = 0;
+    
+    /// <summary>
+    /// Initial data rows.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<TRow> InitialRows { get; set; }
+    
+    /// <summary>
+    /// Table header content. 
+    /// </summary>
+    [Parameter]
+    public RenderFragment? HeaderContent { get; set; }
+    
+    /// <summary>
+    /// Row content.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required RenderFragment<TRow> RowContent { get; set; }
+    
+    /// <summary>
+    /// When is clicked on the next page, this function gets invoked.
+    /// Its a dataloader, what should be rendered in the rows.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required Func<PageClickedArgs, PageClickedResult<TRow>> NextPageClicked { get; set; }
+    
+    /// <summary>
+    /// When is clicked on the previous page, this function gets invoked.
+    /// Its a dataloader, what should be rendered in the rows.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required Func<PageClickedArgs, PageClickedResult<TRow>> PreviousPageClicked { get; set; }
+    
+    /// <summary>
+    /// Additional css class for the table element.
+    /// </summary>
+    [Parameter]
+    public string? AdditionalCssClass { get; set; }
+    
+    /// <inheritdoc /> 
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (InitialDataIndex < 0) throw new Exception($"{nameof(InitialDataIndex)} can't be negative");
+        if (InitialRows.Count > WebConstants.PAGE_SIZE) throw new Exception($"{nameof(InitialRows)} can't have size bigger than ${nameof(WebConstants.PAGE_SIZE)}");
+        _renderedRows = InitialRows;
+    }
+
+    private void OnPreviousPageClicked()
+    {
+        var args = new PageClickedArgs(_dataIndex - 1);
+        _renderedRows = PreviousPageClicked(args).Rows;
+
+        _dataIndex--;
+    }
+
+    private void OnNextPageClicked()
+    {
+        var args = new PageClickedArgs(_dataIndex + 1);
+        _renderedRows = NextPageClicked(args).Rows;
+        
+        _dataIndex++;
+    }
+}

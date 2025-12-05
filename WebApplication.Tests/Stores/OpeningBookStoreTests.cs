@@ -114,6 +114,7 @@ public class OpeningBookStoreTests : TestBase
     [TestCase(TestState.Stopped, false)]
     public void AnyRunningTest(TestState state, bool anyRunningExpected)
     {
+        DateTime? date = state is TestState.Finished or TestState.Stopped ? DateTime.UtcNow : null;
         new DomainBuilder(Factory.CreateDbContext())
             .CreateBook("test-book")
             .CreateSprtSettings()
@@ -121,7 +122,7 @@ public class OpeningBookStoreTests : TestBase
                 .AddEngine("stockfish")
                     .AddBranch("base-branch")
                     .AddBranch("test-branch")
-                    .AddTest("test-1", "test-book", "base-branch", "test-branch", state: state)
+                    .AddTest("test-1", "test-book", "base-branch", "test-branch", state: state, ended: date)
                         .Close()
                     .Close()
                 .Close()

@@ -2,6 +2,7 @@
 
 @inherits CustomComponentBase
 
+@using WebApplication.Components.Components
 @using WebApplication.Stores
 @using WebApplication.Web.Components
 
@@ -12,8 +13,70 @@
 <PageTitle>Test errors</PageTitle>
 <PageHeader Value="Test errors"/>
 
-@* TODO paging !! *@
-<TestErrorsTable Errors="_errors" ShowTestId />
+<TablePaginator InitialRows="_errors"
+                NextPageClicked="OnNextPageClicked"
+                PreviousPageClicked="OnPreviousPageClicked" 
+                AdditionalCssClass="table-striped">
+    <HeaderContent>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Test id</th>
+                <th>Datetime</th>
+                <td>Log</td>
+            </tr>
+        </thead>
+    </HeaderContent>
+    
+    <RowContent>
+        <tr>
+            <td>@context.Id</td>
+            @{
+                var testPath = $"/Test/{context.Test.Id}";
+            }
+            <td><ReloadLink Url="@testPath">@context.Test.Id</ReloadLink></td>
+            
+            <td>@context.Time</td>
+            @{
+                var fileName = $"error_{context.Time}_{context.Test.Id}";
+            }
+            <td><DownloadButton FileName="@fileName" DataLoader="() => TestErrorStore.LoadContent(context.Id)"/></td>
+        </tr>
+    </RowContent>
+</TablePaginator>
+
+@*
+<table class="table">
+    <thead>
+    <tr>
+        <th>Id</th>
+        
+            <th>Test id</th>
+        
+        <th>Datetime</th>
+        <td>Log</td>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var error in _errors)
+    {
+        <tr>
+            <td>@error.Id</td>
+            @{
+                var testPath = $"/Test/{error.Test.Id}";
+            }
+            <td><ReloadLink Url="@testPath">@error.Test.Id</ReloadLink></td>
+            
+            <td>@error.Time</td>
+            @{
+                var fileName = $"error_{error.Time}_{error.Test.Id}";
+            }
+            <td><DownloadButton FileName="@fileName" DataLoader="() => TestErrorStore.LoadContent(error.Id)"/></td>
+        </tr>
+    }
+    </tbody>
+</table>
+*@
 
 @code {
     private IReadOnlyList<Data.Models.TestError> _errors = [];
@@ -21,7 +84,21 @@
     /// <inheritdoc /> 
     protected override void OnInitialized()
     {
-        _errors = TestErrorStore.GetErrors();
+        _errors = TestErrorStore.GetErrorsForPage(0);
         base.OnInitialized();
+    }
+    
+    private PageClickedResult<Data.Models.TestError> OnNextPageClicked(PageClickedArgs args)
+    {
+        var errors = TestErrorStore.GetErrorsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.TestError>(errors);
+        return result;
+    }
+    
+    private PageClickedResult<Data.Models.TestError> OnPreviousPageClicked(PageClickedArgs args)
+    {
+        var errors = TestErrorStore.GetErrorsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.TestError>(errors);
+        return result;
     }
 }

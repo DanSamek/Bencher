@@ -14,14 +14,6 @@ public class TestErrorStore : Store<TestError>
 
     /// <inheritdoc /> 
     protected override DbSet<TestError> GetDbSet() => Context.TestErrors;
-
-    /// <summary>
-    /// Returns all errors ordered by time - last will be first.
-    /// ! Without data.
-    /// </summary>
-    public IReadOnlyList<TestError> GetErrors()
-        => OrderedByTimeWithTest()
-            .ToArray();
     
     /// <summary>
     /// Loads test error content.
@@ -40,6 +32,15 @@ public class TestErrorStore : Store<TestError>
     public IReadOnlyList<TestError> GetErrorsForTest(int testId)
         => OrderedByTimeWithTest()
             .Where(e => e.Test.Id == testId)
+            .ToArray();
+    
+    /// <summary>
+    /// Returns errors for the paging ordered by time - the last will be the first.
+    /// ! Without log.
+    /// </summary>
+    public IReadOnlyList<TestError> GetErrorsForPage(int pageIndex, int pageSize = WebConstants.PAGE_SIZE)
+        => OrderedByTimeWithTest()
+            .TakePage(pageIndex, pageSize)
             .ToArray();
     
     private IOrderedQueryable<TestError> OrderedByTimeWithTest()

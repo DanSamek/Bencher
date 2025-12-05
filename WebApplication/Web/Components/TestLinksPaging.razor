@@ -1,0 +1,28 @@
+@using WebApplication.Components.Components
+@using WebApplication.Web.Pages.Tests
+
+<TablePaginator InitialRows="InitialTests" 
+                AdditionalCssClass="table-borderless test-links-paging"
+                NextPageClicked="NextPageClicked"
+                PreviousPageClicked="PreviousPageClicked">
+    <RowContent>
+        <TestLink Test="context"/>
+    </RowContent>
+</TablePaginator>
+
+@code {
+    /// <summary>
+    /// Initial tests to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<Data.Models.Test> InitialTests { get; set; }
+    
+    /// <inheritdoc cref="TablePaginator.NextPageClicked" />
+    [Parameter, EditorRequired]
+    public required Func<PageClickedArgs, PageClickedResult<Data.Models.Test>> NextPageClicked { get; set; }
+    
+    /// <inheritdoc cref="TablePaginator.PreviousPageClicked" />
+    [Parameter, EditorRequired]
+    public required Func<PageClickedArgs, PageClickedResult<Data.Models.Test>> PreviousPageClicked { get; set; }
+
+}

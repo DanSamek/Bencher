@@ -129,7 +129,11 @@ public class TestStore : Store<Test>
     /// Stops a test by an id.
     /// </summary>
     public async Task StopTest(int testId)
-        => await SetState(testId, TestState.Stopped);
+        =>  await GetDbSet()
+            .Where(t => t.Id == testId)
+            .ExecuteUpdateAsync(spc => spc
+                .SetProperty(t => t.State, TestState.Stopped)
+                .SetProperty(t => t.Ended, DateTime.UtcNow));
 
     
     /// <summary>
@@ -289,20 +293,6 @@ public class TestStore : Store<Test>
     }
     
     /// <summary>
-    /// Returns all ended tests.
-    /// So the test state is stopped or finished.
-    /// </summary>
-    public IReadOnlyList<Test> GetEndedTests()
-    {
-        var result = IncludeForView()
-            .Where(t => t.State == TestState.Finished || t.State == TestState.Stopped)
-            .OrderByDescending(t => t.Ended)
-            .ToArray();
-        
-        return result;
-    }
-    
-    /// <summary>
     /// Returns all paused tests.
     /// </summary>
     public IReadOnlyList<Test> GetPausedTests()
@@ -314,28 +304,6 @@ public class TestStore : Store<Test>
         return result;
     }
 
-    /// <summary>
-    /// Returns all passed tests.
-    /// </summary>
-    public IReadOnlyList<Test> GetPassedTests()
-    {
-        var finishedTests = IncludeForView()
-            .Where(t => t.State == TestState.Finished)
-            .OrderByDescending(t => t.Ended);
-        
-        var result = new List<Test>();
-        foreach (var finishedTest in finishedTests)
-        {
-            var sprtStatistics = Sprt.GetStatistics(finishedTest);
-            if (sprtStatistics.Result == Sprt.SprtResult.H1Accepted)
-            {
-                result.Add(finishedTest);
-            }
-        }
-        
-        return result;
-    }
-    
     /// <summary>
     /// Sets test to PausedState if there are no active workers for a test.
     /// </summary>
@@ -353,6 +321,45 @@ public class TestStore : Store<Test>
         }
 
         return stillRunning;
+    }
+    
+    /// <summary>
+    /// Returns ended tests for a page.
+    /// So the test state is stopped or finished.
+    /// Ordered by time - the last will be the first.
+    /// </summary>
+    public IReadOnlyList<Test> GetEndedTestsForPage(int pageIndex, int pageSize = WebConstants.PAGE_SIZE)
+     => IncludeForView() 
+         .Where(t => t.State == TestState.Finished || t.State == TestState.Stopped)
+         .OrderByDescending(t => t.Ended)
+         .TakePage(pageIndex, pageSize)
+         .ToArray();
+    
+    
+    /// <summary>
+    /// Returns all passed tests for a page.
+    /// Ordered by time - the last will be the first.
+    /// </summary>
+    public IReadOnlyList<Test> GetPassedTestsForPage(int pageIndex, int pageSize = WebConstants.PAGE_SIZE)
+    {
+        var finishedTests = IncludeForView()
+            .Where(t => t.State == TestState.Finished)
+            .OrderByDescending(t => t.Ended);
+        
+        var result = new List<Test>();
+        foreach (var finishedTest in finishedTests)
+        {
+            var sprtStatistics = Sprt.GetStatistics(finishedTest);
+            if (sprtStatistics.Result == Sprt.SprtResult.H1Accepted)
+            {
+                result.Add(finishedTest);
+            }
+        }
+        
+        return result
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToArray();
     }
     
     private IQueryable<Test> Include()
@@ -396,6 +403,7 @@ public class TestStore : Store<Test>
                 .Include(t => t.OpeningBook)
                 .Include(t => t.AutobenchState);
 
+    
 }
 
 file static class LinqExtensions

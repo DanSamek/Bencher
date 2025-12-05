@@ -7,52 +7,52 @@ namespace WebApplication.Tests.Stores;
 public class TestErrorStoreTests : TestBase
 {
     /// <summary>
-    /// Test for <see cref="TestErrorStore.GetErrors" />, but no error is in the database.
+    /// Tests <see cref="TestErrorStore.GetErrorsForPage"/> with page size = 2.
     /// </summary>
     [Test]
-    public void GetErrors_Empty()
+    public void GetErrorsForPage()
     {
-        var store = new TestErrorStore(Factory);
-        var errors = store.GetErrors();
-        Assert.That(errors, Is.Not.Null);
-        Assert.That(errors, Is.Empty);
-    }
-    
-    /// <summary>
-    /// Test for <see cref="TestErrorStore.GetErrors" />, with errors in the database.
-    /// We expect, that errors will be returned by the newest ones.
-    /// </summary>
-    [Test]
-    public void GetErrors()
-    {
+        var data = new byte[] { 0x11, 0x22, 0x33 };
         new DomainBuilder(Factory.CreateDbContext())
             .CreateBook("test_book")
             .CreateSprtSettings()
-                .CreateUser("test_user")
-                    .AddEngine("stockfish")
-                        .AddBranch("test_branch")
-                        .AddBranch("base_branch")
-                        .AddTest("test_1", "test_book", "base_branch", "test_branch")
-                            .AddWorker(1)
-                            .AddError(Factory.CreateDbContext(), new DateTime(2015,4,4))
-                            .AddError(Factory.CreateDbContext(), new DateTime(2000,5,4))
-                            .AddError(Factory.CreateDbContext(), new DateTime(2005,5,4))
-                            .EnsurePentaCreated(Factory.CreateDbContext())
-                            .Close()
-                        .Close()
-                .Close()
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("test_branch")
+            .AddBranch("base_branch")
+            .AddTest("test_1", "test_book", "base_branch", "test_branch")
+            .AddWorker(1)
+            .AddError(Factory.CreateDbContext(), new DateTime(2000,4,4).ToUniversalTime(), data: data)
+            .AddError(Factory.CreateDbContext(), new DateTime(2001,4,4).ToUniversalTime(), data: data)
+            .AddError(Factory.CreateDbContext(), new DateTime(2002,4,4).ToUniversalTime(), data: data)
+            .AddError(Factory.CreateDbContext(), new DateTime(2003,4,4).ToUniversalTime(), data: data)
+            .AddError(Factory.CreateDbContext(), new DateTime(1950,4,4).ToUniversalTime(), data: data)
+            .AddError(Factory.CreateDbContext(), new DateTime(1948,4,4).ToUniversalTime(), data: data)
+            .AddError(Factory.CreateDbContext(), new DateTime(2100,4,4).ToUniversalTime(), data: data)
+            .EnsurePentaCreated(Factory.CreateDbContext())
+            .Close()
+            .Close()
+            .Close()
             .Close();
+
+        var expectedErrors = new List<DateTime[]>();
+        expectedErrors.Add([new DateTime(2100,4,4).ToUniversalTime(), new DateTime(2003,4,4).ToUniversalTime()]);
+        expectedErrors.Add([new DateTime(2002,4,4).ToUniversalTime(), new DateTime(2001,4,4).ToUniversalTime()]);
+        expectedErrors.Add([new DateTime(2000,4,4).ToUniversalTime(), new DateTime(1950,4,4).ToUniversalTime()]);
+        expectedErrors.Add([new DateTime(1948,4,4).ToUniversalTime()]);
+        expectedErrors.Add([]);
         
         var store = new TestErrorStore(Factory);
-        var errors = store.GetErrors();
-        Assert.That(errors, Is.Not.Null);
-        Assert.That(errors, Has.Count.EqualTo(3));
-        Assert.That(errors[0].Time.Year, Is.EqualTo(2015));
-        Assert.That(errors[1].Time.Year, Is.EqualTo(2005));
-        Assert.That(errors[2].Time.Year, Is.EqualTo(2000));
+        for (var pageIndex = 0; pageIndex <= 4; pageIndex++)
+        {
+            var errors = store
+                .GetErrorsForPage(pageIndex, 2)
+                .Select(e => e.Time)
+                .ToArray();
+            Assert.That(errors, Is.EquivalentTo(expectedErrors[pageIndex]));
+        }
     }
     
-   
     /// <summary>
     /// Tests <see cref="TestErrorStore.LoadContent" />.
     /// </summary>

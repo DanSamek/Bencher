@@ -5,8 +5,6 @@
 
 @page "/Tests/Running"
 
-@* TODO paging !!!*@
-
 @rendermode InteractiveServer
 
 @inject TestStore TestStore
@@ -18,12 +16,11 @@
 
 @code {
     private IReadOnlyList<Data.Models.Test> _runningTests = [];
-    private IReadOnlyList<Data.Models.Test> _autobenchedTests = [];
     
     /// <inheritdoc /> 
     protected override void OnInitialized()
     {
-        (_autobenchedTests, _runningTests) = TestStore.GetRunningTests();
+        (_, _runningTests) = TestStore.GetRunningTests();
         base.OnInitialized();
     }
 }

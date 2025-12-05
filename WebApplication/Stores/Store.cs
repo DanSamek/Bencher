@@ -82,3 +82,13 @@ public abstract class Store<T> : IDisposable, IStore<T>
 
     protected abstract DbSet<T> GetDbSet();
 }
+
+public static class EfExtensions
+{
+    public static IQueryable<T> TakePage<T>(this IQueryable<T> queryable, int pageIndex, int pageSize)
+    {
+        return queryable
+            .Skip(pageSize * pageIndex)
+            .Take(pageSize);
+    }
+}

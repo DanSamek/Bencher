@@ -672,6 +672,8 @@ public class TestStoreTests : TestBase
     [TestCase(TestState.Running, TestState.Running)]
     public void SetRunningState_Normal(TestState initialState, TestState expectedState)
     {
+        DateTime? date = initialState is TestState.Stopped or TestState.Finished ? DateTime.UtcNow : null;
+        
         new DomainBuilder(Factory.CreateDbContext())
             .CreateBook("test_book")
             .CreateSprtSettings()
@@ -679,7 +681,7 @@ public class TestStoreTests : TestBase
                 .AddEngine("stockfish")
                     .AddBranch("base_branch")
                     .AddBranch("test_branch")
-                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: initialState, numberOfThreads: 4)
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: initialState, numberOfThreads: 4, ended:date)
                         .AddWorker(1)       
                     .Close()
                 .Close()
@@ -902,44 +904,6 @@ public class TestStoreTests : TestBase
         Assert.That(tests[0].Name, Is.EqualTo("test_1"));
         Assert.That(tests[1].Name, Is.EqualTo("test_4"));
     }
-
-    
-    /// <summary>
-    /// Tests <see cref="TestStore.GetEndedTests"/>
-    /// </summary>
-    [Test]
-    public void GetEndedTests()
-    {
-        new DomainBuilder(Factory.CreateDbContext())
-            .CreateSprtSettings()
-            .CreateBook("test_book")
-                .CreateUser("test_user")
-                .AddEngine("stockfish")
-                    .AddBranch("base_branch")
-                    .AddBranch("test_branch")
-                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Finished)
-                        .EnsurePentaCreated(Factory.CreateDbContext())
-                        .AddWorker(1)
-                        .Close()
-                    .AddTest("test_2", "test_book", "base_branch", "test_branch")
-                        .Close()
-                    .AddTest("test_3", "test_book", "base_branch", "test_branch")
-                        .Close()
-                    .Close()
-                .Close()
-            .Close();
-        
-        EngineBuilder.AddAutobenchedTestForUser("test_4", "test_book", "base_branch", "test_branch", "stockfish",
-            "test_user", Factory.CreateDbContext(), priority: 1, state: TestState.Stopped, workerThreads: [1]);
-        
-        var store = CreateTestStore();
-
-        var endedTests= store.GetEndedTests();
-        endedTests = endedTests.OrderBy(t => t.Name).ToList();
-        Assert.That(endedTests, Has.Count.EqualTo(2));
-        Assert.That(endedTests[0].Name, Is.EqualTo("test_1"));
-        Assert.That(endedTests[1].Name, Is.EqualTo("test_4"));
-    }
     
     /// <summary>
     /// Tests <see cref="TestStore.GetPausedTests"/>
@@ -954,7 +918,7 @@ public class TestStoreTests : TestBase
                 .AddEngine("stockfish")
                     .AddBranch("base_branch")
                     .AddBranch("test_branch")
-                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Finished)
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Finished, ended: DateTime.UtcNow)
                         .EnsurePentaCreated(Factory.CreateDbContext())
                         .AddWorker(1)
                         .Close()
@@ -1006,10 +970,10 @@ public class TestStoreTests : TestBase
     }
 
     /// <summary>
-    /// Tests <see cref="TestStore.GetPassedTests" />. 
+    /// Tests <see cref="TestStore.GetPassedTestsForPage" />. 
     /// </summary>
     [Test]
-    public void GetPassedTests()
+    public void GetPassedTestsForPage()
     {
         Assert.Pass("TODO when SPRT part is implemented.");
     }
@@ -1089,6 +1053,58 @@ public class TestStoreTests : TestBase
 
         Assert.That(!running);
         Assert.That(test.State, Is.EqualTo(TestState.Paused));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="TestStore.GetEndedTestsForPage"/> with the page size 2.
+    /// </summary>
+    [Test]
+    public void GetEndedTestsForPage()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch")
+            .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Finished, ended: new DateTime(2000,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_2", "test_book", "base_branch", "test_branch", state: TestState.Stopped,  ended: new DateTime(2100,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_3", "test_book", "base_branch", "test_branch", state: TestState.Finished,  ended: new DateTime(2030,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_4", "test_book", "base_branch", "test_branch", state: TestState.Stopped,  ended: new DateTime(2010,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_5", "test_book", "base_branch", "test_branch", state: TestState.Finished,  ended: new DateTime(1989,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_6", "test_book", "base_branch", "test_branch", state: TestState.Finished,  ended: new DateTime(2080,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_7", "test_book", "base_branch", "test_branch", state: TestState.Stopped,  ended: new DateTime(2039,1,1).ToUniversalTime())
+            .Close()
+            .Close()
+            .Close();
+
+        var testCount = Factory.CreateDbContext().Tests.Count();
+        Assert.That(testCount, Is.EqualTo(7));
+        
+        var expectedPages = new List<string[]>();
+        expectedPages.Add(["test_2", "test_6"]);
+        expectedPages.Add(["test_7", "test_3"]);
+        expectedPages.Add(["test_4", "test_1"]);
+        expectedPages.Add(["test_5"]);
+        expectedPages.Add([]);
+        var store = CreateTestStore();
+
+        for (var pageQuery = 0; pageQuery <= 4; pageQuery++)
+        {
+            var result = store
+                .GetEndedTestsForPage(pageQuery, pageSize: 2)
+                .Select(t => t.Name)
+                .ToArray();
+
+            Assert.That(result, Is.EqualTo(expectedPages[pageQuery]));
+        }
     }
     
     private static Test GetTestByName(TestContextFactory factory, string name)
