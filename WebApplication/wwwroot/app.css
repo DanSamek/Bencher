@@ -68,3 +68,8 @@ h1:focus {
 .modal form .editor-box{
     height: 400px;
 }
+
+.test-links-paging{
+    border-collapse: separate;
+    border-spacing: 0 0.6em;
+}

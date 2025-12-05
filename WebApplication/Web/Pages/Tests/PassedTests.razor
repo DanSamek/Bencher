@@ -1,9 +1,8 @@
+@using WebApplication.Components.Components
 @using WebApplication.Stores
 @using WebApplication.Web.Components
 
 @page "/Tests/Passed"
-
-@* TODO paging !!!*@
 
 @rendermode InteractiveServer
 
@@ -12,7 +11,11 @@
 <PageTitle>Passed tests</PageTitle>
 <PageHeader Value="Passed tests" />
 
-<TestLinks Tests="_passedTests" />
+
+<TestLinksPaging InitialTests="_passedTests"
+                 NextPageClicked="OnNextPageClicked"
+                 PreviousPageClicked="OnPreviousPageClicked">
+</TestLinksPaging>
 
 @code {
     private IReadOnlyList<Data.Models.Test> _passedTests = [];
@@ -20,7 +23,21 @@
     /// <inheritdoc /> 
     protected override void OnInitialized()
     {
-        _passedTests = TestStore.GetPassedTests();
+        _passedTests = TestStore.GetPassedTestsForPage(0);
         base.OnInitialized();
+    }
+    
+    private PageClickedResult<Data.Models.Test> OnNextPageClicked(PageClickedArgs args)
+    {
+        var tests = TestStore.GetPassedTestsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.Test>(tests);
+        return result;
+    }
+    
+    private PageClickedResult<Data.Models.Test> OnPreviousPageClicked(PageClickedArgs args)
+    {
+        var tests = TestStore.GetPassedTestsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.Test>(tests);
+        return result;
     }
 }

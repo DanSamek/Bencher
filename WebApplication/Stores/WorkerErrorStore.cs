@@ -34,16 +34,6 @@ public class WorkerErrorStore : Store<Error>
     }
     
     /// <summary>
-    /// Returns all errors ordered by time - the last will be the first.
-    /// ! Without log.
-    /// </summary>
-    public IReadOnlyList<Error> GetErrors()
-        => GetDbSet()
-            .OrderByDescending(t => t.Time)
-            .ToArray();
-
-    
-    /// <summary>
     /// Loads worker error content.
     /// </summary>
     public byte[] LoadContent(int errorId)
@@ -52,5 +42,15 @@ public class WorkerErrorStore : Store<Error>
             .Where(e => e.Id == errorId)
             .Select(e => e.Log.Data)
             .First();
+    
+    /// <summary>
+    /// Returns errors for the paging ordered by time - the last will be the first.
+    /// ! Without log.
+    /// </summary>
+    public IReadOnlyList<Error> GetErrorsForPage(int pageIndex, int pageSize = WebConstants.PAGE_SIZE)
+        => GetDbSet()
+            .OrderByDescending(t => t.Time)
+            .TakePage(pageIndex, pageSize)
+            .ToArray();
     
 }

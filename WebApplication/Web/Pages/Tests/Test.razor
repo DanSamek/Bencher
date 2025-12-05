@@ -46,7 +46,7 @@
     }
     
     <h3>Test info</h3>
-    <table class="table">
+    <table class="table table-striped">
         <tbody>
             <KeyValueTableRow Key="Created by" Value="@_test.User.UserName" />
             <KeyValueTableRow Key="State" Value="@_test.State" />
@@ -83,7 +83,7 @@
                 <h3>Errors (@_errors.Count)</h3>
             </HeaderContent>
             <ChildContent>
-                <TestErrorsTable Errors="_errors"/>
+                @MaxHeightBox(@<TestErrorsTable Errors="_errors"/>)
             </ChildContent>
         </HideUnhideContent>
     </div>
@@ -96,13 +96,13 @@
             <ChildContent>
                 <div class="d-flex gap-3 flex-column">
                     <h4>Active workers (@_test.ActiveWorkerThreadCount() threads)</h4>
-                    <WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Active)"/>
+                    @MaxHeightBox(@<WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Active)"/>)
 
                     <h4>Finished</h4>
-                    <WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Finished)"/>
+                    @MaxHeightBox(@<WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Finished)"/>)
 
                     <h4>Disconnected</h4>
-                    <WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Disconnected)"/>
+                    @MaxHeightBox(@<WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Disconnected)"/>)
                 </div>
             </ChildContent>
         </HideUnhideContent>
@@ -156,7 +156,7 @@
 
     private RenderFragment AutobenchStateFragment() =>
         @<text>
-             <table class="table">
+             <table class="table table-striped">
                  <tbody>
                      @{
                          var css = "padding-right: 0; padding-left: 0;";
@@ -185,4 +185,13 @@
              <KeyValueTableRow Key="@keyBranchName" Value="@branch.Name"/>
              <KeyValueTableRow Key="@keyBranchBench" Value="@branch.Bench"/>
          </text>;
+
+    private RenderFragment MaxHeightBox(RenderFragment rf)
+    {
+        return @<div style="max-height: 500px;overflow-y: auto;">
+                   @rf
+               </div>;
+    }
+    
+
 }

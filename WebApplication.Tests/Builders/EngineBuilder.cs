@@ -98,14 +98,20 @@ public class EngineBuilder
                                  int numberOfThreads = 1,
                                  TestState state = TestState.Paused,
                                  int expectedNps = 1,
-                                 string? additionalFastchessOptions = null)
+                                 string? additionalFastchessOptions = null,
+                                 DateTime? ended = null)
     {
+        if (ended == null && state is TestState.Finished or TestState.Stopped)
+        {
+            throw new ArgumentException("If test is finished, its required to have setted ended time");
+        }
+        
         var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
         var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
         {
             AdditionalFastchessOptions = additionalFastchessOptions,
-            ExpectedNps = 1,
+            ExpectedNps = expectedNps,
             Name = name,
             Created = DateTime.UtcNow,
             Priority = priority,
@@ -123,7 +129,8 @@ public class EngineBuilder
             TestBranch = testBranch,
             TestBranchId = testBranch.Id,
             User = _user,
-            Autobenched = false
+            Autobenched = false,
+            Ended = ended
         };
         
         test = UpdateTest(_context, test, _user);

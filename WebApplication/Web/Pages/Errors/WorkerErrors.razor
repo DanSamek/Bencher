@@ -1,5 +1,6 @@
 @page "/Errors/Workers"
 
+@using WebApplication.Components.Components
 @using WebApplication.Stores
 @using WebApplication.Web.Components
 
@@ -10,28 +11,32 @@
 <PageTitle>Worker errors</PageTitle>
 <PageHeader Value="Worker errors"/>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th>Id</th>
-        <th>Datetime</th>
-        <td>Log</td>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var error in _errors)
-    {
+<TablePaginator TRow="Data.Models.Error"
+                InitialRows="_errors"
+                NextPageClicked="OnNextPageClicked"
+                PreviousPageClicked="OnPreviousPageClicked"
+                AdditionalCssClass="table-striped">
+    <HeaderContent>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Datetime</th>
+                <td>Log</td>
+            </tr>
+        </thead>
+    </HeaderContent>
+    
+    <RowContent>
         <tr>
-            <td>@error.Id</td>
-            <td>@error.Time</td>
+            <td>@context.Id</td>
+            <td>@context.Time</td>
             @{
-                var fileName = $"error_{error.Time}";
+                var fileName = $"error_{context.Time}";
             }
-            <td><DownloadButton FileName="@fileName" DataLoader="() => WorkerErrorStore.LoadContent(error.Id)"/></td>
+            <td><DownloadButton FileName="@fileName" DataLoader="() => WorkerErrorStore.LoadContent(context.Id)"/></td>
         </tr>
-    }
-    </tbody>
-</table>
+    </RowContent>
+</TablePaginator>
 
 @code {
     
@@ -40,7 +45,22 @@
     /// <inheritdoc /> 
     protected override void OnInitialized()
     {
-        _errors = WorkerErrorStore.GetErrors();
+        _errors = WorkerErrorStore.GetErrorsForPage(0);
         base.OnInitialized();
     }
+
+    private PageClickedResult<Data.Models.Error> OnNextPageClicked(PageClickedArgs args)
+    {
+        var errors = WorkerErrorStore.GetErrorsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.Error>(errors);
+        return result;
+    }
+    
+    private PageClickedResult<Data.Models.Error> OnPreviousPageClicked(PageClickedArgs args)
+    {
+        var errors = WorkerErrorStore.GetErrorsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.Error>(errors);
+        return result;
+    }
+    
 }

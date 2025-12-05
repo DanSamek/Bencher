@@ -1,9 +1,8 @@
+@using WebApplication.Components.Components
 @using WebApplication.Stores
 @using WebApplication.Web.Components
 
 @page "/Tests/Ended"
-
-@* TODO paging !!!*@
 
 @rendermode InteractiveServer
 
@@ -12,7 +11,10 @@
 <PageTitle>Ended tests</PageTitle>
 <PageHeader Value="Ended tests" />
 
-<TestLinks Tests="_endedTests" />
+<TestLinksPaging InitialTests="_endedTests"
+                 NextPageClicked="OnNextPageClicked"
+                 PreviousPageClicked="OnPreviousPageClicked">
+</TestLinksPaging>
 
 @code {
 
@@ -21,7 +23,21 @@
     /// <inheritdoc /> 
     protected override void OnInitialized()
     {
-        _endedTests = TestStore.GetEndedTests();
+        _endedTests = TestStore.GetEndedTestsForPage(0);
         base.OnInitialized();
+    }
+    
+    private PageClickedResult<Data.Models.Test> OnNextPageClicked(PageClickedArgs args)
+    {
+        var tests = TestStore.GetEndedTestsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.Test>(tests);
+        return result;
+    }
+    
+    private PageClickedResult<Data.Models.Test> OnPreviousPageClicked(PageClickedArgs args)
+    {
+        var tests = TestStore.GetEndedTestsForPage(args.RequestedPageIndex);
+        var result = new PageClickedResult<Data.Models.Test>(tests);
+        return result;
     }
 }
