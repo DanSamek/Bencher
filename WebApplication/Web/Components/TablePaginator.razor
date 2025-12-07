@@ -3,7 +3,7 @@
 
 <div>
     <table class="table @AdditionalCssClass">
-        @if (HeaderContent is not null)
+        @if (HeaderContent is not null && _renderedRows.Count > 0)
         {
             @HeaderContent
         }

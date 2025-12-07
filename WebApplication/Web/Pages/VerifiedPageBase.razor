@@ -1,0 +1,30 @@
+@inherits AuthorizedPageBase
+
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+@inject NavigationManager NavigationManager
+@inject UserStore UserStore
+
+@code {
+    /// <summary>
+    /// If current user is admin.
+    /// </summary>
+    protected bool IsAdmin { get; private set; }
+    
+    /// <inheritdoc /> 
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (UserId is null) return;
+        
+        var user = UserStore.GetById(UserId);
+        var verifiedUser = false;
+        if (user is not null)
+        {
+            verifiedUser = user.Role != UserRole.NotVerified;
+            IsAdmin = user.Role == UserRole.Admin;
+        }
+        
+        if (!verifiedUser) NavigationManager.NavigateTo(WebConstants.NOT_FOUND_PATH, true);
+    }
+}

@@ -363,14 +363,14 @@ public class TestStore : Store<Test>
     }
     
     private IQueryable<Test> Include()
-        => Context.Tests
+        => GetDbSet()
             .Include(t => t.Engine)
             .Include(t => t.WorkerLogs)
             .Include(t => t.AutobenchState)
             .Include(t => t.OpeningBook);
 
     private bool AnyRunningTest(bool autobench)
-        => Context.Tests
+        => GetDbSet()
             .Any(t => autobench ? t.State == TestState.Autobenched : t.State == TestState.Running); 
     
     private Test? PausedTestWithHighestPriority(bool autobench, int workerNumberOfThreads)

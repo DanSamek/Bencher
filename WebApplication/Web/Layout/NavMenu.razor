@@ -1,6 +1,11 @@
-﻿@using WebApplication.Web.Components
+﻿@inherits WebApplication.Web.Pages.AuthorizedPageBase
+
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+@using WebApplication.Web.Components
 
 @inject NavigationManager NavigationManager
+@inject UserStore UserStore
 
 @rendermode InteractiveServer
 
@@ -21,27 +26,31 @@
                             <span>@context.User.Identity?.Name</span>
                         </ReloadLink>
 
-                        <ReloadLink Url="/Account/AccessToken">
-                            @Icons.AccessTokenIcon()
-                        </ReloadLink>
-                        
-                        <ReloadLink Url="/Test/Create">
-                            @Icons.CreateTestIcon()
-                        </ReloadLink>
-                        
+                        @if (_canRenderNavParts)
+                        {
+                            <ReloadLink Url="/Account/AccessToken">
+                                @Icons.AccessTokenIcon()
+                            </ReloadLink>
+
+                            <ReloadLink Url="/Test/Create">
+                                @Icons.CreateTestIcon()
+                            </ReloadLink>
+                        }
                         @TestsFragment()
                         @ErrorsFragment()
-                       
-                        <ReloadLink Url="/Engines/Manage">
-                            @Icons.ManageEnginesIcon()
-                        </ReloadLink>
 
-                        <ReloadLink Url="/OpeningBooks/Manage">
-                            @Icons.ManageOpeningBooksIcon()
-                        </ReloadLink>
-                        
+                        @if (_canRenderNavParts)
+                        {
+                            <ReloadLink Url="/Engines/Manage">
+                                @Icons.ManageEnginesIcon()
+                            </ReloadLink>
+
+                            <ReloadLink Url="/OpeningBooks/Manage">
+                                @Icons.ManageOpeningBooksIcon()
+                            </ReloadLink>
+                        }
                         <ThemeSelector/>
-                        
+
                         <ReloadLink Url="/Account/Logout">
                             @Icons.LogoutIcon()
                         </ReloadLink>
@@ -81,26 +90,29 @@
                             @Icons.ProfileIcon()
                             <span>@context.User.Identity?.Name</span>
                         </ReloadLink>
+                        
+                        @if (_canRenderNavParts)
+                        {
+                            <ReloadLink Url="/Account/AccessToken">
+                                @Icons.AccessTokenIcon()
+                                <span>Access token</span>
+                            </ReloadLink>
 
-                        <ReloadLink Url="/Account/AccessToken">
-                            @Icons.AccessTokenIcon()
-                            <span>Access token</span>
-                        </ReloadLink>
+                            <ReloadLink Url="/Test/Create">
+                                @Icons.CreateTestIcon()
+                                <span>Create test</span>
+                            </ReloadLink>
 
-                        <ReloadLink Url="/Test/Create">
-                            @Icons.CreateTestIcon()
-                            <span>Create test</span>
-                        </ReloadLink>
+                            <ReloadLink Url="/Engines/Manage">
+                                @Icons.ManageEnginesIcon()
+                                <span>Manage engines</span>
+                            </ReloadLink>
 
-                        <ReloadLink Url="/Engines/Manage">
-                            @Icons.ManageEnginesIcon()
-                            <span>Manage engines</span>
-                        </ReloadLink>
-
-                        <ReloadLink Url="/OpeningBooks/Manage">
-                            @Icons.ManageOpeningBooksIcon()
-                            <span>Manage opening books</span>
-                        </ReloadLink>
+                            <ReloadLink Url="/OpeningBooks/Manage">
+                                @Icons.ManageOpeningBooksIcon()
+                                <span>Manage opening books</span>
+                            </ReloadLink>
+                        }
 
                         @TestsFragmentMobile()
                         @ErrorsFragmentMobile()
@@ -132,7 +144,17 @@
 </div>
 
 @code{
-
+    private bool _canRenderNavParts = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (UserId is null) return;
+        
+        var user = UserStore.GetById(UserId);
+        if (user is not null) _canRenderNavParts = user.Role != UserRole.NotVerified;
+    }
+    
     private RenderFragment TestsFragment()
         => @<text>
                 <div class="dropdown nav-link">

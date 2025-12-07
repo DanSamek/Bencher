@@ -32,6 +32,10 @@ function setTheme(theme) {
     displayCorrectTheme(theme);
 }
 
+function ensureReloadRedirect(path){
+    window.location = path;
+}
+
 loadTheme(getTheme()); // ensures no flicking light -> dark when loading.
 
 

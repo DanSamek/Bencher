@@ -1,0 +1,58 @@
+@page "/Admin/Users"
+
+@inherits AdminPageBase
+
+@using WebApplication.Data.Models
+@using WebApplication.Stores
+
+@inject UserStore UserStore
+
+@rendermode InteractiveServer
+
+@{
+    var users = UserStore.GetAllUsers();
+}
+<table class="table table-striped">
+    <thead>
+    <tr>
+        @*<th>Id</th>*@
+        <th>Username</th>
+        <th>Email</th>
+        <th>Actions</th>
+    </tr>   
+    </thead>
+    
+    <tbody>
+    @foreach (var user in users.Where(u => u.Id != UserId))
+    {
+        <tr>
+            @*<td>@user.Id</td>*@
+            <td>@user.UserName</td>
+            <td>@user.Email</td>
+            <td>@ActionButtons(user)</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private RenderFragment ActionButtons(ApplicationUser user)
+        => @<div class="d-flex gap-3 flex-wrap">
+               @{
+                   var userId = user.Id;
+        }
+               @if (user.Role is UserRole.NotVerified)
+               {
+                   <button @onclick="() => ApproveUser(userId)" class="btn btn-success">Approve</button>
+               }
+               <button @onclick="() => DeleteUser(userId)" class="btn btn-danger">Delete</button>
+           </div>;
+    
+    private void DeleteUser(string userId) => UserStore.DeleteById(userId);
+    
+    private void ApproveUser(string userId)
+    {
+        UserStore.SetRole(userId, UserRole.Verified);
+        UserStore.ConfirmUserEmail(userId);
+    }
+}
