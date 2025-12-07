@@ -4,10 +4,14 @@
 
 @using WebApplication.Data.Models
 @using WebApplication.Stores
+@using WebApplication.Web.Components
 
 @inject UserStore UserStore
 
 @rendermode InteractiveServer
+
+<PageTitle>Manage users</PageTitle>
+<PageHeader Value="Manage users" /> 
 
 @{
     var users = UserStore.GetAllUsers();
@@ -17,7 +21,7 @@
     <tr>
         @*<th>Id</th>*@
         <th>Username</th>
-        <th>Email</th>
+        @*<th>Email</th>*@
         <th>Actions</th>
     </tr>   
     </thead>
@@ -28,7 +32,7 @@
         <tr>
             @*<td>@user.Id</td>*@
             <td>@user.UserName</td>
-            <td>@user.Email</td>
+            @*<td>@user.Email</td>*@
             <td>@ActionButtons(user)</td>
         </tr>
     }
