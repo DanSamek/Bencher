@@ -6,7 +6,9 @@ using WebApplication.Components.Account;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 using WebApplication.API;
+using WebApplication.Services;
 using WebApplication.Services.GitBranchComparison;
+using WebApplication.Services.GmailSender;
 using WebApplication.Stores;
 using WebApplication.Web;
 
@@ -39,7 +41,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, GmailSender>();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -77,7 +79,6 @@ builder.Services.AddControllers();
 
 #endregion
 
-
 #region GitComparison
 
 builder.Services.AddSingleton<IGitBranchComparisonService, GitBranchComparisonService>();
@@ -86,8 +87,22 @@ builder.Services.AddKeyedSingleton<IGitBranchComparison, GitlabBranchComparison>
 
 #endregion
 
-
 var app = builder.Build();
+
+#region AdminCreation
+
+using var scope = app.Services.CreateScope();
+
+var userStore = (IUserStore<ApplicationUser>)scope.ServiceProvider.GetService(typeof(IUserStore<ApplicationUser>))!;
+var userManager = (UserManager<ApplicationUser>)scope.ServiceProvider.GetService(typeof(UserManager<ApplicationUser>))!;
+
+var creator = new EnvAdminCreator();
+await creator.Create(userStore, userManager);
+
+#endregion
+
+// Force initialization of the sender.
+app.Services.GetService<IEmailSender<ApplicationUser>>();
 
 if (app.Environment.IsDevelopment())
 {

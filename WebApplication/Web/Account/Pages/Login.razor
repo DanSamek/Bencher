@@ -41,10 +41,10 @@
             </div>
             <div class="d-flex pt-3 justify-content-center gap-3">
                 <p>
-                    <a href="Account/ForgotPassword">Forgot your password?</a>
+                    <span style="cursor: pointer;" class="btn-link" onclick="ensureReloadRedirect('Account/ForgotPassword')">Forgot your password?</span>
                 </p>
                 <p>
-                    <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register</a>
+                    <a style="cursor: pointer;" class="btn-link" onclick="ensureReloadRedirect('@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))')">Register</a>
                 </p>
             </div>
         </EditForm>
@@ -75,7 +75,7 @@
     {       
         var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)  RedirectManager.RedirectTo(ReturnUrl);
-        else _errorMessage = "Invalid login attempt.";
+        else _errorMessage = "Error: Invalid login attempt.";
     }
 
     private sealed class InputModel

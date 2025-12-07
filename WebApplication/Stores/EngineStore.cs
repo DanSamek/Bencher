@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using WebApplication.Data;
 using WebApplication.Data.Models;
@@ -60,9 +59,9 @@ public class EngineStore : Store<Engine>
     /// Removes engine by the id. 
     /// </summary>
     public void DeleteById(int id)
-    {
-        GetDbSet().Where(e => e.Id == id).ExecuteDelete();
-    }
+        => GetDbSet()
+            .Where(e => e.Id == id).ExecuteDelete();
+    
 
     /// <summary>
     /// Updates an engine.

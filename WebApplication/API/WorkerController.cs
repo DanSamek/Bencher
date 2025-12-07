@@ -92,8 +92,11 @@ public partial class WorkerController : ControllerBase
         
         var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
         
+        // Test can be eventually deleted !
+        var test = _testStore.GetById(workerLog.Test.Id); 
+        if (test is null) return NotFound(new ResponseBase()); // TODO update docs.
+        
         // SPRT part.
-        var test = _testStore.GetById(workerLog.Test.Id)!;
         var statistics = Sprt.GetStatistics(test);
         if (statistics.Result != Sprt.SprtResult.Unknown)
         {

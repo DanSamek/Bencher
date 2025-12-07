@@ -1,0 +1,12 @@
+@inherits VerifiedPageBase
+
+@inject NavigationManager NavigationManager
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (!IsAdmin) NavigationManager.NavigateTo(WebConstants.NOT_FOUND_PATH, true);
+    }
+
+}

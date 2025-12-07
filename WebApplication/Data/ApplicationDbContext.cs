@@ -37,6 +37,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasMany(x => x.WorkerLogs)
             .WithOne(x => x.User)
             .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ApplicationUser>()
+            .HasMany(x => x.OpeningBooks)
+            .WithOne(x => x.User)
+            .OnDelete(DeleteBehavior.Cascade);
+        
         #endregion
 
         #region Test

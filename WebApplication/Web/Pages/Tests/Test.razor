@@ -129,7 +129,7 @@
         RefreshTest();
         if (_test is null)
         {
-            NavigationManager.NavigateTo("/NotFound");   
+            NavigationManager.NavigateTo(WebConstants.NOT_FOUND_PATH, true);   
             return;
         }
         _canEdit = _test.User.Id == UserId;
