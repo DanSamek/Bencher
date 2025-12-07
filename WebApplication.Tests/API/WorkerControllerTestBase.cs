@@ -12,7 +12,7 @@ namespace WebApplication.Tests.API;
 /// </summary>
 public class WorkerControllerTestBase : TestBase
 {
-    protected WorkerController Controller { get; private set; }
+    protected WorkerController Controller { get; private set; } = null!;
     
     /// <summary>
     /// Creates a new instance of the controller.

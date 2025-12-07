@@ -100,7 +100,7 @@ public class TestStoreTests : TestBase
                 .Close();
         }
         
-        Assert.That(5, Is.EqualTo(Factory.CreateDbContext().Tests.Count()));
+        Assert.That(Factory.CreateDbContext().Tests.Count(), Is.EqualTo(5));
         
         var nextTests = new HashSet<string>();
         for (var i = 0; i < 5; i++)
@@ -144,8 +144,8 @@ public class TestStoreTests : TestBase
                 .Close();
         }
 
-        Assert.That(5, Is.EqualTo(Factory.CreateDbContext().Tests.Count()));
-        Assert.That(5, Is.EqualTo(Factory.CreateDbContext().AutobenchStates.Count()));
+        Assert.That(Factory.CreateDbContext().Tests.Count(), Is.EqualTo(5));
+        Assert.That(Factory.CreateDbContext().AutobenchStates.Count(), Is.EqualTo(5));
 
         var nextTests = new HashSet<string>();
         for (var i = 0; i < 5; i++)
@@ -283,9 +283,9 @@ public class TestStoreTests : TestBase
         EngineBuilder.AddAutobenchedTestForUser("test_3", "test_book", "base_branch", "test_branch", "stockfish",
             "test_user", factory.CreateDbContext(), priority: -1);
         
-        Assert.That(3, Is.EqualTo(factory.CreateDbContext().AutobenchStates.Count()));
-        Assert.That(3, Is.EqualTo(factory.CreateDbContext().Tests.Count(t => t.Autobenched)));
-        Assert.That(3, Is.EqualTo(factory.CreateDbContext().Tests.Include(t => t.AutobenchState).Count(t => t.AutobenchState != null)));
+        Assert.That(factory.CreateDbContext().AutobenchStates.Count(), Is.EqualTo(3));
+        Assert.That(factory.CreateDbContext().Tests.Count(t => t.Autobenched), Is.EqualTo(3));
+        Assert.That(factory.CreateDbContext().Tests.Include(t => t.AutobenchState).Count(t => t.AutobenchState != null), Is.EqualTo(3));
 
         var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(true, 1);
