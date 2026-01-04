@@ -25,6 +25,13 @@
                         <ReloadLink Url="/Account/Manage">
                             <span>@context.User.Identity?.Name</span>
                         </ReloadLink>
+                        
+                        @if (_isAdmin)
+                        {
+                            <ReloadLink Url="/Admin/Users">
+                                @Icons.PersonCheck()
+                            </ReloadLink>
+                        }
 
                         @if (_canRenderNavParts)
                         {
@@ -91,6 +98,14 @@
                             <span>@context.User.Identity?.Name</span>
                         </ReloadLink>
                         
+                        @if (_isAdmin)
+                        {
+                            <ReloadLink Url="/Admin/Users">
+                                @Icons.PersonCheck()
+                                <span>Manage users</span>
+                            </ReloadLink>
+                        }
+                        
                         @if (_canRenderNavParts)
                         {
                             <ReloadLink Url="/Account/AccessToken">
@@ -145,6 +160,7 @@
 
 @code{
     private bool _canRenderNavParts = false;
+    private bool _isAdmin = false;
     
     protected override async Task OnInitializedAsync()
     {
@@ -152,7 +168,11 @@
         if (UserId is null) return;
         
         var user = UserStore.GetById(UserId);
-        if (user is not null) _canRenderNavParts = user.Role != UserRole.NotVerified;
+        if (user is not null)
+        {
+            _canRenderNavParts = user.Role != UserRole.NotVerified;
+            _isAdmin = user.Role == UserRole.Admin;
+        }
     }
     
     private RenderFragment TestsFragment()

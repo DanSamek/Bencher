@@ -1,6 +1,14 @@
 @page "/NotFound"
-<h3>404 - Not found</h3>
-<span>TODO better styles</span>
+@page "/{*Path:nonfile}"
+
+@using WebApplication.Web.Components
+
+<PageTitle>Not found [404]</PageTitle>
+<div class="not-found d-flex justify-content-center">
+    <PageHeader Value="Not found [404]" />
+</div>
 
 @code {
+    [Parameter]
+    public string? Path { get; set; }
 }
