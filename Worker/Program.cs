@@ -22,8 +22,6 @@ public static class Program
         }
         
         var userOptions = UserOptionsLoader.LoadParams();
-        runnerOptions.NumberOfThreads = userOptions.NumberOfThreads;
-        
         var (compilers, trace) = DependencyValidator.Validate();
         if (trace.Error())
         {
@@ -42,8 +40,17 @@ public static class Program
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         Task.Run(() => notifier.Run());
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        var runner = new Runner(runnerOptions, notifier);
-        await runner.Run();
+        
+        if (userOptions.TrySplitThreads)
+        {
+            // TODO run n times runner
+        }
+        else
+        {
+            runnerOptions.NumberOfThreads = userOptions.NumberOfThreads;
+            var runner = new Runner(runnerOptions, notifier);
+            await runner.Run();   
+        }
     }
 
     private static async Task StopApplicationAndSendMessage(RunnerOptions runnerOptions, ErrorTrace trace)

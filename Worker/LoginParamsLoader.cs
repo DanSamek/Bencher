@@ -10,7 +10,7 @@ internal static class LoginParamsLoader
     internal static LoginParams LoadLoginParams()
     {
         #if DEBUG
-        return new LoginParams(true, "https://localhost:7240", "ZLZCR6KJ81GZXTQA");
+        return new LoginParams(true, "https://localhost:7240", "TU0LJ3TH22XJKBQH");
         #else
         Console.WriteLine("Web application url: ");
         var url = Console.ReadLine();

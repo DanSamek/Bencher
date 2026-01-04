@@ -101,6 +101,24 @@ public class Communication
             _errorTrace.AddError(ex.Message);
         }
     }
+
+    /// <summary>
+    /// Sends pentanomial results to the server.
+    /// </summary>
+    public async Task<ResultsResponseDto?> Results(ResultsDto dto)
+    {
+        try
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/results");
+            var result = await SendAndDeserialize<ResultsResponseDto, ResultsDto>(requestMessage, dto);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _errorTrace.AddError(ex.Message);
+            return null;
+        }
+    }
     
     /// <summary>
     /// Sends worker error to the server. 
