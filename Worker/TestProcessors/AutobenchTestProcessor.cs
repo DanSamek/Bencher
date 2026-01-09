@@ -6,8 +6,19 @@ public record AutobenchProcess(GetTestAutobenchResponse AutobenchResponse, Error
 /// <summary>
 /// Implementation of the autobench test "pipeline".
 /// </summary>
-public class AutobenchTestProcessor : ITestProcessor<AutobenchProcess, int>
+public class AutobenchTestProcessor : ITestProcessor<int>
 {
+    private readonly GetTestAutobenchResponse _autobenchResponse;
+    private readonly ErrorTrace _errorTrace;
+    /// <summary>
+    /// .Ctor
+    /// </summary>
+    public AutobenchTestProcessor(GetTestAutobenchResponse autobenchResponse, ErrorTrace errorTrace)
+    {
+        _autobenchResponse = autobenchResponse;
+        _errorTrace = errorTrace;
+    }
+    
     /// <summary>
     /// Processes autobench:
     /// - Creates directory in the /tmp
@@ -15,25 +26,23 @@ public class AutobenchTestProcessor : ITestProcessor<AutobenchProcess, int>
     /// - Builds the engine
     /// - Runs "bench" command
     /// </summary>
-    public Task<int> Process(AutobenchProcess autobenchProcess)
+    public Task<int> Process()
     {
-        var autobenchResponse = autobenchProcess.AutobenchResponse;
-        var errorTrace = autobenchProcess.ErrorTrace;
-        errorTrace.AddInfo("Processing autobench");
+        _errorTrace.AddInfo("Processing autobench");
     
         var directory = Directory.CreateTempSubdirectory();
     
-        errorTrace.AddInfo($"Cloning repository - {autobenchResponse.GitUrl} - branch {autobenchResponse.TestBranch}");
-        ProcessorHelper.CloneRepository(autobenchResponse.GitUrl, autobenchResponse.TestBranch, 
-            directory.FullName, autobenchProcess.ErrorTrace);
-        if (errorTrace.Error()) return Task.FromResult(0);
+        _errorTrace.AddInfo($"Cloning repository - {_autobenchResponse.GitUrl} - branch {_autobenchResponse.TestBranch}");
+        ProcessorHelper.CloneRepository(_autobenchResponse.GitUrl, _autobenchResponse.TestBranch, 
+            directory.FullName, _errorTrace);
+        if (_errorTrace.Error()) return Task.FromResult(0);
     
-        errorTrace.AddInfo("Building engine");
-        ProcessorHelper.Build(autobenchResponse.BuildScript!, directory.FullName, errorTrace);
-        if (errorTrace.Error()) return Task.FromResult(0);
+        _errorTrace.AddInfo("Building engine");
+        ProcessorHelper.Build(_autobenchResponse.BuildScript!, directory.FullName, _errorTrace);
+        if (_errorTrace.Error()) return Task.FromResult(0);
     
-        errorTrace.AddInfo("Running autobench");
-        var (bench, _) = ProcessorHelper.RunBench(directory.FullName, errorTrace);
+        _errorTrace.AddInfo("Running autobench");
+        var (bench, _) = ProcessorHelper.RunBench(directory.FullName, _errorTrace);
         Directory.Delete(directory.FullName, true);
         return Task.FromResult(bench);
     }

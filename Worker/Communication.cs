@@ -46,21 +46,21 @@ public class Communication
     /// Implementation of the /get-test for autobench
     /// </summary>
     /// <returns>returns <see cref="Shared.Dtos.Responses.GetTestNonAutobenchResponse"/> if any test is in the queue, else null</returns>
-    public async Task<GetTestNonAutobenchResponse?> TryGetTest()
-        => await GetTest<GetTestNonAutobenchResponse>(false);
+    public GetTestNonAutobenchResponse? TryGetTest()
+        => GetTest<GetTestNonAutobenchResponse>(false);
     
     /// <summary>
     /// Implementation of the /get-test for standard test.
     /// </summary>
     /// <returns>returns <see cref="Shared.Dtos.Responses.GetTestAutobenchResponse"/> if any test is in the queue, else null</returns>
-    public async Task<GetTestAutobenchResponse?> TryGetAutobenchTest()
-        => await GetTest<GetTestAutobenchResponse>(true);
+    public GetTestAutobenchResponse? TryGetAutobenchTest()
+        => GetTest<GetTestAutobenchResponse>(true);
     
     /// <summary>
     /// Notifies a server, that this workload is still running at the worker.
     /// </summary>
     /// <param name="connectionId">Connection id, that was obtained from <see cref="TryGetTest"/> <see cref="TryGetAutobenchTest"/></param>
-    public async Task<RunningTestResponseDto?> RunningTest(int connectionId)
+    public RunningTestResponseDto? RunningTest(int connectionId)
     {
         var runningDto = new RunningTestDto
         {
@@ -70,7 +70,7 @@ public class Communication
         {
             var requestMessage =
                 new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/running-test");
-            var responseContent = await SendAndDeserialize<RunningTestResponseDto, RunningTestDto>(requestMessage, runningDto);
+            var responseContent = SendAndDeserialize<RunningTestResponseDto, RunningTestDto>(requestMessage, runningDto);
             return responseContent;
         }
         catch (Exception ex)
@@ -83,7 +83,7 @@ public class Communication
     /// <summary>
     /// Sends autobench result to the server. 
     /// </summary>
-    public async Task SendAutobenchResult(int autobench, int connectionId)
+    public void SendAutobenchResult(int autobench, int connectionId)
     {
         var runningDto = new AutobenchDto
         {
@@ -94,7 +94,7 @@ public class Communication
         try
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/autobench");
-            await SendAndDeserialize<ResponseBase, AutobenchDto>(requestMessage, runningDto);
+            SendAndDeserialize<ResponseBase, AutobenchDto>(requestMessage, runningDto);
         }
         catch (Exception ex)
         {
@@ -105,12 +105,12 @@ public class Communication
     /// <summary>
     /// Sends pentanomial results to the server.
     /// </summary>
-    public async Task<ResultsResponseDto?> Results(ResultsDto dto)
+    public ResultsResponseDto? Results(ResultsDto dto)
     {
         try
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/results");
-            var result = await SendAndDeserialize<ResultsResponseDto, ResultsDto>(requestMessage, dto);
+            var result = SendAndDeserialize<ResultsResponseDto, ResultsDto>(requestMessage, dto);
             return result;
         }
         catch (Exception ex)
@@ -124,7 +124,7 @@ public class Communication
     /// Sends worker error to the server. 
     /// </summary>
     /// <param name="errorTrace">Trace with the error</param>
-    public async Task WorkerError(ErrorTrace errorTrace)
+    public void WorkerError(ErrorTrace errorTrace)
     {
         var workerErrorDto = new WorkerErrorDto
         {
@@ -133,7 +133,7 @@ public class Communication
         try
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/test-error");
-            await SendAndDeserialize<ResponseBase, WorkerErrorDto>(requestMessage, workerErrorDto);
+            SendAndDeserialize<ResponseBase, WorkerErrorDto>(requestMessage, workerErrorDto);
         }
         catch (Exception ex)
         {
@@ -146,7 +146,7 @@ public class Communication
     /// </summary>
     /// <param name="errorTrace">Trace with the error</param>
     /// <param name="connectionId">Connection id, that was obtained from <see cref="TryGetTest"/> <see cref="TryGetAutobenchTest"/></param> 
-    public async Task TestError(ErrorTrace errorTrace, int connectionId)
+    public void TestError(ErrorTrace errorTrace, int connectionId)
     {
         var testErrorDto = new TestErrorDto
         {
@@ -156,7 +156,7 @@ public class Communication
         try
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/test-error");
-            await SendAndDeserialize<ResponseBase, TestErrorDto>(requestMessage, testErrorDto);
+            SendAndDeserialize<ResponseBase, TestErrorDto>(requestMessage, testErrorDto);
         }
         catch (Exception ex)
         {
@@ -183,7 +183,7 @@ public class Communication
             // The SSL connection could not be established, see inner exception --> dotnet dev-certs https --trust
             var response = await client.PostAsync($"{webApplicationUrl}/{Constants.WORKER_API_PREFIX}/validate", new StringContent(""));
 
-            var result = await Helper.Deserialize<ValidateResponseDto>(response);
+            var result = Helper.Deserialize<ValidateResponseDto>(response);
             var loginResult = result?.Username is null
                 ? INVALID_LOGIN
                 : new LoginResult(Username: result.Username, Success: true);
@@ -196,14 +196,14 @@ public class Communication
         return INVALID_LOGIN;
     }
 
-    private async Task<T?> GetTest<T>(bool autobench)
+    private T? GetTest<T>(bool autobench)
         where T : class
     {
         try
         {
             var dto = CreateGetTestDto(autobench);
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/get-test");
-            var responseContent = await SendAndDeserialize<T, GetTestDto>(requestMessage, dto);
+            var responseContent = SendAndDeserialize<T, GetTestDto>(requestMessage, dto);
             return responseContent;
         }
         catch (Exception ex)
@@ -258,14 +258,14 @@ public class Communication
         return dto;
     }
     
-    private async Task <TOut?> SendAndDeserialize<TOut, TIn>(HttpRequestMessage requestMessage, TIn dto) 
+    private TOut? SendAndDeserialize<TOut, TIn>(HttpRequestMessage requestMessage, TIn dto) 
         where TOut : class
     {
         var serializedContent = JsonConvert.SerializeObject(dto);
         requestMessage.Content = new StringContent(serializedContent, Encoding.UTF8, "application/json");
-        var result = await _client.SendAsync(requestMessage);
+        var result = _client.Send(requestMessage);
         if (!result.IsSuccessStatusCode) return null;
-        var responseContent = await Helper.Deserialize<TOut>(result);
+        var responseContent = Helper.Deserialize<TOut>(result);
         return responseContent;
     }
 }

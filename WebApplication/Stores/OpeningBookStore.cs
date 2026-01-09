@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shared;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 

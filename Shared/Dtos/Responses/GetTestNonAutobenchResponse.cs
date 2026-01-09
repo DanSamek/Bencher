@@ -47,4 +47,4 @@ public class GetTestNonAutobenchResponse : ResponseBase
     public string? AdditionalFastchessOptions { get; set; }
 }
 
-public record OpeningBookDto(string Name, byte[] Data, int Depth);
+public record OpeningBookDto(string Name, byte[] Data, int Depth, OpeningBookType OpeningBookType);

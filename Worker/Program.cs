@@ -25,14 +25,14 @@ public static class Program
         var (compilers, trace) = DependencyValidator.Validate();
         if (trace.Error())
         {
-            await StopApplicationAndSendMessage(runnerOptions, trace);
+            StopApplicationAndSendMessage(runnerOptions, trace);
             return;
         }
         
         trace = DependencyResolver.TryResolve(compilers);
         if (trace.Error())
         {
-            await StopApplicationAndSendMessage(runnerOptions, trace);
+            StopApplicationAndSendMessage(runnerOptions, trace);
             return;
         }
         
@@ -49,14 +49,14 @@ public static class Program
         {
             runnerOptions.NumberOfThreads = userOptions.NumberOfThreads;
             var runner = new Runner(runnerOptions, notifier);
-            await runner.Run();   
+            await runner.Run();
         }
     }
 
-    private static async Task StopApplicationAndSendMessage(RunnerOptions runnerOptions, ErrorTrace trace)
+    private static void StopApplicationAndSendMessage(RunnerOptions runnerOptions, ErrorTrace trace)
     {
         var communication = new Communication(runnerOptions);
-        await communication.WorkerError(trace);
+        communication.WorkerError(trace);
         Console.WriteLine(trace);
         ApplicationInfo.Stopping();
     }

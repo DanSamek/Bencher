@@ -38,7 +38,7 @@ public class Runner
             var communication = new Communication(_options); // TODO somehow refresh httpclients.
             for (var i = 0; i < WORKER_AUTOBENCH_NUM_TRIES && !communication.Error; i++)
             {
-                var autobenchResponse = await communication.TryGetAutobenchTest();
+                var autobenchResponse = communication.TryGetAutobenchTest();
                 if (autobenchResponse is not null)
                 {
                     if (await RunAutobench(communication, autobenchResponse)) continue;
@@ -56,15 +56,15 @@ public class Runner
                 await Wait();
             }
             
-            var testResponse = await communication.TryGetTest();
+            var testResponse = communication.TryGetTest();
             if (testResponse is not null)
             {
-                var gameTestProcess = new GameTestProcess(testResponse, new ErrorTrace());
-                var testProcessor = new GameTestProcessor(communication);
+                var errorTrace = new ErrorTrace();
+                var testProcessor = new GameTestProcessor(communication, errorTrace, testResponse, _options.NumberOfThreads);
                 var connectionId = testResponse.ConnectionId;
                 
                 await _notifier.AddNotifyRunningTest(connectionId);
-                    var result = await testProcessor.Process(gameTestProcess);
+                    var result = await testProcessor.Process();
                 await _notifier.RemoveNotifyRunningTest(connectionId);
                 
                 // TODO
@@ -76,24 +76,24 @@ public class Runner
 
     private async Task<bool> RunAutobench(Communication communication, GetTestAutobenchResponse autobenchResponse)
     {
-        var result = await communication.RunningTest(autobenchResponse.ConnectionId);
+        var result = communication.RunningTest(autobenchResponse.ConnectionId);
         if (result is null || !result.Running) return true;
 
-        var autobenchProcess = new AutobenchProcess(autobenchResponse, new ErrorTrace());
+        var errorTrace = new ErrorTrace();
         var connectionId = autobenchResponse.ConnectionId;
-        var autobenchProcessor = new AutobenchTestProcessor();
+        var autobenchProcessor = new AutobenchTestProcessor(autobenchResponse, errorTrace);
         
         await _notifier.AddNotifyRunningTest(connectionId);
-            var autobench = await autobenchProcessor.Process(autobenchProcess);
+            var autobench = await autobenchProcessor.Process();
         await _notifier.RemoveNotifyRunningTest(connectionId);
 
-        if (autobenchProcess.ErrorTrace.Error())
+        if (errorTrace.Error())
         {
-            await communication.TestError(autobenchProcess.ErrorTrace, connectionId);
+            communication.TestError(errorTrace, connectionId);
         }
         else
         {
-            await communication.SendAutobenchResult(autobench,connectionId);   
+            communication.SendAutobenchResult(autobench,connectionId);   
         }
 
         return false;
