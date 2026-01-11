@@ -1,21 +1,13 @@
 @inherits AuthorizedPageBase
 
 @using System.ComponentModel.DataAnnotations
-@using global::Shared.CustomAttributes
 @using Shared
-@using WebApplication.Data.Models
 @using WebApplication.Stores
 
 @inject OpeningBookStore OpeningBookStore 
 
 <EditForm Model="_formData" OnValidSubmit="AddOpeningBook" FormName="AddOpeningBook">
     <DataAnnotationsValidator/>
-    
-    <div class="form-floating mb-3">
-        <InputNumber TValue="int" class="form-control" @bind-Value="_formData.Depth" Id="Depth"></InputNumber>
-        <label for="Depth" class="form-label">Depth</label>
-        <ValidationMessage For="@(() => _formData.Depth)"/>
-    </div>
     
     <div class="form-floating mb-3">
         <InputFile class="form-control" OnChange="OnFileChanged" Id="File" />
@@ -25,8 +17,8 @@
                 File type is invalid, expected .epd or .pgn filetype.
             </div>
         }
-    </div> 
-    
+    </div>
+   
     <button type="submit" class="btn btn-primary ms-auto d-block" value="Save">Add</button>
 </EditForm>
 
@@ -47,7 +39,7 @@
     
     private void AddOpeningBook(EditContext context)
     {
-        OpeningBookStore.Add(UserId!, _formData.Name, _formData.Data, _formData.Depth, _formData.OpeningBookType);
+        OpeningBookStore.Add(UserId!, _formData.Name, _formData.Data, _formData.OpeningBookType);
         OnOpeningBookAdd.Invoke();
     }
 
@@ -66,7 +58,7 @@
         _formData.OpeningBookType = extension == LowerEpd ? OpeningBookType.EPD : OpeningBookType.PGN;
         _formData.Name = file.Name;
 
-        using var stream = file.OpenReadStream(MAX_OPENING_BOOK_SIZE); 
+        await using var stream = file.OpenReadStream(MAX_OPENING_BOOK_SIZE);
         _formData.Data = new byte[stream.Length];
         await stream.ReadExactlyAsync(_formData.Data, 0, (int)stream.Length);
     }
@@ -79,10 +71,6 @@
         
         [Required]
         public byte[] Data { get; set; } = null!;
-
-        [Required]
-        [Min(0)]
-        public int Depth { get; set; }
         
         [Required]
         public OpeningBookType OpeningBookType { get; set; }

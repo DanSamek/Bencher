@@ -13,8 +13,8 @@ namespace WebApplication.API;
 /// </summary>
 [ApiController]
 [Route(Constants.WORKER_API_PREFIX)]
-public partial class WorkerController : ControllerBase
-{
+public partial class WorkerController : ControllerBase  
+{   
     private readonly UserStore _userStore;
     private readonly WorkerLogStore _workerLogStore;
     private readonly PentaStore _pentaStore;
@@ -222,7 +222,7 @@ public partial class WorkerController : ControllerBase
     }
 }
 
-file static class HttpContextExtensions
+file static class HttpContextExtensions 
 {
     public static string GetUserToken(this HttpContext context)
     => context.Request.Headers[Constants.WORKER_REQUEST_HEADER].ToString(); // Middleware validated, that user token is valid.

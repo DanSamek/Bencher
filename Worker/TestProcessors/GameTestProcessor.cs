@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using Shared;
 using Shared.Dtos.Requests;
 using Shared.Dtos.Responses;
 using Worker.Dependencies;
@@ -21,7 +20,7 @@ public class GameTestProcessor : ITestProcessor<bool>
     private readonly int _pairsNeeded;
     
     private const byte WDL_W = 1;
-    private const byte WDL_D = 2;
+    private const byte WDL_D = 2;   
     private const byte WDL_L = 4;
     
     /*
@@ -317,11 +316,6 @@ file static class Extensions
     {
         var openingBookType = openingBookDto.OpeningBookType;
         builder.AddArgument($"-openings order=random file={openingBookPath} format={openingBookType.ToString().ToLower()}");
-        if (openingBookType is OpeningBookType.PGN)
-        {
-            // Number of plies for pgn [https://github.com/Disservin/fastchess/blob/master/man.md]
-            builder.AddArgument($"plies={openingBookDto.Depth}");
-        }
     }
     
     public static void AddEngine(this StringBuilder sb, string cmdName)
@@ -330,7 +324,7 @@ file static class Extensions
     }
 
     public static void AddArgument(this StringBuilder sb, string argument)
-    {
+    {   
         sb.Append($"{argument} ");
     }
     

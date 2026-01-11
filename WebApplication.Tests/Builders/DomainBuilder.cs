@@ -42,7 +42,6 @@ public class DomainBuilder
         {
             Name = name,
             Type = OpeningBookType.EPD,
-            Depth = 0,
             Tests = []
         };
         
@@ -68,7 +67,6 @@ public class DomainBuilder
         {
             Name = name,
             Type = OpeningBookType.EPD,
-            Depth = 0,
             Tests = [],
             User = user
         };
