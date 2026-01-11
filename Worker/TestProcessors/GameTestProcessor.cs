@@ -74,8 +74,8 @@ public class GameTestProcessor : ITestProcessor<bool>
         
         // Create opening book [from the response].
         var openingBookPath = await CreateOpeningBook();
-        
         var arguments = CreateFastchessArguments(openingBookPath, baseDirectory, newDirectory, baseNps);
+        
         // Run games.
         RunGames(arguments);
         
@@ -165,10 +165,10 @@ public class GameTestProcessor : ITestProcessor<bool>
     
     
     private int ValidateBenches(DirectoryInfo baseDirectory,
-                                 DirectoryInfo newDirectory)
+                                DirectoryInfo newDirectory)
     { 
-        var baseBench = ProcessorHelper.RunBench(baseDirectory.Name, _errorTrace);
-        var testBench = ProcessorHelper.RunBench(newDirectory.Name, _errorTrace);
+        var baseBench = ProcessorHelper.RunBench(baseDirectory.FullName, _errorTrace);
+        var testBench = ProcessorHelper.RunBench(newDirectory.FullName, _errorTrace);
         
         AddErrorIfFalse(baseBench.Bench != _getTestNonAutobenchResponse.BaseBranchBench, 
             "Base bench differ from the entered bench");
