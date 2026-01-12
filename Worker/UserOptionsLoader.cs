@@ -30,7 +30,7 @@ public static class UserOptionsLoader
             numberOfThreads = Environment.ProcessorCount;
         }
         
-        var result = new UserOptions(numberOfThreads);
+        var result = new UserOptions(numberOfThreads, false);
         return result;
         #endif
     }

@@ -36,9 +36,9 @@ public class ErrorTrace
         var withPrefix = message.WithPrefix(prefix);
         _sb.AppendLine(withPrefix);
         
-#if DEBUG
+//#if DEBUG
         Console.WriteLine(withPrefix);
-#endif
+//#endif
         return true;
     }
 }

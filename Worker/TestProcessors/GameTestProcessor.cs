@@ -23,27 +23,19 @@ public class GameTestProcessor : ITestProcessor<bool>
     private const byte WDL_D = 2;   
     private const byte WDL_L = 4;
     
-    /*
-        New perspective results.
-        Finished game 5 (stockfish-dev vs stockfish): 1/2-1/2 Draw by 3-fold repetition
-        Finished game 8 (stockfish vs stockfish-dev): 1-0 stockfish wins by adjudication
-        Finished game 14 (stockfish vs stockfish-dev): 1-0 stockfish wins by adjudication  
-        Finished game 4 (stockfish vs stockfish-dev): 1-0 stockfish-dev got checkmated
-
-        game (\d*) (Draw) [D]
-        game (\d*) (base) wins [L]
-        game (\d*) (base) got checkmated [W]
-        game (\d*) (new) wins [W]
-        game (\d*) (new) got checkmated [L]
-    */
-    
-    private static IReadOnlyDictionary<Regex, byte> _fastChessResults = new Dictionary<Regex, byte>
+    private static IReadOnlyList<(Regex, byte)> _fastChessResults = new List<(Regex, byte)>
     {
-        { new Regex("game (\\d+) .* Draw", RegexOptions.Compiled), WDL_D },
-        { new Regex("game (\\d+) .* base wins", RegexOptions.Compiled), WDL_L },
-        { new Regex("game (\\d+) .* base got checkmated", RegexOptions.Compiled), WDL_W },
-        { new Regex("game (\\d+) .* new wins", RegexOptions.Compiled), WDL_W },
-        { new Regex("game (\\d+) .* new got checkmated", RegexOptions.Compiled), WDL_L }
+        // Draws
+        (new Regex("game (\\d+) \\(new vs base\\): 1\\/2-1\\/2"), WDL_D),
+        (new Regex("game (\\d+) \\(base vs new\\): 1\\/2-1\\/2"), WDL_D),
+        
+        // Wins [dev perspective]
+        (new Regex("game (\\d+) \\(new vs base\\): 1-0"), WDL_W),
+        (new Regex("game (\\d+) \\(base vs new\\): 0-1"), WDL_W),
+        
+        // Loses [dev perspective]
+        (new Regex("game (\\d+) \\(new vs base\\): 0-1"), WDL_L),
+        (new Regex("game (\\d+) \\(base vs new\\): 1-0"), WDL_L)
     };
     
     private record PrepareEngineArguments(string GitUrl, string Branch, byte[] BuildScript, ErrorTrace ErrorTrace);
@@ -85,6 +77,7 @@ public class GameTestProcessor : ITestProcessor<bool>
     
     private void RunGames(string arguments)
     {
+        _errorTrace.AddInfo($"Running games with arguments: {arguments}");
         var processStartInfo = Helper.CreateProcessStartInfo(arguments, $"{FastchessDependency.FASTCHESS_BINARY_PATH}/fastchess");
         var process = System.Diagnostics.Process.Start(processStartInfo);
 
@@ -98,6 +91,10 @@ public class GameTestProcessor : ITestProcessor<bool>
         process.OutputDataReceived += ((_, e) =>
         {
             if (string.IsNullOrEmpty(e.Data)) return;
+            //#if DEBUG
+                Console.WriteLine(e.Data);
+           // #endif
+            var hit = false;
             foreach (var (regex, wdl) in _fastChessResults)
             {
                 var match = regex.Match(e.Data);
@@ -107,8 +104,11 @@ public class GameTestProcessor : ITestProcessor<bool>
                 
                 if (pairResults.TryGetValue(bucket, out var value)) value.Add(wdl);
                 else pairResults.Add(bucket, [wdl]);
+
+                hit = true;
                 break;
             }
+            if (!hit) Console.WriteLine("Unknown line: " + e.Data);
             
             var running = SendPairResults(pairResults, false);
             if (!running) process.Kill(); // Stop fastchess, if test is not running.
@@ -170,10 +170,10 @@ public class GameTestProcessor : ITestProcessor<bool>
         var baseBench = ProcessorHelper.RunBench(baseDirectory.FullName, _errorTrace);
         var testBench = ProcessorHelper.RunBench(newDirectory.FullName, _errorTrace);
         
-        AddErrorIfFalse(baseBench.Bench != _getTestNonAutobenchResponse.BaseBranchBench, 
+        AddErrorIfFalse(baseBench.Bench == _getTestNonAutobenchResponse.BaseBranchBench, 
             "Base bench differ from the entered bench");
         
-        AddErrorIfFalse(testBench.Bench != _getTestNonAutobenchResponse.TestBranchBench, 
+        AddErrorIfFalse(testBench.Bench == _getTestNonAutobenchResponse.TestBranchBench, 
             "Test bench differ from the entered bench");
 
         return baseBench.Nps;
@@ -230,7 +230,6 @@ public class GameTestProcessor : ITestProcessor<bool>
         -engine proto=uci cmd="./stockfish-dev" name="stockfish-dev"
         -engine proto=uci cmd="./stockfish" name="stockfish"
         -each tc=0:08+0.08
-        -randomseed
         -rounds 100000  [N / 2]
         -games 2
         -repeat
@@ -249,17 +248,15 @@ public class GameTestProcessor : ITestProcessor<bool>
         var sb = new StringBuilder();
         var baseBinaryPath = Helper.EngineBinary(baseDirectory);
         var newBinaryPath = Helper.EngineBinary(newDirectory);
-        
-        sb.AddEngine($"cmd={baseBinaryPath} name=base");
+
         sb.AddEngine($"cmd={newBinaryPath} name=new");
+        sb.AddEngine($"cmd={baseBinaryPath} name=base");
         sb.AddArgument("-each");
         
         var (seconds, increment) = ScaleTc(baseNps);
-        sb.AddArgument($"tc={seconds}+{increment}"); 
+        sb.AddArgument($"tc={seconds:F}+{increment:F}"); 
         sb.AddArgument($"option.Hash={_getTestNonAutobenchResponse.HashSize}");
         sb.AddArgument($"option.Threads={_getTestNonAutobenchResponse.NumberOfThreads}");
-        
-        sb.AddArgument("-randomseed");
         
         sb.AddArgument($"-rounds {_getTestNonAutobenchResponse.NumberOfGames / 2}");
         sb.AddArgument("-games 2");

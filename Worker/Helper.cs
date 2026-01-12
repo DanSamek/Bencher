@@ -1,4 +1,4 @@
-using System.Diagnostics;
+    using System.Diagnostics;
 using Newtonsoft.Json;
 using Shared;
 
@@ -48,6 +48,6 @@ public static class Helper
         => $"{prefix}: {message}";
     
     public static string EngineBinary(DirectoryInfo directoryInfo)
-        => $"{directoryInfo.Name}/{Constants.BENCHER_BINARY_FOLDER}/{Constants.BENCHER_BINARY_NAME}";
+        => $"{directoryInfo.FullName}/{Constants.BENCHER_BINARY_FOLDER}/{Constants.BENCHER_BINARY_NAME}";
     
 }
