@@ -1,4 +1,4 @@
-namespace WebApplication.Data.Models;
+namespace Shared;
 
 /// <summary>
 /// Opening book file type.

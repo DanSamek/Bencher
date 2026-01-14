@@ -3,34 +3,43 @@
 @inject TestErrorStore TestErrorStore
 
 <table class="table table-striped">
-    <thead>
-    <tr>
-        <th>Id</th>
-        @if (ShowTestId)
-        {
-            <th>Test id</th>
-        }
-        <th>Datetime</th>
-        <td>Log</td>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var error in Errors)
-    {
+    @if (Errors.Count > 0){
+        <thead>
         <tr>
-            <td>@error.Id</td>
-            
+            <th>Id</th>
             @if (ShowTestId)
             {
-                var testPath = $"/Test/{error.Test.Id}";
-                <td><ReloadLink Url="@testPath">@error.Test.Id</ReloadLink></td>
+                <th>Test id</th>
             }
-            <td>@error.Time</td>
-            @{
-                var fileName = $"error_{error.Time}_{error.Test.Id}";
-            }
-            <td><DownloadButton FileName="@fileName" DataLoader="() => TestErrorStore.LoadContent(error.Id)"/></td>
+            <th>Datetime</th>
+            <td>Log</td>
         </tr>
+        </thead>
+    }
+    <tbody>
+    @if (Errors.Count > 0)
+    {
+        @foreach (var error in Errors)
+        {
+            <tr>
+                <td>@error.Id</td>
+
+                @if (ShowTestId)
+                {
+                    var testPath = $"/Test/{error.Test.Id}";
+                    <td><ReloadLink Url="@testPath">@error.Test.Id</ReloadLink></td>
+                }
+                <td>@error.Time</td>
+                @{
+                    var fileName = $"error_{error.Time}_{error.Test.Id}";
+                }
+                <td><DownloadButton FileName="@fileName" DataLoader="() => TestErrorStore.LoadContent(error.Id)"/></td>
+            </tr>
+        }
+    }
+    else
+    {
+        <span>No data to display</span>
     }
     </tbody>
 </table>
@@ -40,7 +49,7 @@
     /// Test errors to display.
     /// </summary>
     [Parameter, EditorRequired]
-    public required IEnumerable<TestError> Errors { get; set; }
+    public required IReadOnlyList<TestError> Errors { get; set; }
     
     /// <summary>
     /// If test id column should be rendered.

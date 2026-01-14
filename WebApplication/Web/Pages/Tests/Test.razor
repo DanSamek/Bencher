@@ -51,7 +51,7 @@
             <KeyValueTableRow Key="Created by" Value="@_test.User.UserName" />
             <KeyValueTableRow Key="State" Value="@_test.State" />
             <KeyValueTableRow Key="Description" Value="@NoneTextIfEmpty(_test.Description)" />
-            <KeyValueTableRow Key="Autobenched" Value="@_test.State" />
+            <KeyValueTableRow Key="Autobenched" Value="@_test.Autobenched" />
             <KeyValueTableRow Key="Expected NPS" Value="@_test.ExpectedNps" />
             <KeyValueTableRow Key="Opening book" Value="@_test.OpeningBook.Name" />
             <KeyValueTableRow Key="Created date" Value="@_test.Created" />
@@ -63,7 +63,7 @@
             }
             <KeyValueTableRow Key="Hashsize" Value="@_test.HashSize" />
             <KeyValueTableRow Key="Time management" Value="@_test.TimeManagement" />
-            <KeyValueTableRow Key="NumberOfThreads" Value="@_test.NumberOfThreads" />
+            <KeyValueTableRow Key="Number of threads" Value="@_test.NumberOfThreads" />
             <KeyValueTableRow Key="Priority" Value="@_test.Priority" /> @* TODO enable change *@
             <KeyValueTableRow Key="Additional fastchess options" Value="@(string.IsNullOrEmpty(_test.AdditionalFastchessOptions)? "None" : _test.AdditionalFastchessOptions)" />
             

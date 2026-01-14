@@ -5,10 +5,11 @@ namespace Worker.Dependencies;
 /// </summary>
 public static class DependencyValidator
 {
-    private static readonly IReadOnlyList<IValidatableDependency> _validatableDependencies = new List<IValidatableDependency> 
-    {
-        new GitDependency()
-    };
+    private static readonly IReadOnlyList<IValidatableDependency> _validatableDependencies = 
+        new List<IValidatableDependency> 
+        {
+            new GitDependency()
+        };
 
     private static readonly IReadOnlyList<ICompilerDependency> _compilerDependencies =
         new List<ICompilerDependency>
@@ -22,6 +23,7 @@ public static class DependencyValidator
     public static ValidationResult Validate()
     {
         var trace = new ErrorTrace();
+        trace.AddInfo("Validating installed dependencies");
         
         foreach (var dependency in _validatableDependencies)
         {
