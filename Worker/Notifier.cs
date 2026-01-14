@@ -41,7 +41,7 @@ public class Notifier
             await _semaphoreSlim.WaitAsync();
             foreach (var connectionId in _connectionIds)
             {
-                await _communication.RunningTest(connectionId);
+                _communication.RunningTest(connectionId);
             }
             _semaphoreSlim.Release();
             await _timer.WaitForNextTickAsync();

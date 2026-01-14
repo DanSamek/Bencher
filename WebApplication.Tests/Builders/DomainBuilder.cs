@@ -1,3 +1,4 @@
+using Shared;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 
@@ -41,7 +42,6 @@ public class DomainBuilder
         {
             Name = name,
             Type = OpeningBookType.EPD,
-            Depth = 0,
             Tests = []
         };
         
@@ -67,7 +67,6 @@ public class DomainBuilder
         {
             Name = name,
             Type = OpeningBookType.EPD,
-            Depth = 0,
             Tests = [],
             User = user
         };

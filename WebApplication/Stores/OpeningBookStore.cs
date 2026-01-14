@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shared;
 using WebApplication.Data;
 using WebApplication.Data.Models;
 
@@ -43,7 +44,7 @@ public class OpeningBookStore : Store<OpeningBook>
     /// <summary>
     /// Adds an opening book.
     /// </summary>
-    public void Add(string userId, string name, byte[] data, int depth, OpeningBookType openingBookType)
+    public void Add(string userId, string name, byte[] data, OpeningBookType openingBookType)
     {
         var user = Context.Users
             .FirstOrDefault(u => u.Id == userId);
@@ -52,7 +53,6 @@ public class OpeningBookStore : Store<OpeningBook>
         {
             Name = name,
             Type = openingBookType,
-            Depth = depth,
             Tests = [],
             User = user
         };

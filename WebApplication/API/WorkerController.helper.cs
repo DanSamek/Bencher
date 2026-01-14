@@ -39,7 +39,7 @@ public partial class WorkerController
             NumberOfThreads = test.NumberOfThreads,
             TimeManagement = test.TimeManagement,
             NumberOfGames = workerLog.TotalNumberOfGames,
-            OpeningBook = new OpeningBookDto(test.OpeningBook.Name, content, test.OpeningBook.Depth),
+            OpeningBook = new OpeningBookDto(test.OpeningBook.Name, content, test.OpeningBook.Type),
             BuildScript = test.Engine.BuildScript
         };
         
