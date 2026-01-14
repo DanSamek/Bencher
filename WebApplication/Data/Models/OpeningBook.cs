@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Shared;
 
 namespace WebApplication.Data.Models;
 
@@ -25,13 +26,6 @@ public class OpeningBook : DoId
     /// </summary>
     [Required]
     public required OpeningBookType Type { get; set; }
-    
-    /// <summary>
-    /// Book depth.
-    /// Aka, how many moves are played from the opening book.
-    /// </summary>
-    [Required]
-    public required int Depth { get; set; }
     
     /// <summary>
     /// Tests that uses this opening book.

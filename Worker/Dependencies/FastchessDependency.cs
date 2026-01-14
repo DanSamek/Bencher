@@ -2,7 +2,7 @@ namespace Worker.Dependencies;
 
 public class FastchessDependency : IResolvableDependency
 {
-    private const string FASTCHESS_BINARY_PATH = "/tmp/bencher-worker";
+    public const string FASTCHESS_BINARY_PATH = "/tmp/bencher-worker";
     // TODO maybe create own fork just to make sure.
     private const string FASTCHESS_GIT_URL = "https://github.com/Disservin/fastchess.git";
     private const string FASTCHESS_VERSION = "v1.7.0-alpha";
@@ -22,9 +22,9 @@ public class FastchessDependency : IResolvableDependency
         var buildCommand = compilers == Compilers.Clang ? "make -j CXX=clang++" : "make -j";
         var commands = (string[])
         [
-            $"mkdir -p {FASTCHESS_BINARY_PATH}; cd {FASTCHESS_BINARY_PATH}", 
-            $"git clone --branch {FASTCHESS_VERSION} --single-branch {FASTCHESS_GIT_URL} . ;", 
-            $"{buildCommand}"
+            $"mkdir -p {FASTCHESS_BINARY_PATH};", 
+            $"cd {FASTCHESS_BINARY_PATH}; git clone --branch {FASTCHESS_VERSION} --single-branch {FASTCHESS_GIT_URL} . ;", 
+            $"cd {FASTCHESS_BINARY_PATH}; {buildCommand}"
         ];
 
         var (_, error) = Helper.RunProcess(Helper.CreateProcessStartInfo(commands[0]));

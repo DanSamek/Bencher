@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Shared;
 using WebApplication.Data.Models;
 using WebApplication.Stores;
 using WebApplication.Tests.Builders;
@@ -68,7 +69,7 @@ public class OpeningBookStoreTests : TestBase
         
         var userId = Factory.CreateDbContext().Users.First().Id;
         var store = new OpeningBookStore(Factory);
-        store.Add(userId,"test-book", [0x1, 0x2, 0x4], 1, OpeningBookType.EPD);
+        store.Add(userId,"test-book", [0x1, 0x2, 0x4], OpeningBookType.EPD);
         
         var openingBooks = Factory.CreateDbContext().OpeningBooks.Include(openingBook => openingBook.Data).ToArray();
         Assert.That(openingBooks, Has.Length.EqualTo(1));
@@ -76,7 +77,6 @@ public class OpeningBookStoreTests : TestBase
         var book = openingBooks[0];
         Assert.That(book.Data.Data, Is.EqualTo(new byte [] {0x1, 0x2, 0x4}));
         Assert.That(book.Name, Is.EqualTo("test-book"));
-        Assert.That(book.Depth, Is.EqualTo(1));
         Assert.That(book.Type, Is.EqualTo(OpeningBookType.EPD));
     }
     
