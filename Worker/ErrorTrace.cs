@@ -36,9 +36,8 @@ public class ErrorTrace
         var withPrefix = message.WithPrefix(prefix);
         _sb.AppendLine(withPrefix);
         
-//#if DEBUG
+        // Maybe not #if DEBUG, it's fine to output everything?
         Console.WriteLine(withPrefix);
-//#endif
         return true;
     }
 }

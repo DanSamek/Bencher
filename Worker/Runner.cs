@@ -3,7 +3,6 @@ using Worker.TestProcessors;
 
 namespace Worker;
 
-// TODO what about AVX, SSE, flags when compiling [technically this can be done by user build script.]
 /// <summary>
 /// Class that runs worker processes.
 /// </summary>
@@ -44,33 +43,44 @@ public class Runner
                     if (await RunAutobench(communication, autobenchResponse)) continue;
                     goto RUN_LOOP;
                 }
-
-                // TODO dry for game test.
-                if (communication.Error)
-                {
-                    ApplicationInfo.Display(communication.GetErrorMessage());
-                    ApplicationInfo.Stopping();
-                    return;
-                }
                 
+                StopApplicationIfCommunicationError(communication);
                 await Wait();
             }
             
             var testResponse = communication.TryGetTest();
             if (testResponse is not null)
             {
-                var errorTrace = new ErrorTrace();
-                var testProcessor = new GameTestProcessor(communication, errorTrace, testResponse, _options.NumberOfThreads);
-                var connectionId = testResponse.ConnectionId;
-                
-                await _notifier.AddNotifyRunningTest(connectionId);
-                    var result = await testProcessor.Process();
-                await _notifier.RemoveNotifyRunningTest(connectionId);
-                
-                // TODO
+                await RunGames(communication, testResponse);
+                StopApplicationIfCommunicationError(communication);
             }
             
             await Wait();
+        }
+    }
+    
+    private void StopApplicationIfCommunicationError(Communication communication)
+    {
+        if (!communication.Error) return;
+        
+        ApplicationInfo.Display(communication.GetErrorMessage());
+        ApplicationInfo.Stopping();
+        Environment.Exit(1);
+    }
+    
+    private async Task RunGames(Communication communication, GetTestNonAutobenchResponse testResponse)
+    {
+        var errorTrace = new ErrorTrace();
+        var testProcessor = new GameTestProcessor(communication, errorTrace, testResponse, _options.NumberOfThreads);
+        var connectionId = testResponse.ConnectionId;
+                
+        await _notifier.AddNotifyRunningTest(connectionId);
+        var result = await testProcessor.Process();
+        await _notifier.RemoveNotifyRunningTest(connectionId);
+        
+        if (!result)
+        {
+            communication.TestError(errorTrace, connectionId);
         }
     }
 

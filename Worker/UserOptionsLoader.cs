@@ -18,20 +18,41 @@ public static class UserOptionsLoader
     /// </summary>
     public static UserOptions LoadParams()
     {
-        #if DEBUG
-        return new UserOptions(4, false);
-        #else
-        
-        Console.WriteLine($"Number of threads to use (maximum is {Environment.ProcessorCount}): ");
-        var numberOfThreads = int.Parse(Console.ReadLine()!);
-        if (numberOfThreads > Environment.ProcessorCount)
+        var valid = false;
+        var numberOfThreads = 0;
+        var splitThreads = false;
+        while (!valid)  
         {
+            Console.WriteLine($"Number of threads to use (maximum is {Environment.ProcessorCount}): ");
+            valid = int.TryParse(Console.ReadLine(), out numberOfThreads);
+            
+            if (numberOfThreads <= Environment.ProcessorCount) continue;
             Console.WriteLine($"Number of threads is set to {Environment.ProcessorCount}.");
             numberOfThreads = Environment.ProcessorCount;
         }
+
+        valid = false;
+        while (!valid)
+        {
+            Console.WriteLine("Try split threads [T/F]:");
+            var splitThreadsString = Console.ReadLine();
+            if (splitThreadsString is null || splitThreadsString.Length != 1) continue;
+
+            var splitThreadsChar = char.ToLower(splitThreadsString[0]); 
+            splitThreads = splitThreadsChar switch
+            {
+                't' => true,
+                _ => false
+            };
+                
+            valid = splitThreadsChar switch
+            {
+                't' or 'f' => true,
+                _ => false
+            };
+        }
         
-        var result = new UserOptions(numberOfThreads, false);
+        var result = new UserOptions(numberOfThreads, splitThreads);
         return result;
-        #endif
     }
 }

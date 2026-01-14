@@ -14,6 +14,8 @@ public static class DependencyResolver
     public static ErrorTrace TryResolve(Compilers compilers)
     {
         var trace = new ErrorTrace();
+        trace.AddInfo("Trying to resolve external dependencies");
+        
         foreach (var dependency in _resolvableDependencies)
         {
             var validationResult = dependency.Validate();

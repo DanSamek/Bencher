@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 using Shared.Dtos.Requests;
@@ -18,6 +19,8 @@ public class GameTestProcessor : ITestProcessor<bool>
     private readonly GetTestNonAutobenchResponse _getTestNonAutobenchResponse;
     private readonly int _processorThreads;
     private readonly int _pairsNeeded;
+
+    private readonly Lock _lock = new Lock();
     
     private const byte WDL_W = 1;
     private const byte WDL_D = 2;   
@@ -49,7 +52,7 @@ public class GameTestProcessor : ITestProcessor<bool>
         _errorTrace = errorTrace;
         _getTestNonAutobenchResponse = getTestNonAutobenchResponse;
         _processorThreads = processorThreads;
-        _pairsNeeded = CalculatePairsNeeded(getTestNonAutobenchResponse);
+        _pairsNeeded = CalculatePairsNeeded(getTestNonAutobenchResponse); // This is not optimal to calculate here, but who cares.
     }
     
     /// <inheritdoc /> 
@@ -88,30 +91,22 @@ public class GameTestProcessor : ITestProcessor<bool>
         }
         
         var pairResults = new Dictionary<int, List<byte>>();
+        var gamesEnded = 0;
         process.OutputDataReceived += ((_, e) =>
         {
             if (string.IsNullOrEmpty(e.Data)) return;
-            //#if DEBUG
-                Console.WriteLine(e.Data);
-           // #endif
-            var hit = false;
-            foreach (var (regex, wdl) in _fastChessResults)
-            {
-                var match = regex.Match(e.Data);
-                if (!match.Success) continue;
-                
-                var bucket = (int.Parse(match.Groups[1].Value) - 1) / 2;
-                
-                if (pairResults.TryGetValue(bucket, out var value)) value.Add(wdl);
-                else pairResults.Add(bucket, [wdl]);
-
-                hit = true;
-                break;
-            }
-            if (!hit) Console.WriteLine("Unknown line: " + e.Data);
             
-            var running = SendPairResults(pairResults, false);
-            if (!running) process.Kill(); // Stop fastchess, if test is not running.
+            bool running;
+            lock(_lock)
+            {
+                ProcessLine(e.Data);
+                var (results, canSend, toRemove) = PrepareResults(pairResults);
+                running = SendPairResults(results, canSend);
+                if (canSend) toRemove.ForEach(k => pairResults.Remove(k));
+            }
+           
+             // Stop fastchess, if test is not running or something happen with communication (network problems for example).
+            if (!running || _communication.Error) process.Kill();
         });
         
         process.BeginOutputReadLine();
@@ -119,10 +114,44 @@ public class GameTestProcessor : ITestProcessor<bool>
         
         process.WaitForExit();
         process.Close();
-        SendPairResults(pairResults, true);
+        
+        var (results, _, _) = PrepareResults(pairResults);
+        SendPairResults(results, true);
+        
+        return;
+        void ProcessLine(string line)
+        {
+            var matched = false;
+            foreach (var (regex, wdl) in _fastChessResults)
+            {
+                var match = regex.Match(line);
+                if (!match.Success) continue;
+
+                var bucket = (int.Parse(match.Groups[1].Value) - 1) / 2;
+
+                if (pairResults.TryGetValue(bucket, out var value)) value.Add(wdl);
+                else pairResults.Add(bucket, [wdl]);
+
+                gamesEnded++;
+                matched = true;
+                break;
+            }
+
+            if (!matched)
+            {
+                _errorTrace.AddInfo($"Unknown line: {line}");
+                return;
+            }
+
+            if (gamesEnded % _pairsNeeded == 0)
+            {
+                _errorTrace.AddInfo($"Games ended: {gamesEnded}");
+            }
+        }
     }
 
-    private bool SendPairResults(Dictionary<int, List<byte>> pairResults, bool force)
+    private record PreparedResults(ResultsDto Results, bool CanSend, List<int> ToRemove);
+    private PreparedResults PrepareResults(Dictionary<int, List<byte>> pairResults)
     {
         var results = new ResultsDto
         {
@@ -155,11 +184,14 @@ public class GameTestProcessor : ITestProcessor<bool>
             toRemove.Add(key);
             currentPairsDone++;
         }
-
-        if (currentPairsDone < _pairsNeeded && !force) return true; 
+        return new (results, currentPairsDone >= _pairsNeeded, toRemove);
+    }
+    
+    private bool SendPairResults(ResultsDto results, bool canSend)
+    {
+        if (!canSend) return true; 
         
         var result = _communication.Results(results);
-        toRemove.ForEach(k => pairResults.Remove(k));
         return result?.Running ?? false;
     }
     
