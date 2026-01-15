@@ -12,6 +12,7 @@ variables:
 stages:
   - build
   - test
+  - binaries
 
 build_web_app:
   stage: build
@@ -39,3 +40,14 @@ test_web_app:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == 'main'
+
+worker_binaries:
+    stage: binaries
+    script:
+        - cd Worker
+        - dotnet restore
+        - dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:SelfContained=true
+    artifacts:
+      paths:
+        - bin/Release/net*/linux-x64/publish/Worker
+
