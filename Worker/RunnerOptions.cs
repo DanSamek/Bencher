@@ -1,6 +1,6 @@
 namespace Worker;
 
-public class RunnerOptions
+public record RunnerOptions
 {
     /// <summary>
     /// Web application url for communication.

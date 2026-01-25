@@ -143,14 +143,29 @@ public partial class WorkerController : ControllerBase
         return Ok(new ResponseBase());
     }
     
+    private static readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
+    
     /// <summary>
     /// Request of the worker for a test.
     /// </summary>
     [HttpPost("get-test")]
-    public IActionResult GetTest([FromBody] GetTestDto getTestDto)
+    public async Task<IActionResult> GetTest([FromBody] GetTestDto getTestDto)
     {
-        var test = _testStore.GetNextTestForWorker(getTestDto.Autobench, getTestDto.NumberOfThreads);
-        if (test is null) return NotFound(new ResponseBase());
+        // NOTE: This is not ideal, but we ensure for thread splits at workers to work :(( 
+        await _semaphoreSlim.WaitAsync();
+
+        Test? test;
+        try
+        {
+            test = _testStore.GetNextTestForWorker(getTestDto.Autobench, getTestDto.NumberOfThreads);
+            if (test is null) return NotFound(new ResponseBase());
+
+            await _testStore.SetRunningState(test.Id);
+        }
+        finally
+        {
+            _semaphoreSlim.Release();
+        }
         
         var userToken = HttpContext.GetUserToken();
         var user = _userStore.GetUserByAccessToken(userToken);
@@ -215,6 +230,32 @@ public partial class WorkerController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Returns number of paused tests (with the maximum possible priority).
+    /// </summary>
+    [HttpGet("total-paused-tests")]
+    public IActionResult TotalPausedTestsWithMaxPriority()
+    {
+        var result = new TotalPausedTestsDto
+        {
+            Count = _testStore.TotalPausedTestsWithMaxPriority()
+        };
+        return Ok(result);
+    }
+    
+    /// <summary>
+    /// Returns maximum required threads for the test (with the highest priority).
+    /// </summary>
+    [HttpGet("max-threads-for-test")]
+    public IActionResult MaxThreadsForTestWithMaxPriority()
+    {
+        var result = new MaxThreadsForTestDto
+        {
+            MaximumThreads = _testStore.MaxThreadsForTestWithMaxPriority()
+        };
+        return Ok(result);
+    }
+    
     private async Task StopTest(int testId)
     {
         await _testStore.StopTest(testId);

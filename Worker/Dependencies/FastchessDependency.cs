@@ -2,23 +2,25 @@ namespace Worker.Dependencies;
 
 public class FastchessDependency : IResolvableDependency
 {
-    public const string FASTCHESS_BINARY_PATH = "/tmp/bencher-worker";
+    private const string FASTCHESS_BINARY_PATH = "/tmp/bencher-worker";
+    private const string FASTCHESS_BINARY_NAME = "fastchess";
+    public const string  FASTCHESS_BINARY_FILE_PATH = $"{FASTCHESS_BINARY_PATH}/{FASTCHESS_BINARY_NAME}";
     // TODO maybe create own fork just to make sure.
     private const string FASTCHESS_GIT_URL = "https://github.com/Disservin/fastchess.git";
     private const string FASTCHESS_VERSION = "v1.7.0-alpha";
-    public  const string FASTCHESS_BINARY_NAME = "fastchess";
     
     private string _errorMessage = string.Empty;
     
     public bool Validate()
     {
-        var result = Directory.Exists(FASTCHESS_BINARY_PATH);
-        // TODO maybe check how old binary is and remove it.
+        var result = File.Exists(FASTCHESS_BINARY_FILE_PATH);
         return result;
     }
     
     public bool TryResolve(Compilers compilers)
     {
+        if (Directory.Exists(FASTCHESS_BINARY_PATH)) Directory.Delete(FASTCHESS_BINARY_PATH, true);
+        
         var buildCommand = compilers == Compilers.Clang ? "make -j CXX=clang++" : "make -j";
         var commands = (string[])
         [

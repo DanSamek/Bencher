@@ -26,6 +26,11 @@ public class TestStoreTests : TestBase
                     .AddBranch("base_branch")
                     .AddBranch("test_branch")
                     .AddTest("test_1", "test_book", "base_branch", "test_branch")
+                        .Close()
+                    .AddTest("test_2", "test_book", "base_branch", "test_branch", state: TestState.Finished, ended: new DateTime(2000,1 ,1).ToUniversalTime(), priority: 5)
+                        .Close()
+                    .AddTest("test_3", "test_book", "base_branch", "test_branch", state: TestState.Stopped, ended: new DateTime(2000,1 ,1).ToUniversalTime(), priority: 5)
+                        .Close()
                 .Close()
             .Close();
         
@@ -84,10 +89,22 @@ public class TestStoreTests : TestBase
     {
         var domainBuilder = new DomainBuilder(Factory.CreateDbContext())
             .CreateBook("test_book")
-            .CreateSprtSettings();
+            .CreateSprtSettings()
+            .CreateUser("test_user_x")
+            .AddEngine("stockfish_x")
+            .AddBranch("base_branch_x")
+            .AddBranch("test_branch_x")
+            .AddTest("test_X2", "test_book", "base_branch_x", "test_branch_x", state: TestState.Finished,
+                ended: new DateTime(2000, 1, 1).ToUniversalTime(), priority: 5)
+            .Close()
+            .AddTest("test_X3", "test_book", "base_branch_x", "test_branch_x", state: TestState.Stopped,
+                ended: new DateTime(2000, 1, 1).ToUniversalTime(), priority: 5)
+            .Close()
+            .Close()
+            .Close();
         
         var testStore = CreateTestStore();
-        
+     
         for (var i = 0; i < 5; i++)
         {
             domainBuilder
@@ -100,7 +117,7 @@ public class TestStoreTests : TestBase
                 .Close();
         }
         
-        Assert.That(Factory.CreateDbContext().Tests.Count(), Is.EqualTo(5));
+        Assert.That(Factory.CreateDbContext().Tests.Count(), Is.EqualTo(7));
         
         var nextTests = new HashSet<string>();
         for (var i = 0; i < 5; i++)
@@ -125,8 +142,20 @@ public class TestStoreTests : TestBase
     {
         new DomainBuilder(Factory.CreateDbContext())
             .CreateBook("test_book")
-            .CreateSprtSettings()
+            .CreateSprtSettings() 
+            .CreateUser("test_user_x")
+            .AddEngine("stockfish_x")
+            .AddBranch("base_branch_x")
+            .AddBranch("test_branch_x")
+            .Close()
+            .Close()
             .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_X2", "test_book", "base_branch_x", "test_branch_x", "stockfish_x",
+            "test_user_x", Factory.CreateDbContext(), numberOfThreads: 2, state: TestState.Stopped, priority: 5, ended: new DateTime(2000,1,1).ToUniversalTime());
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_X2", "test_book", "base_branch_x", "test_branch_x", "stockfish_x",
+            "test_user_x", Factory.CreateDbContext(), numberOfThreads: 2, state: TestState.Finished, priority: 5, ended: new DateTime(2000,1,1).ToUniversalTime());
 
         var testStore = CreateTestStore();
 
@@ -144,8 +173,8 @@ public class TestStoreTests : TestBase
                 .Close();
         }
 
-        Assert.That(Factory.CreateDbContext().Tests.Count(), Is.EqualTo(5));
-        Assert.That(Factory.CreateDbContext().AutobenchStates.Count(), Is.EqualTo(5));
+        Assert.That(Factory.CreateDbContext().Tests.Count(), Is.EqualTo(7));
+        Assert.That(Factory.CreateDbContext().AutobenchStates.Count(), Is.EqualTo(7));
 
         var nextTests = new HashSet<string>();
         for (var i = 0; i < 5; i++)
@@ -593,7 +622,7 @@ public class TestStoreTests : TestBase
             .AddBranch("test_branch");
         
         EngineBuilder.AddTestForUser("test_1", "test_book", "base_branch", "test_branch", "stockfish",
-            "test_user", Factory.CreateDbContext(), priority: 1,  state: testState);
+            "test_user", Factory.CreateDbContext(), priority: 1,  state: testState, ended: new DateTime(2000,1,1).ToUniversalTime());
         
         using var context = Factory.CreateDbContext();
         
@@ -621,7 +650,7 @@ public class TestStoreTests : TestBase
             .AddBranch("test_branch");
         
         EngineBuilder.AddAutobenchedTestForUser("test_1", "test_book", "base_branch", "test_branch", "stockfish",
-            "test_user", Factory.CreateDbContext(), priority: 1,  state: testState);
+            "test_user", Factory.CreateDbContext(), priority: 1,  state: testState, ended: new DateTime(2000,1,1).ToUniversalTime());
         
         using var context = Factory.CreateDbContext();
         
@@ -1107,6 +1136,97 @@ public class TestStoreTests : TestBase
         }
     }
     
+    /// <summary>
+    /// Tests <see cref="TestStore.TotalPausedTestsWithMaxPriority"/>.
+    /// </summary>
+    [Test]
+    public void TotalPausedTestsWithMaxPriority()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch")
+            .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Paused, priority: 1)
+            .Close()
+            .AddTest("test_3", "test_book", "base_branch", "test_branch", state: TestState.Paused, priority: 0)
+            .Close()
+            .AddTest("test_4", "test_book", "base_branch", "test_branch", state: TestState.Paused, priority: -1)
+            .Close()
+            .AddTest("test_50", "test_book", "base_branch", "test_branch", state: TestState.Stopped, priority: 2, numberOfThreads: 64, ended: new DateTime(2000,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_50", "test_book", "base_branch", "test_branch", state: TestState.Finished, priority: 2, numberOfThreads: 64, ended: new DateTime(2000,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_2", "test_book", "base_branch", "test_branch", state: TestState.Running)
+            .EnsurePentaCreated(Factory.CreateDbContext())
+            .AddWorker(1)
+            .Close()
+            .Close()
+            .Close()
+            .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_5", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 1, state: TestState.Autobenched, workerThreads: [1]);
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_6", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 2, state: TestState.Paused);
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_7", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 2, state: TestState.Paused);
+        
+        var store = CreateTestStore();
+        var result = store.TotalPausedTestsWithMaxPriority();
+        Assert.That(result,Is.EqualTo(2));
+    }
+    
+    
+    /// <summary>
+    /// Tests <see cref="TestStore.MaxThreadsForTestWithMaxPriority"/>.
+    /// </summary>
+    [Test]
+    public void MaxThreadsForTestWithMaxPriority()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch")
+            .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Paused, priority: 1)
+            .Close()
+            .AddTest("test_3", "test_book", "base_branch", "test_branch", state: TestState.Paused, priority: 0)
+            .Close()
+            .AddTest("test_4", "test_book", "base_branch", "test_branch", state: TestState.Paused, priority: -1)
+            .Close()
+            .AddTest("test_50", "test_book", "base_branch", "test_branch", state: TestState.Stopped, priority: 2, numberOfThreads: 64, ended: new DateTime(2000,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_50", "test_book", "base_branch", "test_branch", state: TestState.Finished, priority: 2, numberOfThreads: 64, ended: new DateTime(2000,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_2", "test_book", "base_branch", "test_branch", state: TestState.Running, priority: 2, numberOfThreads:8)
+            .EnsurePentaCreated(Factory.CreateDbContext())
+            .AddWorker(1)
+            .Close()
+            .Close()
+            .Close()
+            .Close();
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_5", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 2, state: TestState.Autobenched, workerThreads: [1], numberOfThreads: 4);
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_6", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 2, state: TestState.Paused, numberOfThreads: 16);
+        
+        EngineBuilder.AddAutobenchedTestForUser("test_7", "test_book", "base_branch", "test_branch", "stockfish",
+            "test_user", Factory.CreateDbContext(), priority: 2, state: TestState.Paused);
+        
+        var store = CreateTestStore();
+        var result = store.MaxThreadsForTestWithMaxPriority();
+        Assert.That(result,Is.EqualTo(16));
+    }
+
     private static Test GetTestByName(TestContextFactory factory, string name)
     {
         using var context = factory.CreateDbContext();
