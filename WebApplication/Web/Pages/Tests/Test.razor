@@ -80,22 +80,11 @@
     <div class="pb-3">
         <HideUnhideContent>
             <HeaderContent>
-                <h3>Errors (@_errors.Count)</h3>
-            </HeaderContent>
-            <ChildContent>
-                @MaxHeightBox(@<TestErrorsTable Errors="_errors"/>)
-            </ChildContent>
-        </HideUnhideContent>
-    </div>
-    
-    <div class="pb-3">
-        <HideUnhideContent>
-            <HeaderContent>
-                <h3>Workers</h3>
+                <h4>Workers (active @_test.ActiveWorkerThreadCount() threads) </h4>
             </HeaderContent>
             <ChildContent>
                 <div class="d-flex gap-3 flex-column">
-                    <h4>Active workers (@_test.ActiveWorkerThreadCount() threads)</h4>
+                    <h4>Active</h4>
                     @MaxHeightBox(@<WorkerLogTable WorkerLogs="@_test.WorkerLogs.Where(wl => wl.State == WorkerLogState.Active)"/>)
 
                     <h4>Finished</h4>
@@ -107,6 +96,18 @@
             </ChildContent>
         </HideUnhideContent>
     </div>
+    
+    <div class="pb-3">
+        <HideUnhideContent>
+            <HeaderContent>
+                <h4>Errors (@_errors.Count)</h4>
+            </HeaderContent>
+            <ChildContent>
+                @MaxHeightBox(@<TestErrorsTable Errors="_errors"/>)
+            </ChildContent>
+        </HideUnhideContent>
+    </div>
+
 </div>
 
 @* TODO LLR/Elo history as a graph. *@

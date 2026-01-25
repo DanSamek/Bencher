@@ -44,6 +44,33 @@ public class TestStore : Store<Test>
     }
 
     /// <summary>
+    /// Returns number of paused tests with maximum priority.
+    /// </summary>
+    public int TotalPausedTestsWithMaxPriority()
+    {
+        var maximumPriority = MaxPriority();
+        
+        var result = GetDbSet()
+            .Count(t => t.State == TestState.Paused && t.Priority == maximumPriority);  
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// Returns maximum required threads for the test (with the maximum priority).
+    /// </summary>
+    public int MaxThreadsForTestWithMaxPriority()
+    {
+        var maximumPriority = MaxPriority();
+        var result = GetDbSet()
+            .Where(t => t.Priority == maximumPriority 
+                        && (t.State == TestState.Paused || t.State == TestState.Running || t.State == TestState.Autobenched))
+            .Max(t => t.NumberOfThreads);
+        
+        return result;
+    }
+    
+    /// <summary>
     /// Returns a test, that should be run on the worker.
     /// Note, this method also includes <see cref="Test.WorkerLogs" />, <see cref="Test.Engine" /> and <see cref="Test.AutobenchState" /> 
     /// Algorithm for finding optimal test to run:
@@ -56,7 +83,7 @@ public class TestStore : Store<Test>
     ///         -> if test exists, we return.
     ///         -> otherwise we will select test by max ((test.ThreadScale / 2) / Test.ActiveWorkerThreadCount())
     /// NOTE: when a test is returned from the method, it's automatically set do running.
-    /// TODO update docs
+    /// ! TODO update docs
     /// </summary>
     public Test? GetNextTestForWorker(bool autobench, int workerNumberOfThreads)
     {
@@ -68,10 +95,8 @@ public class TestStore : Store<Test>
             return test;
         }
         
-        // Get maximum priority of running tests.
-        var runningPriority = Context.Tests
-            .Where(t => t.State == TestState.Autobenched || t.State == TestState.Running)
-            .Max(t => t.Priority);
+        // Get maximum priority of all tests.
+        var runningPriority = MaxPriority();
 
         // Get a paused test with a same priority.
         var notRunningTestWithoutWorkers =
@@ -79,13 +104,11 @@ public class TestStore : Store<Test>
                 .Where(t => t.State == TestState.Paused && t.Priority == runningPriority)
                 .OrderByDescending(t => t.ThreadScale)
                 .FirstOrDefault();
-
-
+        
         if (notRunningTestWithoutWorkers is not null)
         {
             return notRunningTestWithoutWorkers;
         }
-
 
         var filteredRunningTests = Include()
             .Where(t => (autobench ? t.State == TestState.Autobenched : t.State == TestState.Running) &&
@@ -124,6 +147,25 @@ public class TestStore : Store<Test>
         Update(test);
         SaveChanges();
     }
+    
+    /// <summary>
+    /// Updates test state to <see cref="TestState.Running"/> or <see cref="TestState.Autobenched"/>.
+    /// </summary>
+    public async Task SetRunningState(int testId)
+    {
+        var test = GetDbSet()
+            .AsNoTracking()
+            .Include(t => t.AutobenchState)
+            .FirstOrDefault(t => t.Id == testId);
+        
+        if (test is null || test.State is TestState.Finished or TestState.Stopped) return;
+        
+        var state = test.AutobenchState is null || test.AutobenchState!.Resolved
+            ? TestState.Running : TestState.Autobenched;
+
+        await SetState(testId,  state);
+    }
+    
     
     /// <summary>
     /// Stops a test by an id.
@@ -361,6 +403,11 @@ public class TestStore : Store<Test>
             .Take(pageSize)
             .ToArray();
     }
+
+    private int MaxPriority()
+        =>  GetDbSet() 
+                .Where(t => t.State != TestState.Stopped && t.State != TestState.Finished)
+                .Max(t => t.Priority);
     
     private IQueryable<Test> Include()
         => GetDbSet()
@@ -402,8 +449,6 @@ public class TestStore : Store<Test>
                 .Include(t => t.WorkerLogs)
                 .Include(t => t.OpeningBook)
                 .Include(t => t.AutobenchState);
-
-    
 }
 
 file static class LinqExtensions

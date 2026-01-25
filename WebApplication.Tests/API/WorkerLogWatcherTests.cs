@@ -54,7 +54,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     [Test]
     public async Task DateTimeNow_AsLastConnectTime()
     {
-        CreateWorkerLogs(5);
+        await CreateWorkerLogs(5);
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         Task.Run(async () => { await _watcher.StartAsync(new CancellationToken()); });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -75,7 +75,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     [Test]
     public async Task DateTimeNow_OutOfRange()
     {
-        CreateWorkerLogs(5);
+        await CreateWorkerLogs(5);
         await using var changingContext = Factory.CreateDbContext();
         var toChangeDateTime = DateTime.UtcNow.Subtract(new TimeSpan(0,1, 1));
         await changingContext.WorkerLogs.ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.LastConnectTime, toChangeDateTime));
@@ -104,7 +104,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     [Test]
     public async Task StopTest()
     {
-        CreateWorkerLogs(5);
+        await CreateWorkerLogs(5);
 
         var context = Factory.CreateDbContext();
         var tests = context.Tests.ToArray();
@@ -135,13 +135,13 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     }
     
     
-    private void CreateWorkerLogs(int count)
+    private async Task CreateWorkerLogs(int count)
     {
         for (var i = 0; i < count; i++)
         {
             RefreshController();
             LoginAs("user_1");
-            var result = Controller.GetTest(new GetTestDto
+            var result = await Controller.GetTest(new GetTestDto
             {
                 Autobench = false,
                 Mac = "12:34:12:34:12:34",

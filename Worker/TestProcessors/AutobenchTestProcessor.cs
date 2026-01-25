@@ -10,13 +10,16 @@ public class AutobenchTestProcessor : ITestProcessor<int>
 {
     private readonly GetTestAutobenchResponse _autobenchResponse;
     private readonly ErrorTrace _errorTrace;
+    private readonly Notifier _notifier;
+    
     /// <summary>
     /// .Ctor
     /// </summary>
-    public AutobenchTestProcessor(GetTestAutobenchResponse autobenchResponse, ErrorTrace errorTrace)
+    public AutobenchTestProcessor(GetTestAutobenchResponse autobenchResponse, ErrorTrace errorTrace, Notifier notifier)
     {
         _autobenchResponse = autobenchResponse;
         _errorTrace = errorTrace;
+        _notifier = notifier;
     }
     
     /// <summary>
@@ -31,15 +34,16 @@ public class AutobenchTestProcessor : ITestProcessor<int>
         _errorTrace.AddInfo("Processing autobench");
     
         var directory = Directory.CreateTempSubdirectory();
+        var connectionId = _autobenchResponse.ConnectionId;
     
         _errorTrace.AddInfo($"Cloning repository - {_autobenchResponse.GitUrl} - branch {_autobenchResponse.TestBranch}");
         ProcessorHelper.CloneRepository(_autobenchResponse.GitUrl, _autobenchResponse.TestBranch, 
             directory.FullName, _errorTrace);
-        if (_errorTrace.Error()) return Task.FromResult(0);
+        if (_errorTrace.Error() || !_notifier.IsTestStillRunning(connectionId)) return Task.FromResult(0);
     
         _errorTrace.AddInfo("Building engine");
         ProcessorHelper.Build(_autobenchResponse.BuildScript!, directory.FullName, _errorTrace);
-        if (_errorTrace.Error()) return Task.FromResult(0);
+        if (_errorTrace.Error() || !_notifier.IsTestStillRunning(connectionId)) return Task.FromResult(0);
     
         _errorTrace.AddInfo("Running autobench");
         var (bench, _) = ProcessorHelper.RunBench(directory.FullName, _errorTrace);

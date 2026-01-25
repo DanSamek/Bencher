@@ -13,14 +13,16 @@ public class Runner
     
     private readonly RunnerOptions _options;
     private readonly Notifier _notifier;
+    private readonly IClientFactory _clientFactory;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public Runner(RunnerOptions options, Notifier notifier)
+    public Runner(RunnerOptions options, Notifier notifier, IClientFactory clientFactory)
     {
         _options = options;
         _notifier = notifier;
+        _clientFactory = clientFactory;
     } 
 
     private async Task Wait()
@@ -29,13 +31,14 @@ public class Runner
         await Task.Delay(WAIT_SECONDS * 1000);
     }
     
-    public async Task Run()
+    public async Task Run(int? nIterations = null)
     {
+        var iterations = 0;
         RUN_LOOP:
         while (true)
         {  
-            var communication = new Communication(_options); // TODO somehow refresh httpclients.
-            for (var i = 0; i < WORKER_AUTOBENCH_NUM_TRIES && !communication.Error; i++)
+            var communication = new Communication(_options, _clientFactory.Get());
+            for (var i = 0; i < WORKER_AUTOBENCH_NUM_TRIES && !communication.Error(); i++)
             {
                 var autobenchResponse = communication.TryGetAutobenchTest();
                 if (autobenchResponse is not null)
@@ -56,12 +59,16 @@ public class Runner
             }
             
             await Wait();
+            
+            // Avoid missing threads in the ThreadSplitManager.
+            iterations++;
+            if (nIterations > iterations) return;
         }
     }
     
     private void StopApplicationIfCommunicationError(Communication communication)
     {
-        if (!communication.Error) return;
+        if (!communication.Error()) return;
         
         ApplicationInfo.Display(communication.GetErrorMessage());
         ApplicationInfo.Stopping();
@@ -71,14 +78,14 @@ public class Runner
     private async Task RunGames(Communication communication, GetTestNonAutobenchResponse testResponse)
     {
         var errorTrace = new ErrorTrace();
-        var testProcessor = new GameTestProcessor(communication, errorTrace, testResponse, _options.NumberOfThreads);
+        var testProcessor = new GameTestProcessor(communication, errorTrace, testResponse, _options.NumberOfThreads, _notifier);
         var connectionId = testResponse.ConnectionId;
                 
         await _notifier.AddNotifyRunningTest(connectionId);
         var result = await testProcessor.Process();
         await _notifier.RemoveNotifyRunningTest(connectionId);
         
-        if (!result)
+        if (result == GameProcessorResult.Error)
         {
             communication.TestError(errorTrace, connectionId);
         }
@@ -86,12 +93,9 @@ public class Runner
 
     private async Task<bool> RunAutobench(Communication communication, GetTestAutobenchResponse autobenchResponse)
     {
-        var result = communication.RunningTest(autobenchResponse.ConnectionId);
-        if (result is null || !result.Running) return true;
-
-        var errorTrace = new ErrorTrace();
         var connectionId = autobenchResponse.ConnectionId;
-        var autobenchProcessor = new AutobenchTestProcessor(autobenchResponse, errorTrace);
+        var errorTrace = new ErrorTrace();
+        var autobenchProcessor = new AutobenchTestProcessor(autobenchResponse, errorTrace, _notifier);
         
         await _notifier.AddNotifyRunningTest(connectionId);
             var autobench = await autobenchProcessor.Process();

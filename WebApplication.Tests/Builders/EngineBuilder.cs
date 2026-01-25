@@ -45,8 +45,14 @@ public class EngineBuilder
         int numberOfThreads = 1,
         TestState state = TestState.Paused,
         int bench = 1000000,
-        double userConfidence = 0.1)
+        double userConfidence = 0.1,
+        DateTime? ended = null)
     {
+        if (ended == null && state is TestState.Finished or TestState.Stopped)
+        {
+            throw new ArgumentException("If test is finished, its required to have setted ended time");
+        }
+        
         var baseBranch = _context.TestBranches.First(x => x.Name == baseBranchName);
         var testBranch = _context.TestBranches.First(x => x.Name == testBranchName);
         var test = new Test
@@ -69,7 +75,8 @@ public class EngineBuilder
             TestBranch = testBranch,
             TestBranchId = testBranch.Id,
             User = _user,
-            Autobenched = true
+            Autobenched = true,
+            Ended = ended
         };
         test = UpdateTest(_context, test, _user);
         
@@ -148,9 +155,10 @@ public class EngineBuilder
         string timeManagement = "8+0.08", 
         int priority = 0, 
         int numberOfThreads = 1,
-        TestState state = TestState.Paused)
+        TestState state = TestState.Paused,
+        DateTime?  ended = null)
     {
-        Create(name, bookName, baseBranchName, testBranchName, engineName, username, context, false,timeManagement, priority, numberOfThreads, state);
+        Create(name, bookName, baseBranchName, testBranchName, engineName, username, context, false,timeManagement, priority, numberOfThreads, ended, state);
     }
     
     public static void AddAutobenchedTestForUser(
@@ -166,9 +174,10 @@ public class EngineBuilder
         int numberOfThreads = 1,
         TestState state = TestState.Paused,
         double userConfidence = 0.1,
+        DateTime? ended = null,
         params int[] workerThreads)
     {
-        var (test, user) = Create(name, bookName, baseBranchName, testBranchName, engineName, username, context,true, timeManagement, priority, numberOfThreads, state);
+        var (test, user) = Create(name, bookName, baseBranchName, testBranchName, engineName, username, context,true, timeManagement, priority, numberOfThreads, ended, state);
         
         var autobenchState = new AutobenchState
         {
@@ -230,8 +239,13 @@ public class EngineBuilder
         string timeManagement = "8+0.08", 
         int priority = 0, 
         int numberOfThreads = 1,
+        DateTime? ended = null,
         TestState state = TestState.Paused)
     {
+        if (ended == null && state is TestState.Finished or TestState.Stopped)
+        {
+            throw new ArgumentException("If test is finished, its required to have setted ended time");
+        }
         
         var engine = context.Engines.First(e => e.Name == engineName);
         var user = context.Users.First(u => u.UserName == username);
@@ -258,7 +272,8 @@ public class EngineBuilder
             TestBranch = testBranch,
             TestBranchId = testBranch.Id,
             User = user,
-            Autobenched = autobenched
+            Autobenched = autobenched,
+            Ended = ended
         };
         test = UpdateTest(context, test, user);
         
