@@ -112,7 +112,6 @@ public class Test : DoId
     
     /// <summary>
     /// Engine that belongs to this test.
-    /// TODO maybe allow 2 engines to play againts each other ?
     /// </summary>
     [Required]
     public required Engine Engine { get; set; }

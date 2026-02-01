@@ -58,7 +58,7 @@ public class Penta : DoId
     /// </summary>
     public int TestId { get; set; }
 
-    private int DdWl => Dd + Wl;
+    public int DdWl => Dd + Wl;
     
     /// <summary>
     /// WDL statistics
@@ -85,11 +85,7 @@ public class Penta : DoId
 
     public RawPentanomial ToRawPentanomial() => new RawPentanomial(Ll, Ld, DdWl, Wd, Ww);
     
-    private int TotalPairs => Ll + Ld + DdWl + Wd + Wl;
-    
-    // W = 0.5
-    // D = 0.25
-    // L = 0
-    private double TotalPoints => Ll * 0 + Ld * 0.25 + DdWl * 0.5 + Wd * 0.75 + Ww * 1;
-    public double Score => TotalPoints / TotalPairs;
+    public int TotalPairs() => Ll + Ld + DdWl + Wd + Ww;
+    public double TotalPoints() => Ll * 0 + Ld * 0.25 + DdWl * 0.5 + Wd * 0.75 + Ww * 1;
+    public double Score() => TotalPoints() / TotalPairs();
 }

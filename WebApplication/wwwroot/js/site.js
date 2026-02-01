@@ -9,6 +9,8 @@ function getTheme() {
 
 function loadTheme(theme){
     document.documentElement.setAttribute('data-bs-theme', theme);
+    document.documentElement.classList = [];
+    document.documentElement.classList.add(theme);
 }
 
 function displayCorrectTheme(theme) {

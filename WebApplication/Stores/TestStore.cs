@@ -379,7 +379,7 @@ public class TestStore : Store<Test>
     
     
     /// <summary>
-    /// Returns all passed tests for a page.
+    /// Returns all passed tests for a page ordered by ended time.
     /// Ordered by time - the last will be the first.
     /// </summary>
     public IReadOnlyList<Test> GetPassedTestsForPage(int pageIndex, int pageSize = WebConstants.PAGE_SIZE)
@@ -388,20 +388,27 @@ public class TestStore : Store<Test>
             .Where(t => t.State == TestState.Finished)
             .OrderByDescending(t => t.Ended);
         
+        // Not optional.
         var result = new List<Test>();
+        var toSkip = pageIndex * pageSize;
         foreach (var finishedTest in finishedTests)
         {
             var sprtStatistics = Sprt.GetStatistics(finishedTest);
-            if (sprtStatistics.Result == Sprt.SprtResult.H1Accepted)
+            if (sprtStatistics.Result != Sprt.SprtResult.H0Rejected)
             {
-                result.Add(finishedTest);
+                continue;
             }
+            if (toSkip > 0)
+            {
+                toSkip--;
+                continue;
+            }
+            
+            result.Add(finishedTest);
+            if (result.Count == pageSize) break;
         }
-        
-        return result
-            .Skip(pageIndex * pageSize)
-            .Take(pageSize)
-            .ToArray();
+
+        return result;
     }
 
     private int MaxPriority()

@@ -1002,9 +1002,75 @@ public class TestStoreTests : TestBase
     /// Tests <see cref="TestStore.GetPassedTestsForPage" />. 
     /// </summary>
     [Test]
-    public void GetPassedTestsForPage()
+    public async Task GetPassedTestsForPage()
     {
-        Assert.Pass("TODO when SPRT part is implemented.");
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch")
+            .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Finished, ended: new DateTime(2000,1,1).ToUniversalTime())
+            .EnsurePentaCreated(Factory.CreateDbContext())
+            .Close()
+            .AddTest("test_2", "test_book", "base_branch", "test_branch", state: TestState.Finished, ended: new DateTime(2005,1,1).ToUniversalTime())
+            .EnsurePentaCreated(Factory.CreateDbContext())
+            .Close()
+            .AddTest("test_3", "test_book", "base_branch", "test_branch")
+            .EnsurePentaCreated(Factory.CreateDbContext())
+            .Close()
+            .AddTest("test_4", "test_book", "base_branch", "test_branch", state: TestState.Finished, ended: new DateTime(1995,1,1).ToUniversalTime())
+            .Close()
+            .AddTest("test_5", "test_book", "base_branch", "test_branch", state: TestState.Finished, ended: new DateTime(2010,1,1).ToUniversalTime())
+            .Close()
+            .Close()
+            .Close()
+            .Close();
+        
+        var store = CreateTestStore();
+        var pentaStore = new PentaStore(Factory);
+        AddPentaToTest("test_1");
+        await pentaStore.UpdatePenta(GetTestByName(Factory, "test_1").Id, 1000,0,0,0,0,0);
+        
+        AddPentaToTest("test_2");
+        await pentaStore.UpdatePenta(GetTestByName(Factory, "test_2").Id, 100,100,100,100,100,2000);
+        
+        AddPentaToTest("test_4");
+        await pentaStore.UpdatePenta(GetTestByName(Factory, "test_4").Id, 100,100,100,100,100,2000);
+        
+        AddPentaToTest("test_5");
+        await pentaStore.UpdatePenta(GetTestByName(Factory, "test_5").Id, 100,100,100,100,100,2000);
+        
+        var passedTests = store.GetPassedTestsForPage(0, 2);
+        Assert.That(passedTests.Count, Is.EqualTo(2));
+        Assert.That(passedTests[0].Name, Is.EqualTo("test_5"));
+        Assert.That(passedTests[1].Name, Is.EqualTo("test_2"));
+        
+        passedTests = store.GetPassedTestsForPage(1, 2);
+        Assert.That(passedTests.Count, Is.EqualTo(1));
+        Assert.That(passedTests[0].Name, Is.EqualTo("test_4"));
+        
+        passedTests = store.GetPassedTestsForPage(2, 2);
+        Assert.That(passedTests, Is.Empty);
+        
+        return;
+
+        void AddPentaToTest(string testName)
+        {
+            var context = Factory.CreateDbContext();
+            var test = context.Tests.First(t => t.Name == testName);
+            var penta = new Penta
+            {
+                Test = test,
+                TestId = test.Id
+            };
+            
+            penta = context.Pentas.Add(penta).Entity;
+            context.SaveChanges();
+            test.Penta = penta;
+            context.SaveChanges();
+        }
     }
 
 
