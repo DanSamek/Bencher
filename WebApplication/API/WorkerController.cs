@@ -24,6 +24,9 @@ public partial class WorkerController : ControllerBase
     private readonly OpeningBookStore _openingBookStore;
     private readonly WorkerErrorStore _workerErrorStore;
     
+    private static readonly SemaphoreSlim _resultsSemaphore = new SemaphoreSlim(1, 1);
+    private static readonly SemaphoreSlim _getTestSemaphore = new SemaphoreSlim(1, 1);
+    
     /// <summary>
     /// .Ctor
     /// </summary>
@@ -73,38 +76,49 @@ public partial class WorkerController : ControllerBase
     [HttpPost("results")]
     public async Task<IActionResult> Results([FromBody] ResultsDto resultsDto)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(resultsDto.ConnectionId);
-        if (workerLog is null) return NotFound(new ResponseBase());
-        
-        if (workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase()); // TODO update docs.
-        if (workerLog.Test.State != TestState.Running) return Ok(new ResultsResponseDto(false));
+        // It's not ideal to use semaphore for the entire controller action (maybe TODO)
+        await _resultsSemaphore.WaitAsync();
+        try
+        {
+            var workerLog = _workerLogStore.GetByConnectionId(resultsDto.ConnectionId);
+            if (workerLog is null) return NotFound(new ResponseBase());
 
-        var toIncrement = (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
-        if (workerLog.NumberOfGames + toIncrement > workerLog.TotalNumberOfGames) return NotFound(new ResponseBase()); // TODO update docs.
-        
-        await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl, resultsDto.Wd, resultsDto.Ww);
-        workerLog.NumberOfGames += toIncrement;
-        if (workerLog.NumberOfGames == workerLog.TotalNumberOfGames)
-        {
-            workerLog.State = WorkerLogState.Finished;
-        } 
-        _workerLogStore.Update(workerLog);
-        
-        var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
-        
-        // Test can be eventually deleted !
-        var test = _testStore.GetById(workerLog.Test.Id); 
-        if (test is null) return NotFound(new ResponseBase()); // TODO update docs.
-        
-        // SPRT part.
-        var statistics = Sprt.GetStatistics(test);
-        if (statistics.Result != Sprt.SprtResult.Unknown)
-        {
-            await _workerLogStore.StopAllWorkers(workerLog.Test.Id);
-            await _testStore.SetFinishedState(test.Id);
+            if (workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase()); // TODO update docs.
+            if (workerLog.Test.State != TestState.Running) return Ok(new ResultsResponseDto(false));
+
+            // Test can be eventually deleted !
+            var test = _testStore.GetById(workerLog.Test.Id);
+            if (test is null) return NotFound(new ResponseBase()); // TODO update docs.
+            
+            var toIncrement = (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
+            if (workerLog.NumberOfGames + toIncrement > workerLog.TotalNumberOfGames) return NotFound(new ResponseBase()); // TODO update docs.
+
+            await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl,
+                resultsDto.Wd, resultsDto.Ww);
+            workerLog.NumberOfGames += toIncrement;
+            if (workerLog.NumberOfGames == workerLog.TotalNumberOfGames)
+            {
+                workerLog.State = WorkerLogState.Finished;
+            }
+
+            _workerLogStore.Update(workerLog);
+
+            var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
+            
+            // SPRT part.
+            var statistics = Sprt.GetStatistics(test);
+            if (statistics.Result != Sprt.SprtResult.Unknown)
+            {
+                await _workerLogStore.StopAllWorkers(workerLog.Test.Id);
+                await _testStore.SetFinishedState(test.Id);
+            }
+
+            return Ok(new ResultsResponseDto(running && statistics.Result == Sprt.SprtResult.Unknown));
         }
-        
-        return Ok(new ResultsResponseDto(running && statistics.Result == Sprt.SprtResult.Unknown));
+        finally
+        {
+            _resultsSemaphore.Release();
+        }
     }
     
     /// <summary>
@@ -143,8 +157,6 @@ public partial class WorkerController : ControllerBase
         return Ok(new ResponseBase());
     }
     
-    private static readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
-    
     /// <summary>
     /// Request of the worker for a test.
     /// </summary>
@@ -152,7 +164,7 @@ public partial class WorkerController : ControllerBase
     public async Task<IActionResult> GetTest([FromBody] GetTestDto getTestDto)
     {
         // NOTE: This is not ideal, but we ensure for thread splits at workers to work :(( 
-        await _semaphoreSlim.WaitAsync();
+        await _getTestSemaphore.WaitAsync();
 
         Test? test;
         try
@@ -164,7 +176,7 @@ public partial class WorkerController : ControllerBase
         }
         finally
         {
-            _semaphoreSlim.Release();
+            _getTestSemaphore.Release();
         }
         
         var userToken = HttpContext.GetUserToken();

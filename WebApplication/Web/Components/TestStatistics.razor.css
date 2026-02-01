@@ -1,0 +1,19 @@
+html.light code.passed, html.dark code.passed {
+    outline: 1px solid green !important;
+    background: green;
+    color: white !important;
+}
+
+html.light code.failed, html.dark code.failed {
+    outline: 1px solid #b64b4b !important;
+    background: #b64b4b;
+    color: white !important;
+}
+
+html.dark code {
+    color: white !important;
+}
+
+html.light code {
+    color: black !important;
+}

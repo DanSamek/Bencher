@@ -1,5 +1,5 @@
-@using System.Globalization
 @using WebApplication.SPRT
+@inherits CustomComponentBase
 
 @Statistics()
 
@@ -10,14 +10,40 @@
     [EditorRequired, Parameter]
     public required Data.Models.Test Test { get; set; }
     
+    /// <summary>
+    /// CSS width.
+    /// </summary>
+    [Parameter]
+    public string? Style { get; set; }
+    
+    /// <summary>
+    /// If statistics are rendered in the detail [test page] 
+    /// </summary>
+    [Parameter]
+    public bool Detail { get; set; }
+    
     private RenderFragment Statistics()
-     {
+     {  
          var wdl = Test.Penta.ToWdl();
          var statistics = Sprt.GetStatistics(Test);
          var rawPenta = Test.Penta.ToRawPentanomial();
+         
+         var statusClass = statistics.Result switch
+         {
+             Sprt.SprtResult.H0Rejected => "passed",
+             Sprt.SprtResult.H0NotRejected => "failed",
+             _ => "unknown"
+         };
+         
          RenderFragment rf = @<text>
-                                  <code class="text-center">
-                                      LLR: @statistics.Llr.ToString(CultureInfo.InvariantCulture) - @Test.Settings.ToString()<br/>
+                                  <code class="text-center @statusClass" id="@Id" style="@Style">
+                                      LLR: @statistics.Llr.ToString("F") @Test.Settings.ToString()<br />
+                                      @if (Detail)
+                                      {
+                                          <text>
+                                              Elo: @statistics.Elo.ToString("F") (-@statistics.EloLowerBound.ToString("F"), +@statistics.EloUpperBound.ToString("F"))<br/>
+                                          </text>
+                                      }
                                       WDL: [@wdl.W, @wdl.L, @wdl.D] <br/>
                                       Penta: [@rawPenta.Ll, @rawPenta.Ld, @rawPenta.Dd, @rawPenta.Wd, @rawPenta.Ww]
                                   </code>

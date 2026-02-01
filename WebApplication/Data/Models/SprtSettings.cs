@@ -49,7 +49,7 @@ public class SprtSettings : DoId
     public override string ToString()
     {
         var bounds = GetErrorBounds();
-        var result = $"[{Elo0},{Elo1}], ({bounds.Type1ErrorBound:N},{bounds.Type2ErrorBound:N})";
+        var result = $"({bounds.Type1ErrorBound:N}, {bounds.Type2ErrorBound:N}) [{Elo0}, {Elo1}]";
         return result;
     }
 }

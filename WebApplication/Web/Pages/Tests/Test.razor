@@ -18,32 +18,33 @@
 
 <div class="d-flex flex-lg-row justify-content-between flex-column mb-lg-0 mb-3">
     <PageHeader Value="@_test!.Name"/>
-    <TestStatistics Test="_test" />
+    <TestStatistics Test="_test" Detail />
 </div>
 
 <div class="d-flex gap-1 flex-column" >
-    @if (_canEdit)
-    {   
-        <h3>Actions</h3>
-        <div class="d-flex gap-3 mb-3">
+    <h3>Actions</h3>
+    <div class="d-flex gap-3 mb-3">
+        @if (_canEdit)
+        {
             @if (_test.State != TestState.Stopped)
             {
                 <button @onclick="StopTest" class="btn btn-warning">Stop</button>
             }
             <button @onclick="RemoveTest" class="btn btn-danger">Remove</button>
-            @{
-                var url = GitBranchComparisonService.GetDiffUrl(_test);
-            }
-            @if (url.Matched)
-            {
-                <a href="@url.DiffUrl" target="_blank">
-                    <button class="btn btn-primary">
-                        Show diff
-                    </button>
-                </a>
-            }
-        </div>
-    }
+        }
+        @{
+            var url = GitBranchComparisonService.GetDiffUrl(_test);
+        }
+        @if (url.Matched)
+        {
+            <a href="@url.DiffUrl" target="_blank">
+                <button class="btn btn-primary">
+                    Show diff
+                </button>
+            </a>
+        }
+    </div>
+    
     
     <h3>Test info</h3>
     <table class="table table-striped">
@@ -133,7 +134,7 @@
             NavigationManager.NavigateTo(WebConstants.NOT_FOUND_PATH, true);   
             return;
         }
-        _canEdit = _test.User.Id == UserId;
+        _canEdit = _test.User.Id == UserId || _test.User.Role == UserRole.Admin;
         _errors = TestErrorStore.GetErrorsForTest(Id);
     }
     
@@ -193,6 +194,4 @@
                    @rf
                </div>;
     }
-    
-
 }

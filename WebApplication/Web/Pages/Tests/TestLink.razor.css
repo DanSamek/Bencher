@@ -1,18 +1,18 @@
-.test-link-mini code, .test-link-big code{
+.test-link-mini ::deep  code, .test-link-big ::deep code{
     border-radius: 0.5em;
     outline: 1px solid;
 }
 
-.test-link-big code{
+.test-link-big ::deep code{
     font-size: 0.6em;
     padding: 0.1em 0.6em;
 }
 
-.test-link-mini span{
+.test-link-mini ::deep span{
     font-size: 0.8em;
 }
 
-.test-link-mini code{
+.test-link-mini ::deep code{
     width: 90%;
     outline: 1px solid;
     font-size: 0.75em;
