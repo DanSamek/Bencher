@@ -2,9 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Shared;
 using Shared.Dtos.Requests;
 using Shared.Dtos.Responses;
-using WebApplication.Data.Models;
-using WebApplication.SPRT;
-using WebApplication.Stores;
 
 namespace WebApplication.API;
 
@@ -15,31 +12,14 @@ namespace WebApplication.API;
 [Route(Constants.WORKER_API_PREFIX)]
 public partial class WorkerController : ControllerBase  
 {   
-    private readonly UserStore _userStore;
-    private readonly WorkerLogStore _workerLogStore;
-    private readonly PentaStore _pentaStore;
-    private readonly TestStore _testStore;
-    private readonly TestBranchStore _testBranchStore;
-    private readonly AutobenchStateStore _autobenchStateStore;
-    private readonly OpeningBookStore _openingBookStore;
-    private readonly WorkerErrorStore _workerErrorStore;
-    
-    private static readonly SemaphoreSlim _resultsSemaphore = new SemaphoreSlim(1, 1);
-    private static readonly SemaphoreSlim _getTestSemaphore = new SemaphoreSlim(1, 1);
+    private readonly IWorkerControllerService _workerControllerService;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public WorkerController(UserStore userStore, WorkerLogStore workerLogStore, PentaStore pentaStore, TestStore testStore, TestBranchStore testBranchStore, AutobenchStateStore autobenchStateStore, OpeningBookStore openingBookStore, WorkerErrorStore workerErrorStore)
+    public WorkerController(IWorkerControllerService workerControllerService)
     {
-        _userStore = userStore;
-        _workerLogStore = workerLogStore;
-        _pentaStore = pentaStore;
-        _testStore = testStore;
-        _testBranchStore = testBranchStore;
-        _autobenchStateStore = autobenchStateStore;
-        _openingBookStore = openingBookStore;
-        _workerErrorStore = workerErrorStore;
+        _workerControllerService = workerControllerService;
     }
     
     /// <summary>
@@ -48,9 +28,10 @@ public partial class WorkerController : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpPost("worker-error")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponseBase))]
     public IActionResult WorkerError([FromBody] WorkerErrorDto workerErrorDto)
     {
-        _workerErrorStore.AddError(workerErrorDto.Log);
+        _workerControllerService.AddWorkerError(workerErrorDto);
         return Ok(new ResponseBase());
     }
     
@@ -58,15 +39,11 @@ public partial class WorkerController : ControllerBase
     /// Action for workers - when error occurs when running test.
     /// </summary>
     [HttpPost("test-error")]
-    public async Task<IActionResult> TestError([FromBody] TestErrorDto testErrorDto)
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponseBase))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ResponseBase>> TestError([FromBody] TestErrorDto testErrorDto)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(testErrorDto.ConnectionId);
-        if (workerLog is null || testErrorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE) return NotFound(new ResponseBase());
-        
-        workerLog.State = WorkerLogState.Finished;
-        _workerLogStore.AddError(workerLog, testErrorDto.Log);
-        
-        await StopTest(workerLog.Test.Id);
+        await _workerControllerService.SaveTestError(testErrorDto);
         return Ok(new ResponseBase());
     }
     
@@ -74,86 +51,23 @@ public partial class WorkerController : ControllerBase
     /// Action for workers - sending classical SPRT results.
     /// </summary>
     [HttpPost("results")]
-    public async Task<IActionResult> Results([FromBody] ResultsDto resultsDto)
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResultsResponseDto))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ResultsResponseDto>> Results([FromBody] ResultsDto resultsDto)
     {
-        // It's not ideal to use semaphore for the entire controller action (maybe TODO)
-        await _resultsSemaphore.WaitAsync();
-        try
-        {
-            var workerLog = _workerLogStore.GetByConnectionId(resultsDto.ConnectionId);
-            if (workerLog is null) return NotFound(new ResponseBase());
-
-            if (workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase()); // TODO update docs.
-            if (workerLog.Test.State != TestState.Running) return Ok(new ResultsResponseDto(false));
-
-            // Test can be eventually deleted !
-            var test = _testStore.GetById(workerLog.Test.Id);
-            if (test is null) return NotFound(new ResponseBase()); // TODO update docs.
-            
-            var toIncrement = (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
-            if (workerLog.NumberOfGames + toIncrement > workerLog.TotalNumberOfGames) return NotFound(new ResponseBase()); // TODO update docs.
-
-            await _pentaStore.UpdatePenta(workerLog.Test.Id, resultsDto.Ll, resultsDto.Ld, resultsDto.Dd, resultsDto.Wl,
-                resultsDto.Wd, resultsDto.Ww);
-            workerLog.NumberOfGames += toIncrement;
-            if (workerLog.NumberOfGames == workerLog.TotalNumberOfGames)
-            {
-                workerLog.State = WorkerLogState.Finished;
-            }
-
-            _workerLogStore.Update(workerLog);
-
-            var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
-            
-            // SPRT part.
-            var statistics = Sprt.GetStatistics(test);
-            if (statistics.Result != Sprt.SprtResult.Unknown)
-            {
-                await _workerLogStore.StopAllWorkers(workerLog.Test.Id);
-                await _testStore.SetFinishedState(test.Id);
-            }
-
-            return Ok(new ResultsResponseDto(running && statistics.Result == Sprt.SprtResult.Unknown));
-        }
-        finally
-        {
-            _resultsSemaphore.Release();
-        }
+        var isTestStillRunning = await _workerControllerService.UpdateSPRTResults(resultsDto);
+        return Ok(new ResultsResponseDto(isTestStillRunning));
     }
     
     /// <summary>
     /// Action for workers - sending autobench result.
     /// </summary>
     [HttpPost("autobench")]
-    public async Task<IActionResult> Autobench([FromBody] AutobenchDto autobenchDto)
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponseBase))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ResponseBase>> Autobench([FromBody] AutobenchDto autobenchDto)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(autobenchDto.ConnectionId);
-        if (workerLog is null || workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase());
-        
-        var autobenchState = _autobenchStateStore.GetAutobenchStateByTestId(workerLog.Test.Id);
-        if (autobenchState is null) return NotFound(new ResponseBase());
-
-        var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
-        if (!result)
-        {
-            await StopTest(workerLog.Test.Id);
-        }
-        
-        workerLog.State = WorkerLogState.Finished;
-        _workerLogStore.SaveChanges();
-        _autobenchStateStore.SaveChanges();
-        
-        if (result)
-        {
-            await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
-        }
-        
-        // If test is resolved, set this as a bench of the test branch.
-        if (autobenchState.Resolved)
-        {
-            await _testBranchStore.SetTestBranchBench(workerLog.Test.Id, autobenchState.Bench);
-        }
-        
+        await _workerControllerService.UpdateAutobenchState(autobenchDto);
         return Ok(new ResponseBase());
     }
     
@@ -161,49 +75,12 @@ public partial class WorkerController : ControllerBase
     /// Request of the worker for a test.
     /// </summary>
     [HttpPost("get-test")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetTestAutobenchResponse))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetTestNonAutobenchResponse))]
     public async Task<IActionResult> GetTest([FromBody] GetTestDto getTestDto)
     {
-        // NOTE: This is not ideal, but we ensure for thread splits at workers to work :(( 
-        await _getTestSemaphore.WaitAsync();
-
-        Test? test;
-        try
-        {
-            test = _testStore.GetNextTestForWorker(getTestDto.Autobench, getTestDto.NumberOfThreads);
-            if (test is null) return NotFound(new ResponseBase());
-
-            await _testStore.SetRunningState(test.Id);
-        }
-        finally
-        {
-            _getTestSemaphore.Release();
-        }
-        
-        var userToken = HttpContext.GetUserToken();
-        var user = _userStore.GetUserByAccessToken(userToken);
-        
-        _workerLogStore.Attach(user!);
-        _workerLogStore.Attach(test);
-
-        var now = DateTime.UtcNow;
-        var wl = new WorkerLog
-        {
-            Name = getTestDto.Name.Length <= WorkerLog.MAX_NAME_LENGTH ? getTestDto.Name : getTestDto.Name[..(WorkerLog.MAX_NAME_LENGTH - 1)],
-            InitialTestState = getTestDto.Autobench ? InitialTestState.Autobenched : InitialTestState.Normal,
-            State = WorkerLogState.Active,
-            ConnectTime = now,
-            LastConnectTime = now,
-            NumberOfGames = 0,
-            TotalNumberOfGames = getTestDto.NumberOfThreads * Constants.GAME_THREAD_COUNT_MULTIPLIER, 
-            NumberOfThreads = getTestDto.NumberOfThreads,
-            Mac = getTestDto.Mac,
-            User = user!, // User exists - middleware validated that.
-            Test = test
-        };
-        
-        _workerLogStore.Add(wl);
-        _workerLogStore.SaveChanges();
-        
+        var (wl, test) = await _workerControllerService.CreateJobForWorker(getTestDto, HttpContext.GetAccessToken());
         return getTestDto.Autobench ? HandleAutobenchResponse(wl, test) : HandleNormalTestResponse(wl, test);
     }
     
@@ -212,18 +89,12 @@ public partial class WorkerController : ControllerBase
     /// and worker is still running. 
     /// </summary>
     [HttpPost("running-test")]
-    public IActionResult RunningTest([FromBody] RunningTestDto runningTestDto)
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RunningTestResponseDto))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<RunningTestResponseDto> RunningTest([FromBody] RunningTestDto runningTestDto)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(runningTestDto.ConnectionId);
-        if (workerLog is null || workerLog.State != WorkerLogState.Active) return NotFound(new ResponseBase());
-        _testStore.SetRunningState(workerLog.Test);
-        
-        workerLog.LastConnectTime = DateTime.UtcNow;
-        _workerLogStore.Update(workerLog);
-        _workerLogStore.SaveChanges();
-        
-        var running = workerLog.Test.State.Running();
-        var result = new RunningTestResponseDto(running);
+        var stillRunning = _workerControllerService.HandleRunningTestFromWorker(runningTestDto.ConnectionId);
+        var result = new RunningTestResponseDto(stillRunning);
         return Ok(result);
     }
     
@@ -231,14 +102,12 @@ public partial class WorkerController : ControllerBase
     /// Validates users access token - used as a simple login.
     /// </summary>
     [HttpPost("validate")]
-    public IActionResult Validate()
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ValidateResponseDto))]
+    public ActionResult<ValidateResponseDto> Validate()
     {
-        var userToken = HttpContext.GetUserToken();
-        
-        var user = _userStore.GetUserByAccessToken(userToken);
-        if (user is null) return Unauthorized(new ResponseBase());
-        
-        var result = new ValidateResponseDto(user.UserName!);
+        var accessToken = HttpContext.GetAccessToken();
+        var username = _workerControllerService.GetUsernameByAccessToken(accessToken);
+        var result = new ValidateResponseDto(username);
         return Ok(result);
     }
 
@@ -246,11 +115,13 @@ public partial class WorkerController : ControllerBase
     /// Returns number of paused tests (with the maximum possible priority).
     /// </summary>
     [HttpGet("total-paused-tests")]
-    public IActionResult TotalPausedTestsWithMaxPriority()
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TotalPausedTestsDto))]
+    public ActionResult<TotalPausedTestsDto> TotalPausedTestsWithMaxPriority()
     {
+        var totalPausedTests = _workerControllerService.GetTotalPausedTestsWithMaxPriority();
         var result = new TotalPausedTestsDto
         {
-            Count = _testStore.TotalPausedTestsWithMaxPriority()
+            Count = totalPausedTests
         };
         return Ok(result);
     }
@@ -259,24 +130,20 @@ public partial class WorkerController : ControllerBase
     /// Returns maximum required threads for the test (with the highest priority).
     /// </summary>
     [HttpGet("max-threads-for-test")]
-    public IActionResult MaxThreadsForTestWithMaxPriority()
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MaxThreadsForTestDto))]
+    public ActionResult<MaxThreadsForTestDto> MaxThreadsForTestWithMaxPriority()
     {
+        var maxThreads = _workerControllerService.GetMaxThreadsForTestWithMaxPriority();
         var result = new MaxThreadsForTestDto
         {
-            MaximumThreads = _testStore.MaxThreadsForTestWithMaxPriority()
+            MaximumThreads = maxThreads
         };
         return Ok(result);
-    }
-    
-    private async Task StopTest(int testId)
-    {
-        await _testStore.StopTest(testId);
-        await _workerLogStore.StopAllWorkers(testId);
     }
 }
 
 file static class HttpContextExtensions 
 {
-    public static string GetUserToken(this HttpContext context)
-    => context.Request.Headers[Constants.WORKER_REQUEST_HEADER].ToString(); // Middleware validated, that user token is valid.
+    public static string GetAccessToken(this HttpContext context)
+        => context.Request.Headers[Constants.WORKER_REQUEST_HEADER].ToString(); // Middleware validated, that user token is valid.
 }
