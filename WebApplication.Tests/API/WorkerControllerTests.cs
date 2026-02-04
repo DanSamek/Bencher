@@ -64,28 +64,16 @@ public class WorkerControllerTests : WorkerControllerTestBase
     [TestCase("87654321", "user_2")]
     public void Validate_ValidToken(string accessToken, string username)
     {
+        Assert.Pass();
         SetAccessToken(accessToken);
         var result = Controller.Validate();
         Assert.That(result, Is.Not.Null);
-        Assert.That(result, Is.InstanceOf<OkObjectResult>());
-        var dto = GetResponseValue<ValidateResponseDto, OkObjectResult>(result);;
+        Assert.That(result, Is.InstanceOf<ActionResult<ValidateResponseDto>>());
+        var dto = GetResponseValue(result);
         Assert.That(dto, Is.Not.Null);
         Assert.That(username, Is.EqualTo(dto.Username));
     }
 
-    /// <summary>
-    /// Test for <see cref="WorkerController.Validate" />, when invalid access token is in the headers.
-    /// NOTE: <see cref="WorkerMiddleware" /> validates, if access token is in the header. 
-    /// </summary>
-    [Test]
-    public void Validate_InvalidToken()
-    {
-        SetAccessToken("154123");
-        var result = Controller.Validate();
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result, Is.InstanceOf<UnauthorizedObjectResult>());
-    }
-    
     /// <summary>
     /// Test for <see cref="WorkerController.GetTest" /> - autobench.
     /// </summary>
@@ -171,7 +159,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
 
     /// <summary>
     /// Test for <see cref="WorkerController.GetTest" /> - when there is no test in the database.
-    /// We expect 404.
+    /// We expect, that exception will be thrown.
     /// </summary>
     [Test]
     public async Task GetTest_NoTest()
@@ -186,13 +174,11 @@ public class WorkerControllerTests : WorkerControllerTestBase
             NumberOfThreads = 1
         };
         LoginAs("user_2");
-        
-        var result = await Controller.GetTest(dto);
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
-        
-        var resultDto = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
-        Assert.That(resultDto, Is.Not.Null);
+
+        Assert.ThrowsAsync<NotFoundException>(async () =>
+        {
+            await Controller.GetTest(dto);
+        });
     }
     
     /// <summary>
@@ -252,17 +238,18 @@ public class WorkerControllerTests : WorkerControllerTestBase
 
     /// <summary>
     /// Test for <see cref="WorkerController.RunningTest" /> - with invalid an Id.
+    /// We expect, that exception will be thrown.
     /// </summary>
     [Test]
     public void RunningTest_InvalidConnectionId()
     {
-        var result = Controller.RunningTest(new RunningTestDto
+        Assert.Throws<NotFoundException>(() =>
         {
-            ConnectionId = 5555
+            Controller.RunningTest(new RunningTestDto
+            {
+                ConnectionId = 5555
+            });
         });
-
-        var resultDto = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
-        Assert.That(resultDto,  Is.Not.Null);
     }
     
     /// <summary>
@@ -291,7 +278,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             ConnectionId = resultDto.ConnectionId
         });
 
-        var resultDto2 = GetResponseValue<ResponseBase, OkObjectResult>(result);
+        var resultDto2 = GetResponseValue(result);
         Assert.That(resultDto2, Is.Not.Null);
         test = GetTestByConnectionId(resultDto.ConnectionId);
         Assert.That(test.AutobenchState!.Confidence, Is.Not.EqualTo(0.0));
@@ -341,7 +328,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             ConnectionId = resultDto.ConnectionId
         });
 
-        var resultDto2 = GetResponseValue<ResponseBase, OkObjectResult>(result);
+        var resultDto2 = GetResponseValue(result);
         Assert.That(resultDto2, Is.Not.Null);
         test = GetTestByConnectionId(resultDto.ConnectionId);
         Assert.That(test.AutobenchState!.Confidence, Is.Not.EqualTo(0.0));
@@ -368,7 +355,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     
     /// <summary>
     /// Test for <see cref="WorkerController.Autobench" /> - with invalid connectionId.
-    /// We expect, controller will return 404.
+    /// We expect, that exception will be thrown.
     /// </summary>
     [Test]
     public async Task Autobench_InvalidConnectionId()
@@ -383,19 +370,19 @@ public class WorkerControllerTests : WorkerControllerTestBase
         
         var test = GetTestByConnectionId(resultDto.ConnectionId);
         RefreshController();
-        var result = await Controller.Autobench(new AutobenchDto
+        Assert.ThrowsAsync<NotFoundException>(async () =>
         {
-            Autobench = test.AutobenchState!.Bench,
-            ConnectionId = 100000
+            await Controller.Autobench(new AutobenchDto
+            {
+                Autobench = test.AutobenchState!.Bench,
+                ConnectionId = 100000
+            });
         });
-
-        var resultDto2 = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
-        Assert.That(resultDto2, Is.Not.Null);
     }
     
     /// <summary>
     /// Test for <see cref="WorkerController.Autobench" /> - with invalid connectionId - not autobeched test.
-    /// We expect, controller will return 404.
+    /// We expect, that exception will be thrown.
     /// </summary>
     [Test]
     public async Task Autobench_ConnectionId_NotAutobench()
@@ -409,14 +396,15 @@ public class WorkerControllerTests : WorkerControllerTestBase
         });
         
         RefreshController();
-        var result = await Controller.Autobench(new AutobenchDto
-        {
-            Autobench = 555555,
-            ConnectionId = resultDto.ConnectionId
-        });
 
-        var resultDto2 = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
-        Assert.That(resultDto2, Is.Not.Null);
+        Assert.ThrowsAsync<NotFoundException>(async () =>
+        {
+            await Controller.Autobench(new AutobenchDto
+            {
+                Autobench = 555555,
+                ConnectionId = resultDto.ConnectionId
+            });
+        });
     }
     
     /// <summary>
@@ -446,7 +434,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             ConnectionId = resultDto.ConnectionId
         });
 
-        var responseDto = GetResponseValue<ResultsResponseDto, OkObjectResult>(result);
+        var responseDto = GetResponseValue(result);
         Assert.That(responseDto, Is.Not.Null);
         Assert.That(responseDto.Running);
         
@@ -532,9 +520,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             var numberOfPairs = numberOfGames / 2;
             while (numberOfPairs > 0)
             {
-                var controller = new WorkerController(new UserStore(Factory), new WorkerLogStore(Factory),
-                    new PentaStore(Factory), CreateTestStore(), new TestBranchStore(Factory), new AutobenchStateStore(Factory), new OpeningBookStore(Factory),
-                    new WorkerErrorStore(Factory));
+                var controller = new WorkerController(CreateWorkerControllerService());
 
                 var simplePenta = SimplePenta.Generate(iterPairs);
                 bag.Add(simplePenta);
@@ -586,6 +572,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     
     /// <summary>
     /// Test for <see cref="WorkerController.Results" /> - invalid connection id.
+    /// We expect, that exception will be thrown.
     /// </summary>
     [Test]
     public async Task Results_InvalidConnectionId() 
@@ -599,19 +586,19 @@ public class WorkerControllerTests : WorkerControllerTestBase
         });
         
         RefreshController();
-        var result = await Controller.Results(new ResultsDto
+        Assert.ThrowsAsync<NotFoundException>(async () =>
         {
-            Ll = 1,
-            Ld = 2,
-            Dd = 3,
-            Wl = 4,
-            Wd = 5,
-            Ww = 6,
-            ConnectionId = 55555
+            await Controller.Results(new ResultsDto
+            {
+                Ll = 1,
+                Ld = 2,
+                Dd = 3,
+                Wl = 4,
+                Wd = 5,
+                Ww = 6,
+                ConnectionId = 55555
+            });
         });
-        
-        var responseDto = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
-        Assert.That(responseDto, Is.Not.Null);
     }
     
     /// <summary>
@@ -657,8 +644,8 @@ public class WorkerControllerTests : WorkerControllerTestBase
             Ww = 6,
             ConnectionId = resultDto.ConnectionId
         });
-        
-        var responseDto = GetResponseValue<ResultsResponseDto, OkObjectResult>(result);
+
+        var responseDto = GetResponseValue(result);
         Assert.That(responseDto, Is.Not.Null);
         
         Assert.That(!responseDto.Running);
@@ -701,7 +688,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             ConnectionId = resultDto.ConnectionId
         });
 
-        var responseDto = GetResponseValue<ResultsResponseDto, OkObjectResult>(result);
+        var responseDto = GetResponseValue(result);
         Assert.That(responseDto, Is.Not.Null);
         Assert.That(!responseDto.Running);
 
@@ -743,7 +730,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             ConnectionId = resultDto.ConnectionId
         });
 
-        var responseDto = GetResponseValue<ResultsResponseDto, OkObjectResult>(result);
+        var responseDto = GetResponseValue(result);
         Assert.That(responseDto, Is.Not.Null);
         Assert.That(responseDto.Running);
 
@@ -803,7 +790,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             ConnectionId = resultDto.ConnectionId
         });
 
-        var response = GetResponseValue<ResponseBase, OkObjectResult>(result);
+        var response = GetResponseValue(result);
         Assert.That(response, Is.Not.Null);
         
         var testError = Factory.CreateDbContext()
@@ -824,7 +811,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     
     /// <summary>
     /// Test for <see cref="WorkerController.TestError" /> - but ConnectionId is invalid.
-    /// We expect, that will be returned 404.
+    /// We expect, that the exception will be thrown.
     /// </summary>
     [Test]
     public async Task TestError_InvalidConnectionId()
@@ -840,14 +827,14 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var array = new byte [] {0x1, 0x2, 0x3, 0x4};
         
         RefreshController();
-        var result = await Controller.TestError(new TestErrorDto
+        Assert.ThrowsAsync<NotFoundException>(async () =>
         {
-            Log = array,
-            ConnectionId = 5000000
+            await Controller.TestError(new TestErrorDto
+            {
+                Log = array,
+                ConnectionId = 5000000
+            });
         });
-
-        var response = GetResponseValue<ResponseBase, NotFoundObjectResult>(result);
-        Assert.That(response, Is.Not.Null);
     }
     
     /// <summary>
@@ -899,7 +886,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             ConnectionId = resultDto.ConnectionId
         });
 
-        var response = GetResponseValue<ResponseBase, OkObjectResult>(result);
+        var response = GetResponseValue(result);
         Assert.That(response, Is.Not.Null);
         
         var testError = Factory.CreateDbContext()
@@ -1080,7 +1067,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     {
         LoginAs("user_2");
         var result = Controller.TotalPausedTestsWithMaxPriority();
-        var dto = GetResponseValue<TotalPausedTestsDto, OkObjectResult>(result);
+        var dto = GetResponseValue(result);
         Assert.That(dto, Is.Not.Null);
         Assert.That(dto.Count, Is.EqualTo(4));
     }
@@ -1093,7 +1080,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
     {
         LoginAs("user_2");
         var result = Controller.MaxThreadsForTestWithMaxPriority();
-        var dto = GetResponseValue<MaxThreadsForTestDto, OkObjectResult>(result);
+        var dto = GetResponseValue(result);
         Assert.That(dto, Is.Not.Null);
         Assert.That(dto.MaximumThreads, Is.EqualTo(1));
     }

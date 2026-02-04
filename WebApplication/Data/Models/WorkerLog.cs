@@ -89,4 +89,10 @@ public class WorkerLog : DoId
     /// </summary>
     /// <returns></returns>
     public string Identifier() => $"{Id}-{Name}-{NumberOfThreads}";
+
+    /// <summary>
+    /// Sets last connect time to now.
+    /// </summary>
+    public void SetLastConnectTimeNow()
+        => LastConnectTime = DateTime.UtcNow;
 }

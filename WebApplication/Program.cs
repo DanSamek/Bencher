@@ -73,6 +73,8 @@ builder.Services.AddScoped<TestErrorStore>();
 
 #region WorkerAPI
 
+builder.Services.AddScoped<IWorkerControllerService, WorkerControllerService>();
+builder.Services.AddSingleton<CustomExceptionHandler>();
 builder.Services.AddSingleton<WorkerMiddleware>();
 builder.Services.AddHostedService<WorkerLogWatcher>();
 builder.Services.AddControllers();
@@ -126,6 +128,7 @@ app.MapAdditionalIdentityEndpoints();
 
 #region WorkerApi
 
+app.UseMiddleware<CustomExceptionHandler>();
 app.UseMiddleware<WorkerMiddleware>();
 app.MapControllers();
 
