@@ -13,6 +13,6 @@ public static partial class Regexes
     public static readonly Regex BenchRegex = BenchNpsRegex(); 
     
     [GeneratedRegex("error:.*", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-    private static partial Regex GitErrorRefex();
-    public static readonly Regex GitErrorRegex = GitErrorRefex();
+    private static partial Regex _GitErrorRegex();
+    public static readonly Regex GitErrorRegex = _GitErrorRegex();
 }

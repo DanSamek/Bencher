@@ -1,5 +1,9 @@
 using Shared.Dtos.Responses;
+using Worker.ProcessOperations;
 using Worker.TestProcessors;
+using Worker.TestProcessors.AutobenchTestProcessor;
+using Worker.TestProcessors.GameTestProcessor;
+using Worker.UI;
 
 namespace Worker;
 
@@ -12,17 +16,19 @@ public class Runner
     private const int WAIT_SECONDS = 5;
     
     private readonly RunnerOptions _options;
-    private readonly Notifier _notifier;
+    private readonly Notifier.Notifier _notifier;
     private readonly IClientFactory _clientFactory;
+    private readonly CommonProcesses _commonProcesses;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public Runner(RunnerOptions options, Notifier notifier, IClientFactory clientFactory)
+    public Runner(RunnerOptions options, Notifier.Notifier notifier, IClientFactory clientFactory, CommonProcesses commonProcesses)
     {
         _options = options;
         _notifier = notifier;
         _clientFactory = clientFactory;
+        _commonProcesses = commonProcesses;
     } 
 
     private async Task Wait()
@@ -37,7 +43,7 @@ public class Runner
         RUN_LOOP:
         while (true)
         {  
-            var communication = new Communication(_options, _clientFactory.Get());
+            var communication = new Communication.Communication(_options, _clientFactory.Get());
             for (var i = 0; i < WORKER_AUTOBENCH_NUM_TRIES && !communication.Error(); i++)
             {
                 var autobenchResponse = communication.TryGetAutobenchTest();
@@ -66,7 +72,7 @@ public class Runner
         }
     }
     
-    private void StopApplicationIfCommunicationError(Communication communication)
+    private void StopApplicationIfCommunicationError(Communication.Communication communication)
     {
         if (!communication.Error()) return;
         
@@ -75,27 +81,27 @@ public class Runner
         Environment.Exit(1);
     }
     
-    private async Task RunGames(Communication communication, GetTestNonAutobenchResponse testResponse)
+    private async Task RunGames(Communication.Communication communication, GetTestNonAutobenchResponse testResponse)
     {
         var errorTrace = new ErrorTrace();
-        var testProcessor = new GameTestProcessor(communication, errorTrace, testResponse, _options.NumberOfThreads, _notifier);
+        var testProcessor = new GameTestProcessor(communication, errorTrace, testResponse, _options.NumberOfThreads, _notifier, _commonProcesses, new TestStateWatcher(_notifier, testResponse.ConnectionId));
         var connectionId = testResponse.ConnectionId;
                 
         await _notifier.AddNotifyRunningTest(connectionId);
         var result = await testProcessor.Process();
         await _notifier.RemoveNotifyRunningTest(connectionId);
         
-        if (result == GameProcessorResult.Error)
+        if (result == GameTestProcessorResult.Error)
         {
             communication.TestError(errorTrace, connectionId);
         }
     }
 
-    private async Task<bool> RunAutobench(Communication communication, GetTestAutobenchResponse autobenchResponse)
+    private async Task<bool> RunAutobench(Communication.Communication communication, GetTestAutobenchResponse autobenchResponse)
     {
         var connectionId = autobenchResponse.ConnectionId;
         var errorTrace = new ErrorTrace();
-        var autobenchProcessor = new AutobenchTestProcessor(autobenchResponse, errorTrace, _notifier);
+        var autobenchProcessor = new AutobenchTestProcessor(autobenchResponse, errorTrace, _notifier, _commonProcesses);
         
         await _notifier.AddNotifyRunningTest(connectionId);
             var autobench = await autobenchProcessor.Process();

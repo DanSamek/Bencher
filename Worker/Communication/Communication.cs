@@ -4,8 +4,9 @@ using Newtonsoft.Json;
 using Shared;
 using Shared.Dtos.Requests;
 using Shared.Dtos.Responses;
+using Worker.UI;
 
-namespace Worker;
+namespace Worker.Communication;
 
 /// <summary>
 /// Implementation of the communication with the server.

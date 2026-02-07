@@ -1,4 +1,4 @@
-namespace Worker;
+namespace Worker.UI;
 
 internal static class LoginParamsLoader
 {

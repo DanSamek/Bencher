@@ -1,25 +1,29 @@
 
-namespace Worker;
+namespace Worker.Notifier;
 
 /// <summary>
 /// Class that is periodically calling /running-test,
 /// because all worker logs are "watched" by the server, if they are active.
 /// </summary>
-public class Notifier
+public class Notifier : INotifier
 {
     private readonly ICommunication _communication;
     private readonly HashSet<int> _connectionIds = new HashSet<int>();
     private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
-    private readonly PeriodicTimer _timer = new PeriodicTimer(new TimeSpan(0,0,15));
+    private Dictionary<int, bool> _testStates = new();
+    private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+    private readonly PeriodicTimer _timer;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public Notifier(ICommunication communication)
+    public Notifier(ICommunication communication, TimeSpan? notifyWaitTick = null)
     {
         _communication = communication;
+        _timer = new PeriodicTimer(notifyWaitTick ?? new TimeSpan(0, 0, 15));
     }
     
+    /// <inheritdoc /> 
     public async Task AddNotifyRunningTest(int connectionId)
     {
         await _semaphoreSlim.WaitAsync();
@@ -29,6 +33,7 @@ public class Notifier
         _communication.RunningTest(connectionId);
     }
     
+    /// <inheritdoc /> 
     public async Task RemoveNotifyRunningTest(int connectionId)
     {
         await _semaphoreSlim.WaitAsync();
@@ -36,15 +41,19 @@ public class Notifier
         _semaphoreSlim.Release();
     }
     
-    private Dictionary<int, bool> _testStates = new();
+    /// <inheritdoc /> 
     public bool IsTestStillRunning(int connectionId)
-        => _testStates.GetValueOrDefault(connectionId, true);
+    {
+        var result = _testStates.GetValueOrDefault(connectionId, true);
+        return result;
+    }
     
+    /// <inheritdoc /> 
     public async Task Run()
     {
-        while (true)
+        while (!_cts.IsCancellationRequested)
         {
-            await _semaphoreSlim.WaitAsync();
+            await _semaphoreSlim.WaitAsync(_cts.Token);
             
             var newTestStates = new Dictionary<int, bool>();
             foreach (var connectionId in _connectionIds)
@@ -56,7 +65,10 @@ public class Notifier
             _semaphoreSlim.Release();
             
             _testStates = newTestStates;
-            await _timer.WaitForNextTickAsync();
+            await _timer.WaitForNextTickAsync(_cts.Token);
         }
     }
+
+    /// <inheritdoc /> 
+    public void EnsureStopped() => _cts.Cancel();
 }

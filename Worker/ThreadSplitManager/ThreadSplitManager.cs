@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using Worker.ProcessOperations;
+using Worker.UI;
 
 namespace Worker.ThreadSplitManager;
 
@@ -12,24 +14,26 @@ namespace Worker.ThreadSplitManager;
 public class ThreadSplitManager
 {
     private readonly RunnerOptions _runnerOptions;
-    private readonly Notifier _notifier;
+    private readonly Notifier.Notifier _notifier;
 
     private const int N_ITERATIONS = 5;
     
     private readonly ManualResetEvent _resetEvent = new ManualResetEvent(true);
     private readonly ConcurrentQueue<int> _availableThreads = new ConcurrentQueue<int>();
-    private readonly Communication _communication; 
+    private readonly Communication.Communication _communication; 
     private readonly IClientFactory _clientFactory;
+    private readonly CommonProcesses _commonProcesses;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public ThreadSplitManager(RunnerOptions runnerOptions, Notifier notifier, Communication communication, IClientFactory clientFactory)
+    public ThreadSplitManager(RunnerOptions runnerOptions, Notifier.Notifier notifier, Communication.Communication communication, IClientFactory clientFactory, CommonProcesses commonProcesses)
     {
         _runnerOptions = runnerOptions;
         _notifier = notifier;
         _communication = communication;
         _clientFactory = clientFactory;
+        _commonProcesses = commonProcesses;
     }
 
     /// <summary>
@@ -51,7 +55,7 @@ public class ThreadSplitManager
                     Task.Run(async () =>
                     {
                         var runnerOptions = _runnerOptions with { NumberOfThreads = runnerThreads };
-                        var runner = new Runner(runnerOptions, _notifier, _clientFactory);
+                        var runner = new Runner(runnerOptions, _notifier, _clientFactory, _commonProcesses);
                         await runner.Run(N_ITERATIONS);
 
                         _availableThreads.Enqueue(runnerThreads);

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Worker;
+namespace Worker.UI;
 
 public class ErrorTrace
 {

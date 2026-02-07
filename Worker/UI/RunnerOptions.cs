@@ -1,4 +1,4 @@
-namespace Worker;
+namespace Worker.UI;
 
 public record RunnerOptions
 {

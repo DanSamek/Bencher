@@ -1,26 +1,38 @@
+using Worker.ProcessOperations;
+using Worker.UI;
+
 namespace Worker.Dependencies;
 
 /// <summary>
 /// Validates if dependencies are installed at the worker.
 /// </summary>
-public static class DependencyValidator
+public class DependencyValidator
 {
-    private static readonly IReadOnlyList<IValidatableDependency> _validatableDependencies = 
-        new List<IValidatableDependency> 
-        {
-            new GitDependency()
-        };
-
-    private static readonly IReadOnlyList<ICompilerDependency> _compilerDependencies =
+    private readonly IReadOnlyList<IValidatableDependency> _validatableDependencies;
+    private readonly IReadOnlyList<ICompilerDependency> _compilerDependencies;
+    
+    
+    /// <summary>
+    /// .Ctor
+    /// </summary>
+    public DependencyValidator(IProcessRunner runner, ProcessStartInfoCreator processInfoCreator)
+    {
+        _validatableDependencies = 
+            new List<IValidatableDependency> 
+            {
+                new GitDependency(runner, processInfoCreator)
+            };
+        _compilerDependencies =
         new List<ICompilerDependency>
         {
-            new ClangDependency(),
-            new GCCDependency(),
+            new ClangDependency(runner, processInfoCreator),
+            new GCCDependency(runner,  processInfoCreator),
         };
+    }
 
  
     public record ValidationResult(Compilers Compilers, ErrorTrace Trace);
-    public static ValidationResult Validate()
+    public ValidationResult Validate()
     {
         var trace = new ErrorTrace();
         trace.AddInfo("Validating installed dependencies");
