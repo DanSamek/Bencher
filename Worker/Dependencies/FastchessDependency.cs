@@ -1,12 +1,25 @@
+using Worker.ProcessOperations;
+
 namespace Worker.Dependencies;
 
 public class FastchessDependency : IResolvableDependency
 {
+    private readonly IProcessRunner _runner;
+    private readonly ProcessStartInfoCreator _processInfoCreator;
+    
+    /// <summary>
+    /// .Ctor
+    /// </summary>
+    public FastchessDependency(IProcessRunner runner, ProcessStartInfoCreator processInfoCreator)
+    {
+        _runner = runner;
+        _processInfoCreator = processInfoCreator;
+    }
+    
     private const string FASTCHESS_BINARY_PATH = "/tmp/bencher-worker";
     private const string FASTCHESS_BINARY_NAME = "fastchess";
     public const string  FASTCHESS_BINARY_FILE_PATH = $"{FASTCHESS_BINARY_PATH}/{FASTCHESS_BINARY_NAME}";
-    // TODO maybe create own fork just to make sure.
-    private const string FASTCHESS_GIT_URL = "https://github.com/Disservin/fastchess.git";
+    private const string FASTCHESS_GIT_URL = "https://github.com/DanSamek/fastchess.git";
     private const string FASTCHESS_VERSION = "v1.7.0-alpha";
     
     private string _errorMessage = string.Empty;
@@ -19,6 +32,7 @@ public class FastchessDependency : IResolvableDependency
     
     public bool TryResolve(Compilers compilers)
     {
+        if (compilers == Compilers.None) return false;
         if (Directory.Exists(FASTCHESS_BINARY_PATH)) Directory.Delete(FASTCHESS_BINARY_PATH, true);
         
         var buildCommand = compilers == Compilers.Clang ? "make -j CXX=clang++" : "make -j";
@@ -29,14 +43,14 @@ public class FastchessDependency : IResolvableDependency
             $"cd {FASTCHESS_BINARY_PATH}; {buildCommand}"
         ];
 
-        var (_, error) = Helper.RunProcess(Helper.CreateProcessStartInfo(commands[0]));
+        var (_, error) = _runner.RunProcess(_processInfoCreator.Create(commands[0]));
         if (!string.IsNullOrEmpty(error))
         {
             _errorMessage = error;
             return false; 
         }
         
-        (_, error) = Helper.RunProcess(Helper.CreateProcessStartInfo(commands[1]));
+        (_, error) = _runner.RunProcess(_processInfoCreator.Create(commands[1]));
         
         var match = Regexes.GitErrorRegex.Match(error ?? string.Empty);
         if (match.Success)
@@ -45,7 +59,7 @@ public class FastchessDependency : IResolvableDependency
             return false;
         }
         
-        (_, error) = Helper.RunProcess(Helper.CreateProcessStartInfo(commands[2]));
+        (_, error) = _runner.RunProcess(_processInfoCreator.Create(commands[2]));
         return !string.IsNullOrEmpty(error);
     }
     

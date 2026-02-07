@@ -2,10 +2,16 @@ using System.Collections.Concurrent;
 
 namespace Worker.ThreadSplitManager;
 
+/// <summary>
+/// Logic for spliting threads - how will be threads split.
+/// </summary>
 public static class ThreadSplit
 {
     private const int N_PARALLEL_GAMES_RUNNER = 8;
     
+    /// <summary>
+    /// Splits available threads based on maximum number of threads and number of paused tests.
+    /// </summary>
     public static IReadOnlyList<int> Split(ConcurrentQueue<int> returnedThreads, 
                                            int maxThreadsForTest,
                                            int pausedTests)

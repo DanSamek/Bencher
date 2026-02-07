@@ -1,33 +1,28 @@
 using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using Shared.Dtos.Requests;
 using Shared.Dtos.Responses;
-using Worker.Dependencies;
+using Worker.ProcessOperations;
+using Worker.UI;
 
-namespace Worker.TestProcessors;
-
-public enum GameProcessorResult
-{
-    Error,
-    NotRunning,
-    Success
-}
+namespace Worker.TestProcessors.GameTestProcessor;
 
 /// <summary>
 /// Game test processor.
-/// - Plays games via fastchess.
+/// - Plays games using fastchess.
 /// </summary>
-public class GameTestProcessor : ITestProcessor<GameProcessorResult>
+public class GameTestProcessor : ITestProcessor<GameTestProcessorResult>
 {
-    private readonly Communication _communication;
-    private readonly Notifier _notifier;
+    private readonly Communication.Communication _communication;
+    private readonly Notifier.Notifier _notifier;
     private readonly ErrorTrace _errorTrace;
     private readonly GetTestNonAutobenchResponse _getTestNonAutobenchResponse;
-    private readonly int _processorThreads;
+    private readonly int _availableThreads;
     private readonly int _pairsNeeded;
     private readonly int _connectionId;
-
+    private readonly CommonProcesses _commonProcesses;
+    private readonly TestStateWatcher _testStateWatcher;
+    
     private readonly Lock _lock = new Lock();
     
     private const byte WDL_W = 1;
@@ -54,35 +49,37 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
     /// <summary>
     /// .Ctor
     /// </summary>
-    public GameTestProcessor(Communication communication, ErrorTrace errorTrace, GetTestNonAutobenchResponse getTestNonAutobenchResponse, int processorThreads, Notifier notifier)
+    public GameTestProcessor(Communication.Communication communication, ErrorTrace errorTrace, GetTestNonAutobenchResponse getTestNonAutobenchResponse, int availableThreads, Notifier.Notifier notifier, CommonProcesses commonProcesses, TestStateWatcher testStateWatcher)
     {
         _communication = communication;
         _errorTrace = errorTrace;
         _getTestNonAutobenchResponse = getTestNonAutobenchResponse;
-        _processorThreads = processorThreads;
+        _availableThreads = availableThreads;
         _notifier = notifier;
-        _pairsNeeded = CalculatePairsNeeded(getTestNonAutobenchResponse); // This is not optimal to calculate here, but who cares.
+        _commonProcesses = commonProcesses;
+        _pairsNeeded = GamePairCalculator.CalculatePairsNeeded(getTestNonAutobenchResponse.TimeManagement, _getTestNonAutobenchResponse.NumberOfThreads, availableThreads); // This is not optimal to calculate here, but who cares.
         _connectionId = _getTestNonAutobenchResponse.ConnectionId;
+        _testStateWatcher = testStateWatcher;
     }
     
     /// <inheritdoc /> 
-    public async Task<GameProcessorResult> Process()
+    public async Task<GameTestProcessorResult> Process()
     {
         // Builds engines.
         var (baseDirectory, newDirectory) = BuildEngines();
         // Create opening book [from the response].
         var openingBookPath = await CreateOpeningBook();
         
-        if (_errorTrace.Error()) return GameProcessorResult.Error;
+        if (_errorTrace.Error()) return GameTestProcessorResult.Error;
         if (!_notifier.IsTestStillRunning(_connectionId)) return ReturnNotRunningClean();
         
         // Run benches.
         _errorTrace.AddInfo("Running engine benches");
         var baseNps = ValidateBenches(baseDirectory, newDirectory);
-        if (_errorTrace.Error()) return GameProcessorResult.Error;
+        if (_errorTrace.Error()) return GameTestProcessorResult.Error;
         if (!_notifier.IsTestStillRunning(_connectionId)) return ReturnNotRunningClean();  
         
-        var arguments = CreateFastchessArguments(openingBookPath, baseDirectory, newDirectory, baseNps);
+        var arguments = FastchessArgumentsCreator.CreateArguments(openingBookPath, baseDirectory, newDirectory, baseNps, _getTestNonAutobenchResponse, _availableThreads);
         
         if (!_notifier.IsTestStillRunning(_connectionId)) return ReturnNotRunningClean();
         
@@ -90,29 +87,26 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
         RunGames(arguments);
         
         CleanTmp(baseDirectory, newDirectory, openingBookPath);
-        return await Task.FromResult(GameProcessorResult.Success);
+        return await Task.FromResult(GameTestProcessorResult.Success);
 
-        GameProcessorResult ReturnNotRunningClean()
+        GameTestProcessorResult ReturnNotRunningClean()
         {
             CleanTmp(baseDirectory, newDirectory, openingBookPath);
-            return GameProcessorResult.NotRunning;
+            return GameTestProcessorResult.NotRunning;
         }
     }
     
     private void RunGames(string arguments)
     {
         _errorTrace.AddInfo($"Running games with arguments: {arguments}");
-        var processStartInfo = Helper.CreateProcessStartInfo(arguments, FastchessDependency.FASTCHESS_BINARY_FILE_PATH);
-        var process = System.Diagnostics.Process.Start(processStartInfo);
-
+        var process = _commonProcesses.RunFastchess(arguments);
         if (process is null)
         {
             _errorTrace.AddError("Unable to run fastchess");
             return;
         }
 
-        var watcher = new TestStateWatcher(_notifier, _getTestNonAutobenchResponse.ConnectionId);
-        Task.Run(() => watcher.Watch());
+        Task.Run(() => _testStateWatcher.Watch());
         
         var pairResults = new Dictionary<int, List<byte>>();
         var gamesEnded = 0;
@@ -124,13 +118,13 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
             lock(_lock)
             {
                 ProcessLine(e.Data);
-                var (results, canSend, toRemove) = PrepareResults(pairResults);
-                running = SendPairResults(results, canSend);
+                var (resultsDto, canSend, toRemove) = PrepareResults(pairResults);
+                running = SendPairResults(resultsDto, canSend);
                 if (canSend) toRemove.ForEach(k => pairResults.Remove(k));
             }
            
-             // Stop fastchess, if test is not running or something happen with communication (network problems for example).
-             if (!watcher.Running || !running || _communication.Error()) process.Kill();
+             // Stop fastchess, if test is not running or something happened with the communication (network problems for example).
+             if (!_testStateWatcher.Running || !running || _communication.Error()) process.Kill();
         });
         
         process.BeginOutputReadLine();
@@ -142,8 +136,8 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
         var (results, _, _) = PrepareResults(pairResults);
         SendPairResults(results, true);
         
-        watcher.EnsureStopped();
-        if (!watcher.Running) _errorTrace.AddInfo("Test was manually stopped");
+        _testStateWatcher.EnsureStopped();
+        if (!_testStateWatcher.Running) _errorTrace.AddInfo("Test was manually stopped");
         
         return;
         void ProcessLine(string line)
@@ -188,7 +182,7 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
             Wl = 0,
             Wd = 0,
             Ww = 0,
-            ConnectionId = _getTestNonAutobenchResponse.ConnectionId
+            ConnectionId = _connectionId
         };
         
         var currentPairsDone = 0;
@@ -225,8 +219,8 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
     private int ValidateBenches(DirectoryInfo baseDirectory,
                                 DirectoryInfo newDirectory)
     { 
-        var baseBench = ProcessorHelper.RunBench(baseDirectory.FullName, _errorTrace);
-        var testBench = ProcessorHelper.RunBench(newDirectory.FullName, _errorTrace);
+        var baseBench = _commonProcesses.RunBench(baseDirectory.FullName, _errorTrace);
+        var testBench = _commonProcesses.RunBench(newDirectory.FullName, _errorTrace);
         
         AddErrorIfFalse(baseBench.Bench == _getTestNonAutobenchResponse.BaseBranchBench, 
             "Base bench differ from the entered bench");
@@ -244,7 +238,7 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
         }
     }
     
-    private static DirectoryInfo PrepareEngine(PrepareEngineArguments args)
+    private DirectoryInfo PrepareEngine(PrepareEngineArguments args)
     {
         var errorTrace = args.ErrorTrace;
         var gitUrl = args.GitUrl;
@@ -255,11 +249,11 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
         var directory = Directory.CreateTempSubdirectory();
     
         errorTrace.AddInfo($"Cloning repository - {gitUrl} - branch {branch}");
-        ProcessorHelper.CloneRepository(gitUrl, branch, directory.FullName, errorTrace);
+        _commonProcesses.CloneRepository(gitUrl, branch, directory.FullName, errorTrace);
         if (errorTrace.Error()) return directory;
     
         errorTrace.AddInfo("Building engine");
-        ProcessorHelper.Build(buildScript, directory.FullName, errorTrace); 
+        _commonProcesses.Build(buildScript, directory.FullName, errorTrace); 
         return directory;
     }
 
@@ -284,112 +278,10 @@ public class GameTestProcessor : ITestProcessor<GameProcessorResult>
         return (baseDirectory, newDirectory);
     }
     
-    /*
-        -engine proto=uci cmd="./stockfish-dev" name="stockfish-dev"
-        -engine proto=uci cmd="./stockfish" name="stockfish"
-        -each tc=0:08+0.08
-        -rounds 100000  [N / 2]
-        -games 2
-        -repeat
-        -concurrency 8   ProcessorThreads / _getTestNonAutobenchResponse.NumberOfThreads
-        -ratinginterval 0
-        -openings file="./openings/UHO_4060_v2.epd" [from the response] format=epd [from the response]. order=random
-        -recover
-        -scoreinterval 0
-        -resign movecount=3 score=500 [additional fastchess options]
-     */
-    private string CreateFastchessArguments(string openingBookPath, 
-                                            DirectoryInfo baseDirectory, 
-                                            DirectoryInfo newDirectory,
-                                            int baseNps)
-    {
-        var sb = new StringBuilder();
-        var baseBinaryPath = Helper.EngineBinary(baseDirectory);
-        var newBinaryPath = Helper.EngineBinary(newDirectory);
-
-        sb.AddEngine($"cmd={newBinaryPath} name=new");
-        sb.AddEngine($"cmd={baseBinaryPath} name=base");
-        sb.AddArgument("-each");
-        
-        var (seconds, increment) = ScaleTc(baseNps);
-        sb.AddArgument($"tc={seconds:F}+{increment:F}"); 
-        sb.AddArgument($"option.Hash={_getTestNonAutobenchResponse.HashSize}");
-        sb.AddArgument($"option.Threads={_getTestNonAutobenchResponse.NumberOfThreads}");
-        
-        sb.AddArgument($"-rounds {_getTestNonAutobenchResponse.NumberOfGames / 2}");
-        sb.AddArgument("-games 2");
-        sb.AddArgument("-repeat");
-        
-        sb.AddArgument($"-concurrency {_processorThreads / _getTestNonAutobenchResponse.NumberOfThreads}");
-        sb.AddArgument("-ratinginterval 0");
-        
-        sb.AddOpeningBook(openingBookPath, _getTestNonAutobenchResponse.OpeningBook);
-        
-        sb.AddArgument("-recover");
-        sb.AddArgument("-scoreinterval 0");
-        
-        if (_getTestNonAutobenchResponse.AdditionalFastchessOptions is not null)
-        {
-            sb.AddArgument(_getTestNonAutobenchResponse.AdditionalFastchessOptions);
-        }
-        
-        var result = sb.ToString();
-        return result;
-    }
-    
-    private (decimal Seconds, decimal Increment) ScaleTc(int baseNps)
-    {
-        var timeScale = _getTestNonAutobenchResponse.ExpectedNps * (decimal)1.0 / baseNps;
-        var timeManagement = _getTestNonAutobenchResponse.TimeManagement;
-        (decimal seconds, decimal increment) = timeManagement.Tc();
-        seconds *= timeScale;
-        increment *= timeScale;
-        return (seconds, increment);
-    }
-    
     private static void CleanTmp(DirectoryInfo baseDirectory, DirectoryInfo newDirectory, string openingBookPath)
     {
         if (Directory.Exists(baseDirectory.FullName)) Directory.Delete(baseDirectory.FullName, true);
         if (Directory.Exists(newDirectory.FullName)) Directory.Delete(newDirectory.FullName, true);
         if (File.Exists(openingBookPath)) File.Delete(openingBookPath);
-    }
-    
-    private int CalculatePairsNeeded(GetTestNonAutobenchResponse nonAutobenchResponse)
-    {
-        var (seconds, _) = nonAutobenchResponse.TimeManagement.Tc();
-        var numberOfThreads = nonAutobenchResponse.NumberOfThreads;
-        
-        var log = (int)Math.Log2(seconds * 1.0 / 30 + numberOfThreads);
-        var perProcessor = Math.Max(4 - log, 1);
-        return perProcessor * (_processorThreads / numberOfThreads);
-    }
-    
-}
-
-file static class Extensions
-{
-    public static void AddOpeningBook(this StringBuilder builder, string openingBookPath, OpeningBookDto openingBookDto)
-    {
-        var openingBookType = openingBookDto.OpeningBookType;
-        builder.AddArgument($"-openings order=random file={openingBookPath} format={openingBookType.ToString().ToLower()}");
-    }
-    
-    public static void AddEngine(this StringBuilder sb, string cmdName)
-    {
-        sb.AddArgument($"-engine proto=uci {cmdName}");
-    }
-
-    public static void AddArgument(this StringBuilder sb, string argument)
-    {   
-        sb.Append($"{argument} ");
-    }
-    
-    public static (int Seconds, decimal Increment) Tc(this string s)
-    {
-        var plusIndex = s.IndexOf('+');
-        if (plusIndex == -1) throw new Exception("String value is not in the expected format.");
-        
-        var split = s.Split("+");
-        return (int.Parse(split[0]), decimal.Parse(split[1]));
     }
 }

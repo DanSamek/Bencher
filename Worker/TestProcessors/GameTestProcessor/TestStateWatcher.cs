@@ -1,22 +1,25 @@
-namespace Worker.TestProcessors;
+using Worker.Notifier;
+
+namespace Worker.TestProcessors.GameTestProcessor;
 
 /// <summary>
 /// Helper class if test is still running.
 /// </summary>
 public class TestStateWatcher
 {
-    private readonly Notifier _notifier;
+    private readonly INotifier _notifier;
     private readonly int _connectionId;
-    private readonly PeriodicTimer _timer = new PeriodicTimer(new TimeSpan(0,0,15));
+    private readonly PeriodicTimer _timer;
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         
     /// <summary>
     /// .Ctor
     /// </summary>
-    public TestStateWatcher(Notifier notifier, int connectionId)
+    public TestStateWatcher(INotifier notifier, int connectionId, TimeSpan? stillRunningWaitTick = null)
     {
         _notifier = notifier;
         _connectionId = connectionId;
+        _timer = new PeriodicTimer(stillRunningWaitTick ?? new TimeSpan(0, 0, 15));
     }
 
     public bool Running { get; private set; } = true;

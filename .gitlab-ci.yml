@@ -41,6 +41,15 @@ test_web_app:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == 'main'
 
+test_worker_app:
+    stage: test
+    script:
+        - cd Worker.Tests
+        - dotnet test
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+        - if: $CI_COMMIT_BRANCH == 'main'
+
 worker_binaries:
     stage: binaries
     script:

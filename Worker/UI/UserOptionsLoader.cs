@@ -1,12 +1,15 @@
-namespace Worker;
+namespace Worker.UI;
 
 public static class UserOptionsLoader
 {
     /// <summary>
     /// Minimum number of threads required for the thread split algorithm. 
     /// </summary>
-    private const int MIN_THREAD_SPLIT = 0; // TODO !!!!!!
-    
+    #if DEBUG
+    private const int MIN_THREAD_SPLIT = 0;
+    #else
+    private const int MIN_THREAD_SPLIT = 16;
+    #endif
     /// <summary>
     /// Options, that will be loaded from the user.
     /// </summary>

@@ -1,14 +1,27 @@
 using System.Text.RegularExpressions;
+using Worker.ProcessOperations;
 
 namespace Worker.Dependencies;
 
 public partial class GCCDependency : ICompilerDependency
 {
+    private readonly IProcessRunner _runner;
+    private readonly ProcessStartInfoCreator _processInfoCreator;
+    
+    /// <summary>
+    /// .Ctor
+    /// </summary>
+    public GCCDependency(IProcessRunner runner, ProcessStartInfoCreator processInfoCreator)
+    {
+        _runner = runner;
+        _processInfoCreator = processInfoCreator;
+    }
+    
     public bool Validate()
     {
         var command = "gcc -v";
-        var process = Helper.CreateProcessStartInfo(command);
-        var (_, error) = Helper.RunProcess(process); 
+        var process = _processInfoCreator.Create(command);
+        var (_, error) = _runner.RunProcess(process); 
         return _regex.IsMatch(error ?? string.Empty);
     }
 

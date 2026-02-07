@@ -1,15 +1,15 @@
 using System.Text;
 
-namespace Worker;
+namespace Worker.UI;
 
 /// <summary>
 /// Simple application information's.
 /// </summary>
 public static class ApplicationInfo
 {
-    private static string VERSION_ID => "0.3";
+    private static string VERSION_ID => "0.4";
     private static string AUTHORS => "Daniel Samek";
-    private static ErrorTrace _errorTrace = new();
+    private static readonly ErrorTrace _errorTrace = new();
 
     public static void Display()
     {

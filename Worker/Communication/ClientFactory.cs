@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using Shared;
+using Worker.UI;
 
 namespace Worker;
 
