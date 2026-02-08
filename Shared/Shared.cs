@@ -32,7 +32,7 @@ public static class Constants
     /// <summary>
     /// Number of games, that will be played per thread on the worker.
     /// </summary>
-    public const int GAME_THREAD_COUNT_MULTIPLIER = 32;
+    public const int GAME_THREAD_COUNT_MULTIPLIER = 16;
 
     #endregion
     
