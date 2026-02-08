@@ -211,9 +211,6 @@ public class EngineBuilder
             test.WorkerLogs.Add(wl);
             context.SaveChanges();
         }
-        
-        Console.WriteLine(context.WorkerLogs.Count());
-        
     }
     
     private static Test UpdateTest(ApplicationDbContext context, Test test, ApplicationUser user)

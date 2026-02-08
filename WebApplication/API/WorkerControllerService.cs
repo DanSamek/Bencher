@@ -173,7 +173,7 @@ public class WorkerControllerService : IWorkerControllerService
             ConnectTime = now,
             LastConnectTime = now,
             NumberOfGames = 0,
-            TotalNumberOfGames = getTestDto.NumberOfThreads * Constants.GAME_THREAD_COUNT_MULTIPLIER, 
+            TotalNumberOfGames = TotalNumberGamesCalculator.Calculate(getTestDto.NumberOfThreads, test.NumberOfThreads), 
             NumberOfThreads = getTestDto.NumberOfThreads,
             Mac = getTestDto.Mac,
             User = user!, // User exists - middleware validated that.
