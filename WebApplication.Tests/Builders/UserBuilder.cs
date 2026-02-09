@@ -50,6 +50,14 @@ public class UserBuilder
         return this;
     }
 
+    public UserBuilder WithRole(UserRole role)
+    {
+        _user.Role = role;
+        _context.Users.Update(_user);
+        _context.SaveChanges();
+        return this;
+    }
+
     public DomainBuilder Close()
     {
         return _domainBuilder;

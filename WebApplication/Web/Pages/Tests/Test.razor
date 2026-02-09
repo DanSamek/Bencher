@@ -12,6 +12,7 @@
 @inject TestStore TestStore
 @inject TestErrorStore TestErrorStore
 @inject NavigationManager NavigationManager
+@inject UserStore UserStore
 @inject IGitBranchComparisonService GitBranchComparisonService
 
 <PageTitle>@_test!.Name</PageTitle>
@@ -111,8 +112,6 @@
 
 </div>
 
-@* TODO LLR/Elo history as a graph. *@
-
 @code {
     private Data.Models.Test? _test;
     private bool _canEdit;
@@ -134,7 +133,7 @@
             NavigationManager.NavigateTo(WebConstants.NOT_FOUND_PATH, true);   
             return;
         }
-        _canEdit = _test.User.Id == UserId || _test.User.Role == UserRole.Admin;
+        _canEdit = _test.User.Id == UserId || UserStore.IsAdmin(UserId);
         _errors = TestErrorStore.GetErrorsForTest(Id);
     }
     

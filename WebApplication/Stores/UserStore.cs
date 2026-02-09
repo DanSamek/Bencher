@@ -97,8 +97,14 @@ public class UserStore : Store<ApplicationUser>
             .Where(u => u.Id == userId)
             .ExecuteDelete();
     
+    /// <summary>
+    /// If user with a specified id is a user.
+    /// </summary>
+    public bool IsAdmin(string? userId)
+        => GetDbSet()
+            .FirstOrDefault(u => u.Id == userId)?.Role == UserRole.Admin;
+    
     private const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
     private string GenerateAccessToken()
     {
         var sb = new StringBuilder();
@@ -110,6 +116,5 @@ public class UserStore : Store<ApplicationUser>
         var accessToken = sb.ToString();
         return accessToken;
     }
-
 }
     
