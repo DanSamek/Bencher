@@ -52,11 +52,11 @@ public class UserStoreTests : TestBase
     public void CreateAccessToken()
     {
         var store = new UserStore(Factory);
-        var user = GetByUsername("user-2", Factory);
+        var user = GetByUsername("user-2");
         Assert.That(user.AccessToken, Is.EqualTo(null));
         store.CreateAccessToken(user.Id);
         
-        user = GetByUsername("user-2", Factory);
+        user = GetByUsername("user-2");
         Assert.That(user.AccessToken, Is.Not.EqualTo(null));
     }
     
@@ -67,10 +67,10 @@ public class UserStoreTests : TestBase
     [TestCase("user-2")]
     public void RemoveAccessToken(string username)
     {
-        var user = GetByUsername(username, Factory);
+        var user = GetByUsername(username);
         var store = new UserStore(Factory);
         store.RemoveAccessToken(user.Id);
-        user = GetByUsername(username, Factory);
+        user = GetByUsername(username);
         Assert.That(user.AccessToken, Is.EqualTo(null));
     }
     
@@ -80,7 +80,7 @@ public class UserStoreTests : TestBase
     [Test]
     public void GetById()
     {
-        var user = GetByUsername("user-2", Factory);
+        var user = GetByUsername("user-2");
         
         var store = new UserStore(Factory);
         var storeUser = store.GetById(user.Id)!;
@@ -115,10 +115,10 @@ public class UserStoreTests : TestBase
     public void SetRole(UserRole role)
     {
         var store = new UserStore(Factory);
-        var user = GetByUsername("user-2", Factory);
+        var user = GetByUsername("user-2");
         store.SetRole(user.Id, role);
 
-        user = GetByUsername("user-2", Factory);
+        user = GetByUsername("user-2");
         Assert.That(user.Role, Is.EqualTo(role));
     }
 
@@ -129,11 +129,11 @@ public class UserStoreTests : TestBase
     public void ConfirmUserEmail()
     {
         var store = new UserStore(Factory);
-        var user = GetByUsername("user-1", Factory);
+        var user = GetByUsername("user-1");
         Assert.That(user.EmailConfirmed, Is.False);
         store.ConfirmUserEmail(user.Id);
         
-        user = GetByUsername("user-1", Factory);
+        user = GetByUsername("user-1");
         Assert.That(user.EmailConfirmed, Is.True);
     }
 
@@ -144,7 +144,7 @@ public class UserStoreTests : TestBase
     public void DeleteById()
     {
         var store = new UserStore(Factory);
-        var user = GetByUsername("user-1", Factory);
+        var user = GetByUsername("user-1");
         store.DeleteById(user.Id);
 
         var exists = Factory
@@ -153,8 +153,54 @@ public class UserStoreTests : TestBase
             .Any(u => u.Id == user.Id);
         Assert.That(exists, Is.False);
     }
+
+
+    /// <summary>
+    /// Tests <see cref="UserStore.IsAdmin"/>.
+    ///     - We expect that the result will be false - user has not this role.
+    /// </summary>
+    [Test]
+    public void IsAdmin_Expected_False()
+    {
+        var userId = GetByUsername("user-1").Id;
+        var store = new UserStore(Factory);
+
+        var isAdmin = store.IsAdmin(userId);
+        Assert.That(isAdmin, Is.False);
+    }
     
+    /// <summary>
+    /// Tests <see cref="UserStore.IsAdmin"/>.
+    ///     - We expect that the result will be true - user has has admin role.
+    /// </summary>
+    [Test]
+    public void IsAdmin_Expected_True()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateUser("admin")
+                .WithRole(UserRole.Admin)
+                .Close()
+            .Close();
+        
+        var userId = GetByUsername("admin").Id;
+        var store = new UserStore(Factory);
+
+        var isAdmin = store.IsAdmin(userId);
+        Assert.That(isAdmin, Is.True);
+    }
     
-    private ApplicationUser GetByUsername(string username, TestContextFactory factory) 
-        => factory.CreateDbContext().Users.First(u => u.UserName == username); 
+    /// <summary>
+    /// Tests <see cref="UserStore.IsAdmin"/>.
+    ///     - We expect that the result will be false - we try null as UserId.
+    /// </summary>
+    [Test]
+    public void IsAdmin_Expected_False_Null_Id()
+    {
+        var store = new UserStore(Factory);
+        var isAdmin = store.IsAdmin(null);
+        Assert.That(isAdmin, Is.False);
+    }
+    
+    private ApplicationUser GetByUsername(string username) 
+        => Factory.CreateDbContext().Users.First(u => u.UserName == username); 
 }

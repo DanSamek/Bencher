@@ -1,1 +1,1 @@
-Testování nápadů před implementací do aplikace.
+Experimenting with ideas before implementing them to the app.

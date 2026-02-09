@@ -1,8 +1,5 @@
 @using WebApplication.Data.Models
-@using WebApplication.Stores
 @using WebApplication.Web.Components
-
-@inject TestStore TestStore
 
 @* NOTE: Similar code in the EditEngineForm and AddEngineForm. *@
 
@@ -25,17 +22,6 @@
         </div>
     </div>
 </EditForm>
-
-@* TODO ! *@
-<p class="grey-form-text">Recent tests</p>
-@{
-    var recentTests = TestStore.RecentTests(Engine.Id, 10);
-}
-@foreach(var test in recentTests) 
-{
-    @* TODO test links*@
-    <p>@test.Id</p>
-}
 
 @code {
     /// <summary>
