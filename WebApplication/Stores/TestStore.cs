@@ -72,18 +72,7 @@ public class TestStore : Store<Test>
     
     /// <summary>
     /// Returns a test, that should be run on the worker.
-    /// Note, this method also includes <see cref="Test.WorkerLogs" />, <see cref="Test.Engine" /> and <see cref="Test.AutobenchState" /> 
-    /// Algorithm for finding optimal test to run:
-    /// NOTE if, test is autobenched (t.Autobenched = true), but it's Resolved, it's not an autobench test anymore, but a normal test.)
-    /// And of course we need to find a test, that requires less or equal number of threads to run.
-    /// -> if there is not running test, we will pick a paused test with the highest priority.
-    /// -> else:
-    ///     -> we will find a maximum running priority.
-    ///     -> we will find a test that is not running with a same priority.
-    ///         -> if test exists, we return.
-    ///         -> otherwise we will select test by max ((test.ThreadScale / 2) / Test.ActiveWorkerThreadCount())
-    /// NOTE: when a test is returned from the method, it's automatically set do running.
-    /// ! TODO update docs
+    /// Note, this method also includes <see cref="Test.WorkerLogs" />, <see cref="Test.Engine" /> and <see cref="Test.AutobenchState" />.
     /// </summary>
     public Test? GetNextTestForWorker(bool autobench, int workerNumberOfThreads)
     {
