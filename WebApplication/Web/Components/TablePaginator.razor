@@ -1,43 +1,28 @@
 @using WebApplication.Components.Components
 @typeparam TRow
 
+@if (!_renderedRows.Any())
+{
+    <span>No data to display</span>
+    @PagingButtons()
+    return;
+}
+
 <div>
     <table class="table @AdditionalCssClass">
-        @if (HeaderContent is not null && _renderedRows.Count > 0)
+        @if (HeaderContent is not null)
         {
             @HeaderContent
         }
-        
         <tbody>
-        @if (_renderedRows.Count > 0)
-        {
             @foreach (var row in _renderedRows)
             {
                 @RowContent(row)
-            }    
-        }
-        else
-        {
-            <span>No data to display</span>
-        }
+            }
         </tbody>
     </table>
 
-    <div class="d-flex justify-content-center w-100 gap-3">
-        @if (_dataIndex != 0)
-        {
-            <button class="btn btn-secondary" @onclick="OnPreviousPageClicked">
-                @Icons.ChevronLeft()
-            </button>
-        }
-        
-        @if (_renderedRows.Count == WebConstants.PAGE_SIZE)
-        {
-            <button class="btn btn-secondary" @onclick="OnNextPageClicked">
-                @Icons.ChevronRight()
-            </button>
-        }
-    </div>
+    @PagingButtons()
 </div>
 
 @code {
@@ -112,4 +97,22 @@
         
         _dataIndex++;
     }
+
+    private RenderFragment PagingButtons()
+        => @<div class="d-flex justify-content-center w-100 gap-3">
+            @if (_dataIndex != 0)
+            {
+                <button class="btn btn-secondary" @onclick="OnPreviousPageClicked">
+                    @Icons.ChevronLeft()
+                </button>
+            }
+
+            @if (_renderedRows.Count == WebConstants.PAGE_SIZE)
+            {
+                <button class="btn btn-secondary" @onclick="OnNextPageClicked">
+                    @Icons.ChevronRight()
+                </button>
+            }
+        </div>;
+
 }
