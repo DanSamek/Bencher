@@ -81,7 +81,7 @@
     <div class="pb-3">
         <HideUnhideContent>
             <HeaderContent>
-                <h4>Workers (active @_test.ActiveWorkerThreadCount() threads) </h4>
+                <h4>Workers [active @_test.ActiveWorkerThreadCount() threads] </h4>
             </HeaderContent>
             <ChildContent>
                 <div class="d-flex gap-3 flex-column">
@@ -101,7 +101,7 @@
     <div class="pb-3">
         <HideUnhideContent>
             <HeaderContent>
-                <h4>Errors (@_errors.Count)</h4>
+                <h4>Errors [@_errors.Count]</h4>
             </HeaderContent>
             <ChildContent>
                 @MaxHeightBox(@<TestErrorsTable Errors="_errors"/>)

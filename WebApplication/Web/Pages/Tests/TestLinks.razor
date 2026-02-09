@@ -1,16 +1,14 @@
+@if (!Tests.Any())
+{
+    <span>No data to display</span>
+    return;
+}
 
 <table class="table table-borderless">
     <tbody>
-    @if (Tests.Count > 0)
+    @foreach (var test in Tests)
     {
-        @foreach (var test in Tests)
-        {
-            <TestLink Test="test"/>
-        }
-    }
-    else
-    {
-        <span>No data to display</span>
+        <TestLink Test="test"/>
     }
     </tbody>
 </table>
