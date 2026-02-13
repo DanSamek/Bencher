@@ -68,7 +68,6 @@
             return;
         }
         
-        // TODO validate gitlab uri.
         EngineStore.Update(Engine.Id, _formData.Name, _formData.GitUrl, _formData.BuildScript);
         OnEngineEdit.Invoke();
     }

@@ -3,12 +3,12 @@ namespace WebApplication.Data.Models;
 public class ErrorContent : DoId
 { 
     /// <summary>
-    /// Id of the opening book.
+    /// Error id.
     /// </summary>
     public required int ErrorId { get; set; }
     
     /// <summary>
-    /// Opening book data.
+    /// Error data.
     /// </summary>
     public required byte[] Data { get; set; } 
 }

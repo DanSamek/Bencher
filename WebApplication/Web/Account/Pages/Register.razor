@@ -70,8 +70,6 @@
             return;
         }
         
-        // TODO
-        // await EmailSender.SendRegisterConfirmation(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
         await SignInManager.SignInAsync(user, isPersistent: false);
         RedirectManager.RedirectTo(ReturnUrl);
     }

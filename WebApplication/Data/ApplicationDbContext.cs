@@ -6,17 +6,17 @@ namespace WebApplication.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    public DbSet<Engine> Engines { get; set; }
-    public DbSet<TestBranch> TestBranches { get; set; }
-    public DbSet<Test> Tests { get; set; }
-    public DbSet<OpeningBook> OpeningBooks { get; set; }
-    public DbSet<SprtSettings> SprtSettings { get; set; }
-    public DbSet<Penta> Pentas { get; set; }    
-    public DbSet<TestError> TestErrors { get; set; }
-    public DbSet<WorkerLog> WorkerLogs { get; set; }
     public DbSet<AutobenchState> AutobenchStates { get; set; }
+    public DbSet<Engine> Engines { get; set; }
+    public DbSet<OpeningBook> OpeningBooks { get; set; }
+    public DbSet<Penta> Pentas { get; set; }
+    public DbSet<SprtSettings> SprtSettings { get; set; }
     
-    public DbSet<Error> WorkerErrors { get; set; }
+    public DbSet<Test> Tests { get; set; }
+    public DbSet<TestBranch> TestBranches { get; set; }
+    public DbSet<WorkerLog> WorkerLogs { get; set; }
+    public DbSet<TestError> TestErrors { get; set; }
+    public DbSet<WorkerError> WorkerErrors { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -106,9 +106,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         #region WorkerLog
 
         builder.Entity<WorkerLog>()
-            .HasMany(x => x.Errors)
+            .HasOne(x => x.Error)
             .WithOne(x => x.WorkerLog)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasForeignKey<TestError>(e => e.WorkerLogId);
         
         #endregion
         
@@ -121,14 +122,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         
         #endregion
 
-        #region Error
-        
+        #region TestError
+
         builder.Entity<TestError>()
             .HasOne(e => e.Log)
             .WithOne()
-            .OnDelete(DeleteBehavior.Cascade);
-        
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasForeignKey<ErrorContent>(ec => ec.ErrorId);
+
         #endregion
         
+        #region WorkerError
+
+        builder.Entity<WorkerError>()
+            .HasOne(e => e.Log)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasForeignKey<ErrorContent>(ec => ec.ErrorId);
+
+        #endregion
+
     }
 }

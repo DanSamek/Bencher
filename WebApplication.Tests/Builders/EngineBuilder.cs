@@ -203,8 +203,7 @@ public class EngineBuilder
                 ConnectTime = DateTime.UtcNow,
                 User = user,
                 Test = test,
-                State = WorkerLogState.Active,
-                InitialTestState = InitialTestState.Autobenched
+                State = WorkerLogState.Active
             };
             
             context.WorkerLogs.Add(wl);
