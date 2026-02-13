@@ -232,7 +232,6 @@ public class TestStore : Store<Test>
         Attach(openingBook);
         Attach(sprtSettings);
         
-        // TODO load this information from the git commit message.
         var baseBranch = AddBranch(data.BaseBranchName, data.BaseBranchBench);
         var testBranch = AddBranch(data.TestBranchName, data.TestBranchBench);
         Attach(baseBranch);
@@ -458,5 +457,4 @@ file static class LinqExtensions
                 .Max()
             ?? DateTime.MinValue);   
     }
-
 }

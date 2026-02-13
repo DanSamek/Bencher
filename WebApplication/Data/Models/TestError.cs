@@ -5,7 +5,7 @@ namespace WebApplication.Data.Models;
 /// <summary>
 /// Error entity.
 /// </summary>
-public class TestError : Error
+public class TestError : WorkerError
 {
     /// <summary>
     /// Test, where this error happened.
@@ -18,4 +18,10 @@ public class TestError : Error
     /// </summary>
     [Required]
     public required WorkerLog WorkerLog { get; set; }
+    
+    /// <summary>
+    /// Id of the WorkerLog, where error happened.
+    /// </summary>
+    [Required]
+    public required int WorkerLogId { get; set; }
 }

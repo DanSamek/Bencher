@@ -24,13 +24,6 @@ public class WorkerLog : DoId
     public required WorkerLogState State { get; set; }
     
     /// <summary>
-    /// Initial state of the test.
-    /// TODO Why did i added that??
-    /// </summary>
-    [Required]
-    public required InitialTestState InitialTestState { get; set; }
-    
-    /// <summary>
     /// Time of the connection for the current workload.
     /// </summary>
     [Required]
@@ -65,12 +58,6 @@ public class WorkerLog : DoId
     [Required]
     [MaxLength(17)]
     public required string Mac { get; set; }
-
-    /// <summary>
-    /// All errors, that happened for this log.
-    /// TODO, this is going to be only one!
-    /// </summary>
-    public List<TestError> Errors { get; set; } = [];
     
     /// <summary>
     /// User that belongs to a log.
@@ -83,6 +70,11 @@ public class WorkerLog : DoId
     /// </summary>
     [Required]
     public required Test Test { get; set; }
+    
+    /// <summary>
+    /// Error that happened for this log.
+    /// </summary>
+    public TestError? Error { get; set; }
 
     /// <summary>
     /// Summary identifier of the worker.
@@ -95,4 +87,10 @@ public class WorkerLog : DoId
     /// </summary>
     public void SetLastConnectTimeNow()
         => LastConnectTime = DateTime.UtcNow;
+
+    /// <summary>
+    /// If this workerlog is for autobench.
+    /// </summary>
+    public bool Autobenched()
+        => TotalNumberOfGames == 0;
 }

@@ -4,7 +4,7 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.Stores;
 
-public class WorkerErrorStore : Store<Error>
+public class WorkerErrorStore : Store<WorkerError>
 {
     /// <summary>
     /// .Ctor
@@ -12,14 +12,14 @@ public class WorkerErrorStore : Store<Error>
     public WorkerErrorStore(IDbContextFactory<ApplicationDbContext> factory) : base(factory) {}
 
     /// <inheritdoc /> 
-    protected override DbSet<Error> GetDbSet() => Context.WorkerErrors;
+    protected override DbSet<WorkerError> GetDbSet() => Context.WorkerErrors;
     
     /// <summary>
     /// Adds worker error.
     /// </summary>
     public void AddError(byte[] errorData)
     {
-        var entity = new Error
+        var entity = new WorkerError
         {
             Time = DateTime.UtcNow
         };
@@ -47,7 +47,7 @@ public class WorkerErrorStore : Store<Error>
     /// Returns errors for the paging ordered by time - the last will be the first.
     /// ! Without log.
     /// </summary>
-    public IReadOnlyList<Error> GetErrorsForPage(int pageIndex, int pageSize = WebConstants.PAGE_SIZE)
+    public IReadOnlyList<WorkerError> GetErrorsForPage(int pageIndex, int pageSize = WebConstants.PAGE_SIZE)
         => GetDbSet()
             .OrderByDescending(t => t.Time)
             .TakePage(pageIndex, pageSize)

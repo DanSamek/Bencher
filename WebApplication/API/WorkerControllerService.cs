@@ -22,6 +22,8 @@ public class WorkerControllerService : IWorkerControllerService
     
     private static readonly SemaphoreSlim _getTestSemaphore = new SemaphoreSlim(1, 1);
     private static readonly SemaphoreSlim _resultsSemaphore = new SemaphoreSlim(1, 1);
+    private static readonly SemaphoreSlim _autobenchStateSemaphore = new SemaphoreSlim(1, 1);
+    
     
     /// <summary>
     /// .Ctor
@@ -44,7 +46,7 @@ public class WorkerControllerService : IWorkerControllerService
         var workerLog = _workerLogStore.GetByConnectionId(connectionId);
         if (workerLog is null || workerLog.State != WorkerLogState.Active) throw new NotFoundException();
         
-        _testStore.SetRunningState(workerLog!.Test);
+        _testStore.SetRunningState(workerLog.Test);
         workerLog.SetLastConnectTimeNow();
                 
         _workerLogStore.SaveChanges();
@@ -57,7 +59,8 @@ public class WorkerControllerService : IWorkerControllerService
     public async Task SaveTestError(TestErrorDto testErrorDto)
     {
         var workerLog = _workerLogStore.GetByConnectionId(testErrorDto.ConnectionId);
-        if (workerLog is null || testErrorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE) throw new NotFoundException();
+        if (workerLog is null || testErrorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE 
+            || workerLog.Error != null || workerLog.State != WorkerLogState.Active) throw new NotFoundException();
         
         workerLog.State = WorkerLogState.Finished;
         _workerLogStore.AddError(workerLog, testErrorDto.Log);
@@ -114,31 +117,39 @@ public class WorkerControllerService : IWorkerControllerService
     /// <inheritdoc /> 
     public async Task UpdateAutobenchState(AutobenchDto autobenchDto)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(autobenchDto.ConnectionId);
-        if (workerLog is null || workerLog.State != WorkerLogState.Active) throw new NotFoundException();
-        
-        var autobenchState = _autobenchStateStore.GetAutobenchStateByTestId(workerLog.Test.Id);
-        if (autobenchState is null) throw new NotFoundException();
+        await _autobenchStateSemaphore.WaitAsync();
+        try
+        {
+            var workerLog = _workerLogStore.GetByConnectionId(autobenchDto.ConnectionId);
+            if (workerLog is null || workerLog.State != WorkerLogState.Active) throw new NotFoundException();
 
-        var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
-        if (!result)
-        {
-            await StopTest(workerLog.Test.Id);
+            var autobenchState = _autobenchStateStore.GetAutobenchStateByTestId(workerLog.Test.Id);
+            if (autobenchState is null) throw new NotFoundException();
+
+            var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
+            if (!result)
+            {
+                await StopTest(workerLog.Test.Id);
+            }
+
+            workerLog.State = WorkerLogState.Finished;
+            _workerLogStore.SaveChanges();
+            _autobenchStateStore.SaveChanges();
+
+            if (result)
+            {
+                await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
+            }
+
+            // If test is resolved, set this as a bench of the test branch.
+            if (autobenchState.Resolved)
+            {
+                await _testBranchStore.SetTestBranchBench(workerLog.Test.Id, autobenchState.Bench);
+            }
         }
-        
-        workerLog.State = WorkerLogState.Finished;
-        _workerLogStore.SaveChanges();
-        _autobenchStateStore.SaveChanges();
-        
-        if (result)
+        finally
         {
-            await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
-        }
-        
-        // If test is resolved, set this as a bench of the test branch.
-        if (autobenchState.Resolved)
-        {
-            await _testBranchStore.SetTestBranchBench(workerLog.Test.Id, autobenchState.Bench);
+            _autobenchStateSemaphore.Release();
         }
     }
     
@@ -168,12 +179,11 @@ public class WorkerControllerService : IWorkerControllerService
         var wl = new WorkerLog
         {
             Name = getTestDto.Name.Length <= WorkerLog.MAX_NAME_LENGTH ? getTestDto.Name : getTestDto.Name[..(WorkerLog.MAX_NAME_LENGTH - 1)],
-            InitialTestState = getTestDto.Autobench ? InitialTestState.Autobenched : InitialTestState.Normal,
             State = WorkerLogState.Active,
             ConnectTime = now,
             LastConnectTime = now,
             NumberOfGames = 0,
-            TotalNumberOfGames = TotalNumberGamesCalculator.Calculate(getTestDto.NumberOfThreads, test.NumberOfThreads), 
+            TotalNumberOfGames = getTestDto.Autobench ? 0 : TotalNumberGamesCalculator.Calculate(getTestDto.NumberOfThreads, test.NumberOfThreads), 
             NumberOfThreads = getTestDto.NumberOfThreads,
             Mac = getTestDto.Mac,
             User = user!, // User exists - middleware validated that.

@@ -1,3 +1,4 @@
+using WebApplication.Data.Models;
 using WebApplication.Stores;
 using WebApplication.Tests.Builders;
 
@@ -21,6 +22,13 @@ public class TestErrorStoreTests : TestBase
             .AddBranch("test_branch")
             .AddBranch("base_branch")
             .AddTest("test_1", "test_book", "base_branch", "test_branch")
+            .AddWorker(1)
+            .AddWorker(1)
+            .AddWorker(1)
+            .AddWorker(1)
+            .AddWorker(1)
+            .AddWorker(1)
+            .AddWorker(1)
             .AddWorker(1)
             .AddError(Factory.CreateDbContext(), new DateTime(2000,4,4).ToUniversalTime(), data: data)
             .AddError(Factory.CreateDbContext(), new DateTime(2001,4,4).ToUniversalTime(), data: data)
@@ -102,11 +110,14 @@ public class TestErrorStoreTests : TestBase
             .AddBranch("base_branch")
             .AddTest("test_1", "test_book", "base_branch", "test_branch")
             .AddWorker(1)
+            .AddWorker(1)
             .AddError(Factory.CreateDbContext(), new DateTime(2016,4,4), data: data)
             .AddError(Factory.CreateDbContext(), new DateTime(2018,1,4), data: data)
             .EnsurePentaCreated(Factory.CreateDbContext())
             .Close()
             .AddTest("test_2", "test_book", "base_branch", "test_branch")
+            .AddWorker(1)
+            .AddWorker(1)
             .AddWorker(1)
             .AddError(Factory.CreateDbContext(), new DateTime(2007,2,2), data: data)
             .AddError(Factory.CreateDbContext(), new DateTime(2021,4,4), data: data)
@@ -116,7 +127,7 @@ public class TestErrorStoreTests : TestBase
             .Close()
             .Close()
             .Close();
-
+        
         var testId = Factory.CreateDbContext().Tests.First(t => t.Name == "test_2").Id;
         var errors = store.GetErrorsForTest(testId);
         

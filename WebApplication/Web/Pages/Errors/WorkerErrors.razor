@@ -11,7 +11,7 @@
 <PageTitle>Worker errors</PageTitle>
 <PageHeader Value="Worker errors"/>
 
-<TablePaginator TRow="Data.Models.Error"
+<TablePaginator TRow="Data.Models.WorkerError"
                 InitialRows="_errors"
                 NextPageClicked="OnNextPageClicked"
                 PreviousPageClicked="OnPreviousPageClicked"
@@ -40,7 +40,7 @@
 
 @code {
     
-    private IReadOnlyList<Data.Models.Error> _errors = [];
+    private IReadOnlyList<Data.Models.WorkerError> _errors = [];
     
     /// <inheritdoc /> 
     protected override void OnInitialized()
@@ -49,17 +49,17 @@
         base.OnInitialized();
     }
 
-    private PageClickedResult<Data.Models.Error> OnNextPageClicked(PageClickedArgs args)
+    private PageClickedResult<Data.Models.WorkerError> OnNextPageClicked(PageClickedArgs args)
     {
         var errors = WorkerErrorStore.GetErrorsForPage(args.RequestedPageIndex);
-        var result = new PageClickedResult<Data.Models.Error>(errors);
+        var result = new PageClickedResult<Data.Models.WorkerError>(errors);
         return result;
     }
     
-    private PageClickedResult<Data.Models.Error> OnPreviousPageClicked(PageClickedArgs args)
+    private PageClickedResult<Data.Models.WorkerError> OnPreviousPageClicked(PageClickedArgs args)
     {
         var errors = WorkerErrorStore.GetErrorsForPage(args.RequestedPageIndex);
-        var result = new PageClickedResult<Data.Models.Error>(errors);
+        var result = new PageClickedResult<Data.Models.WorkerError>(errors);
         return result;
     }
     

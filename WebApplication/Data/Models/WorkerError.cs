@@ -6,7 +6,7 @@ namespace WebApplication.Data.Models;
 /// Error class for workers
 ///     - used for errors without a test - for example missing references,..
 /// </summary>
-public class Error : DoId
+public class WorkerError : DoId
 {
     /// <summary>
     /// Time when the error happened.

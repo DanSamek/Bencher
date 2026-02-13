@@ -20,7 +20,7 @@
             <tr>
                 <td>@workerLog.Identifier()</td>
                 <td>@workerLog.Mac</td>
-                @if (workerLog.InitialTestState == InitialTestState.Normal)
+                @if (!workerLog.Autobenched())
                 {
                     <td>@workerLog.NumberOfGames / @workerLog.TotalNumberOfGames</td>   
                 }

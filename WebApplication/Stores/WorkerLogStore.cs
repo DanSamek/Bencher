@@ -39,11 +39,12 @@ public class WorkerLogStore : Store<WorkerLog>
         {
             Time = DateTime.UtcNow,
             Test = workerLog.Test,
-            WorkerLog = workerLog
+            WorkerLog = workerLog,
+            WorkerLogId = workerLog.Test.Id
         };
         
         var entity = Context.TestErrors.Add(error).Entity;
-        workerLog.Errors.Add(entity);
+        workerLog.Error = entity;
         Context.WorkerLogs.Update(workerLog);
         
         var test = Context.Tests.First(t => t.Id == workerLog.Test.Id);

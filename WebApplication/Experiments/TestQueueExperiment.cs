@@ -84,9 +84,7 @@ public static class TestQueueExperiment
                     Test = testToAddWorker,
                     User = null!,
                     ConnectTime = DateTime.UtcNow,
-                    Errors = [],
                     State = WorkerLogState.Disconnected,
-                    InitialTestState = InitialTestState.Normal
                 });
             
             if (iteration % 5 != 0) continue;

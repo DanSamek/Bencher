@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication.Data;
 using WebApplication.Data.Models;
+using WebApplication.Stores;
 
 namespace WebApplication.Tests.Builders;
 
@@ -35,8 +36,7 @@ public class TestBuilder
             ConnectTime = DateTime.UtcNow,
             User = _user,
             Test = _test,
-            State = WorkerLogState.Active,
-            InitialTestState = _test.Autobenched ? InitialTestState.Autobenched : InitialTestState.Normal
+            State = WorkerLogState.Active
         };
         
         _context.WorkerLogs.Add(wl);
@@ -65,15 +65,23 @@ public class TestBuilder
     public TestBuilder AddError(ApplicationDbContext context, DateTime date, byte[]? data = null)
     {
         context.Attach(_test);
-        var wl = context.WorkerLogs.First(wl => wl.Test.Id == _test.Id);
+        var wl = context.WorkerLogs
+            .Include(wl => wl.Test)
+            .First(wl => wl.Test.Id == _test.Id && wl.Error == null);
         var error = new TestError
         {
             Time = date.ToUniversalTime(),
             Test = _test,
             WorkerLog = wl,
+            WorkerLogId = _test.Id,
             
         };
-        error = context.TestErrors.Add(error).Entity;
+        var entity = context.TestErrors.Add(error).Entity;
+        wl.Error = entity;
+        context.WorkerLogs.Update(wl);
+        
+        var test = context.Tests.First(t => t.Id == wl.Test.Id);
+        test.Errors.Add(entity);
         context.SaveChanges();
 
         error.Log = new ErrorContent
@@ -81,6 +89,7 @@ public class TestBuilder
             Data = data ?? [0x1, 0x2, 0x4],
             ErrorId = error.Id
         };
+        context.SaveChanges();
         return this;
     }
     
