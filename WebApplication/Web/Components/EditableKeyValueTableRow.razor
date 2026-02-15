@@ -1,0 +1,17 @@
+<tr>
+    <td>@Key</td>
+    <td style="@ValueCss">
+        @EditorWithValue
+    </td>
+</tr>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Key { get; set; }
+    
+    [Parameter]
+    public string? ValueCss { get; set; }
+    
+    [Parameter, EditorRequired]
+    public required RenderFragment EditorWithValue { get; set; }
+}

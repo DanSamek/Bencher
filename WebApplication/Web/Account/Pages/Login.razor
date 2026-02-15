@@ -19,7 +19,6 @@
         <StatusMessage Message="@_errorMessage" />
         <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Username" id="Input.Username" class="form-control" aria-required="true" />
                 <label for="Input.Username" class="form-label">Username</label>

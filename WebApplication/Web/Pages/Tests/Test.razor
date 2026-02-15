@@ -14,8 +14,11 @@
 @inject NavigationManager NavigationManager
 @inject UserStore UserStore
 @inject IGitBranchComparisonService GitBranchComparisonService
+@inject IJSRuntime JsRuntime
 
 <PageTitle>@_test!.Name</PageTitle>
+
+<Alert @ref="_alert" Text="Test priority updated." Success />
 
 <div class="d-flex flex-lg-row justify-content-between flex-column mb-lg-0 mb-3">
     <PageHeader Value="@_test!.Name"/>
@@ -66,7 +69,19 @@
             <KeyValueTableRow Key="Hashsize" Value="@_test.HashSize" />
             <KeyValueTableRow Key="Time management" Value="@_test.TimeManagement" />
             <KeyValueTableRow Key="Number of threads" Value="@_test.NumberOfThreads" />
-            <KeyValueTableRow Key="Priority" Value="@_test.Priority" /> @* TODO enable change *@
+            @if (_canEdit)
+            {
+                <EditableKeyValueTableRow Key="Priority " >
+                    <EditorWithValue>
+                        <input class="w-100" type="number" value="@_test.Priority" @onchange="ChangePriority"/>
+                    </EditorWithValue>
+                </EditableKeyValueTableRow>
+            }
+            else
+            {
+                <KeyValueTableRow Key="Priority" Value="@_test.Priority" />
+            }
+            
             <KeyValueTableRow Key="Additional fastchess options" Value="@(string.IsNullOrEmpty(_test.AdditionalFastchessOptions)? "None" : _test.AdditionalFastchessOptions)" />
             
             @BranchFragment("Base branch", _test.BaseBranch)
@@ -116,6 +131,7 @@
     private Data.Models.Test? _test;
     private bool _canEdit;
     private IReadOnlyList<TestError> _errors = [];
+    private Alert? _alert;
     
     /// <summary>
     /// Id of the test. 
@@ -192,5 +208,15 @@
         return @<div style="max-height: 500px;overflow-y: auto;">
                    @rf
                </div>;
+    }
+    
+    private async Task ChangePriority(ChangeEventArgs args)
+    {
+        if (!int.TryParse(args.Value?.ToString(), out var priority)) return;
+        
+        TestStore.UpdatePriority(_test!.Id, priority);
+        _alert?.Show();
+        RefreshTest();
+        await JsRuntime.InvokeVoidAsync("scrollUp");
     }
 }

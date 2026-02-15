@@ -49,7 +49,7 @@ public class SprtTests
         };
         
         var statistics = SPRT.Sprt.GetStatistics(test);
-        Assert.That(double.Round(statistics.Llr, 2), Is.EqualTo(expectedApproxLlr)); // TODO!
+        Assert.That(double.Round(statistics.Llr, 2), Is.EqualTo(expectedApproxLlr));
         Assert.That(statistics.Result, Is.EqualTo(expectedResult));
     }
 }

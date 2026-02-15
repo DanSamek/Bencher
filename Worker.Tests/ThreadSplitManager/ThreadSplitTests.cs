@@ -21,7 +21,8 @@ public class ThreadSplitTests
         new SplitCase([64], 2, 1, [64]),
         new SplitCase([64], 2, 2, [32, 32]),
         new SplitCase([11], 2, 2, [11]),
-        new SplitCase([11], 1, 2, [8, 3])
+        new SplitCase([11], 1, 2, [8, 3]),
+        new SplitCase([128], 1, 10, [16, 16, 16, 16, 16, 16, 16, 16])
     ];
     
     /// <summary>

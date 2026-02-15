@@ -74,3 +74,7 @@ async function downloadFile(fileName, contentStreamReference) {
     anchorElement.remove();
     URL.revokeObjectURL(url);
 }
+
+function scrollUp() {
+    window.scrollTo(0,0);
+}

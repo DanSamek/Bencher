@@ -65,15 +65,13 @@ public class GameTestProcessor : ITestProcessor<GameTestProcessorResult>
     /// <inheritdoc /> 
     public async Task<GameTestProcessorResult> Process()
     {
-        // Builds engines.
         var (baseDirectory, newDirectory) = BuildEngines();
-        // Create opening book [from the response].
+     
         var openingBookPath = await CreateOpeningBook();
         
         if (_errorTrace.Error()) return GameTestProcessorResult.Error;
         if (!_notifier.IsTestStillRunning(_connectionId)) return ReturnNotRunningClean();
         
-        // Run benches.
         _errorTrace.AddInfo("Running engine benches");
         var baseNps = ValidateBenches(baseDirectory, newDirectory);
         if (_errorTrace.Error()) return GameTestProcessorResult.Error;
@@ -83,11 +81,10 @@ public class GameTestProcessor : ITestProcessor<GameTestProcessorResult>
         
         if (!_notifier.IsTestStillRunning(_connectionId)) return ReturnNotRunningClean();
         
-        // Run games.
         RunGames(arguments);
         
         CleanTmp(baseDirectory, newDirectory, openingBookPath);
-        return await Task.FromResult(GameTestProcessorResult.Success);
+        return GameTestProcessorResult.Success;
 
         GameTestProcessorResult ReturnNotRunningClean()
         {
@@ -128,7 +125,6 @@ public class GameTestProcessor : ITestProcessor<GameTestProcessorResult>
         });
         
         process.BeginOutputReadLine();
-        // TODO process.BeginErrorReadLine();
         
         process.WaitForExit();
         process.Close();
@@ -137,7 +133,7 @@ public class GameTestProcessor : ITestProcessor<GameTestProcessorResult>
         SendPairResults(results, true);
         
         _testStateWatcher.EnsureStopped();
-        if (!_testStateWatcher.Running) _errorTrace.AddInfo("Test was manually stopped");
+        if (!_testStateWatcher.Running) _errorTrace.AddInfo("Test ended or was manually stopped");
         
         return;
         void ProcessLine(string line)
@@ -160,7 +156,7 @@ public class GameTestProcessor : ITestProcessor<GameTestProcessorResult>
 
             if (!matched)
             {
-                _errorTrace.AddInfo($"Unknown line: {line}");
+                _errorTrace.AddInfo(line);
                 return;
             }
 

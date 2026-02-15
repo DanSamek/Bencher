@@ -3,10 +3,10 @@ using Worker.ProcessOperations;
 using Worker.UI;
 
 namespace Worker.TestProcessors.AutobenchTestProcessor;
-public record AutobenchProcess(GetTestAutobenchResponse AutobenchResponse, ErrorTrace ErrorTrace);
 
 /// <summary>
-/// Implementation of the autobench test "pipeline".
+/// Autobench test processor
+/// - Runs bench for the engine
 /// </summary>
 public class AutobenchTestProcessor : ITestProcessor<int>
 {
@@ -27,11 +27,7 @@ public class AutobenchTestProcessor : ITestProcessor<int>
     }
     
     /// <summary>
-    /// Processes autobench:
-    /// - Creates directory in the /tmp
-    /// - Clones a repository + branch checkout
-    /// - Builds the engine
-    /// - Runs "bench" command
+    /// Processes autobench.
     /// </summary>
     public Task<int> Process()
     {

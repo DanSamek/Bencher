@@ -62,4 +62,10 @@ public class AutobenchState : DoId
 
         return true;
     }
+
+    /// <summary>
+    /// If confidence is in the interval - (0.0001, 1]
+    /// </summary>
+    public static bool IsConfidenceInInterval(double value)
+        => value is >= 0.0001 and <= 1.0;
 }

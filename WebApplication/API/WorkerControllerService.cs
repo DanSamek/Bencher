@@ -24,7 +24,6 @@ public class WorkerControllerService : IWorkerControllerService
     private static readonly SemaphoreSlim _resultsSemaphore = new SemaphoreSlim(1, 1);
     private static readonly SemaphoreSlim _autobenchStateSemaphore = new SemaphoreSlim(1, 1);
     
-    
     /// <summary>
     /// .Ctor
     /// </summary>
@@ -157,42 +156,43 @@ public class WorkerControllerService : IWorkerControllerService
     public async Task<(WorkerLog, Test)> CreateJobForWorker(GetTestDto getTestDto, string userToken)
     {
         await _getTestSemaphore.WaitAsync();
-        Test? test;
         try
         {
-            test = _testStore.GetNextTestForWorker(getTestDto.Autobench, getTestDto.NumberOfThreads);
+            var test = _testStore.GetNextTestForWorker(getTestDto.Autobench, getTestDto.NumberOfThreads);
             if (test is null) throw new NotFoundException();
 
+            var user = _userStore.GetUserByAccessToken(userToken);
+        
+            _workerLogStore.Attach(user!);
+            _workerLogStore.Attach(test);
+
+            var now = DateTime.UtcNow;
+            var wl = new WorkerLog
+            {
+                Name = getTestDto.Name.Length <= WorkerLog.MAX_NAME_LENGTH ? getTestDto.Name : getTestDto.Name[..(WorkerLog.MAX_NAME_LENGTH - 1)],
+                State = WorkerLogState.Active,
+                ConnectTime = now,
+                LastConnectTime = now,
+                NumberOfGames = 0,
+                TotalNumberOfGames = getTestDto.Autobench ? 0 : TotalNumberGamesCalculator.Calculate(getTestDto.NumberOfThreads, test.NumberOfThreads), 
+                NumberOfThreads = getTestDto.NumberOfThreads,
+                Mac = getTestDto.Mac,
+                User = user!, // User exists - middleware validated that.
+                Test = test
+            };
+        
+            _workerLogStore.Add(wl);
+            _workerLogStore.SaveChanges();
+            
+            // We need to set running state after WorkerLog is created if service is down,
+            // there is no WorkerLog, but test is in the running state -> invalid. 
             await _testStore.SetRunningState(test.Id);
+            return (wl, test);
         }
         finally
         {
             _getTestSemaphore.Release();
         }
-        
-        var user = _userStore.GetUserByAccessToken(userToken);
-        
-        _workerLogStore.Attach(user!);
-        _workerLogStore.Attach(test);
-
-        var now = DateTime.UtcNow;
-        var wl = new WorkerLog
-        {
-            Name = getTestDto.Name.Length <= WorkerLog.MAX_NAME_LENGTH ? getTestDto.Name : getTestDto.Name[..(WorkerLog.MAX_NAME_LENGTH - 1)],
-            State = WorkerLogState.Active,
-            ConnectTime = now,
-            LastConnectTime = now,
-            NumberOfGames = 0,
-            TotalNumberOfGames = getTestDto.Autobench ? 0 : TotalNumberGamesCalculator.Calculate(getTestDto.NumberOfThreads, test.NumberOfThreads), 
-            NumberOfThreads = getTestDto.NumberOfThreads,
-            Mac = getTestDto.Mac,
-            User = user!, // User exists - middleware validated that.
-            Test = test
-        };
-        
-        _workerLogStore.Add(wl);
-        _workerLogStore.SaveChanges();
-        return (wl, test);
     }
     
     /// <inheritdoc /> 
@@ -224,5 +224,4 @@ public class WorkerControllerService : IWorkerControllerService
         await _testStore.StopTest(testId);
         await _workerLogStore.StopAllWorkers(testId);
     }
-
 }
