@@ -33,6 +33,8 @@ public class RegexesTests
     /// </summary>
     [TestCase("    error: git error")]
     [TestCase("error: git error")]
+    [TestCase("fatal: git error")]
+    [TestCase("     fatal: git error")]
     public void GitErrorRegex_Success(string line)
     {
         var match = Worker.Regexes.GitErrorRegex.Match(line);
@@ -44,6 +46,9 @@ public class RegexesTests
     /// </summary>
     [TestCase("    x: git error")]
     [TestCase("git error")]
+    [TestCase("info: git error")]
+    [TestCase("rror: git error")]
+    [TestCase("atal: git error")]
     public void GitErrorRegex_Failure(string line)
     {
         var match = Worker.Regexes.GitErrorRegex.Match(line);

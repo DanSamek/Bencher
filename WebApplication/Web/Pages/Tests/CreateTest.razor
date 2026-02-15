@@ -43,8 +43,8 @@
     <div class="form-floating mb-3">
         @if (_formModel.Autobenched)
         {
-            <SimpleInputNumber TNumber="double?" @bind-Value="@_formModel.Confidence" Name="Confidence" For="() => _formModel.Confidence"/>
-            <span class="message warningMessage">@_autobenchErrorMessage</span>
+            <SimpleInputNumber Mb3="false" TNumber="double?" @bind-Value="@_formModel.Confidence" Name="Confidence" For="() => _formModel.Confidence"/>
+            <span class="message validation-message">@_autobenchErrorMessage</span>
         }
     </div>
     
@@ -62,7 +62,7 @@
         <div class="w-100">
             <p>Base branch</p>
             <SimpleInputText @bind-Value="@_formModel.BaseBranchName" Name="Branch name" For="() => _formModel.BaseBranchName"/>
-            <SimpleInputNumber TNumber="int" @bind-Value="@_formModel.BaseBranchBench" Name="Bench" For="() => _formModel.BaseBranchBench"/>
+            <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.BaseBranchBench" Name="Bench" For="() => _formModel.BaseBranchBench"/>
         </div>
         
         <div class="w-100">
@@ -70,7 +70,7 @@
             <SimpleInputText @bind-Value="@_formModel.TestBranchName" Name="Branch name" For="() => _formModel.TestBranchName"/>
             @if (!_formModel.Autobenched)
             {
-                <SimpleInputNumber TNumber="int" @bind-Value="@_formModel.TestBranchBench" Name="Bench" For="() => _formModel.TestBranchBench"/>
+                <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.TestBranchBench" Name="Bench" For="() => _formModel.TestBranchBench"/>
             }
         </div>
     </div>
@@ -78,8 +78,8 @@
     <div class="form-floating mb-3">
         <p>Test options</p>
         <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.Priority" Name="Priority" For="() => _formModel.Priority"/>
-        <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.HashSize" Name="HashSize" For="() => _formModel.HashSize"/>
-        <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.NumberOfThreads" Name="Number of threads" For="() => _formModel.NumberOfThreads"/>
+        <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.HashSize" Name="Hash size" For="() => _formModel.HashSize"/>
+        <SimpleInputNumber TNumber="int?" @bind-Value="@_formModel.NumberOfThreads"  Name="Number of threads" For="() => _formModel.NumberOfThreads"/>
         <SimpleInputText @bind-Value="@_formModel.TimeManagement" Name="Time management" For="() => _formModel.TimeManagement"/>
     </div>
     
@@ -120,7 +120,8 @@
 </EditForm>
     
 @code{
-    private const string CONFIDENCE_IS_NULL = "Confidence is required if autobench is set.";
+    private const string CONFIDENCE_IS_NULL = "Confidence is required if autobench is set";
+    private const string CONFIDENCE_OUT_OF_INTERVAL = "Condifence is out of interval, expected (0.0001, 1]";
     
     private readonly CreateTestFormModel _formModel = new CreateTestFormModel();
     private IReadOnlyList<Engine> _engines = [];
@@ -150,17 +151,32 @@
     {
         _autobenchErrorMessage = null;
         var result = context.Validate();
-        if (!result) return;
         
         var data = (context.Model as CreateTestFormModel)!;
         if (data is { Autobenched: true, Confidence: null })
         {
             _autobenchErrorMessage = CONFIDENCE_IS_NULL;
+            StateHasChanged();
+            return;
+        }
+
+        if (data.Autobenched && !AutobenchState.IsConfidenceInInterval(data.Confidence!.Value))
+        {
+            _autobenchErrorMessage = CONFIDENCE_OUT_OF_INTERVAL;
+            StateHasChanged();
             return;
         }
         
+        var validationMessages = context
+            .GetValidationMessages()
+            .ToArray();
+        
+        if (validationMessages.Length == 1 
+            && validationMessages[0] == CreateTestFormModel.TEST_BRANCH_BENCH_REQUIRED_ERROR_MESSAGE
+            && data is { Autobenched: true, TestBranchBench: null }) data.TestBranchBench = 0;
+        else if (!result) return;
+
         var test = TestStore.Create(UserId!, data);
         NavigationManager.NavigateTo($"/Test/{test.Id}", true);
-        
     }
 }

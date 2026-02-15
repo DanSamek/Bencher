@@ -34,3 +34,5 @@ msbuild.wrn
 
 
 .env
+.env-local
+.prisma-env

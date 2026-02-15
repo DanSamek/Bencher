@@ -232,8 +232,8 @@ public class TestStore : Store<Test>
         Attach(openingBook);
         Attach(sprtSettings);
         
-        var baseBranch = AddBranch(data.BaseBranchName, data.BaseBranchBench);
-        var testBranch = AddBranch(data.TestBranchName, data.TestBranchBench);
+        var baseBranch = AddBranch(data.BaseBranchName, data.BaseBranchBench!.Value);
+        var testBranch = AddBranch(data.TestBranchName, data.TestBranchBench!.Value);
         Attach(baseBranch);
         Attach(testBranch);
         
@@ -398,7 +398,15 @@ public class TestStore : Store<Test>
 
         return result;
     }
-
+    
+    /// <summary>
+    /// Updates test priority.
+    /// </summary>
+    public void UpdatePriority(int id, int priority)
+        => GetDbSet()
+            .Where(t => t.Id == id)
+            .ExecuteUpdate(spc => spc.SetProperty(t => t.Priority, priority));
+    
     private int MaxPriority()
         =>  GetDbSet() 
                 .Where(t => t.State != TestState.Stopped && t.State != TestState.Finished)

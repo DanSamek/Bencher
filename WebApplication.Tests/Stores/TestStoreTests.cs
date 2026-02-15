@@ -1293,6 +1293,36 @@ public class TestStoreTests : TestBase
         Assert.That(result,Is.EqualTo(16));
     }
 
+    /// <summary>
+    /// Tests <see cref="TestStore.UpdatePriority" />.
+    /// We expect that after method call, priority is changed. 
+    /// </summary>
+    [Test]
+    public void UpdatePriority()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateSprtSettings()
+            .CreateBook("test_book")
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch")
+            .AddTest("test_1", "test_book", "base_branch", "test_branch", priority: 1)
+            .Close()
+            .Close()
+            .Close()
+            .Close();
+
+        var store = CreateTestStore();
+        var test = GetTestByName(Factory, "test_1");
+        Assert.That(test.Priority, Is.EqualTo(1));
+        
+        store.UpdatePriority(test.Id, 5);
+        
+        test = GetTestByName(Factory, "test_1");
+        Assert.That(test.Priority, Is.EqualTo(5));
+    }
+    
     private static Test GetTestByName(TestContextFactory factory, string name)
     {
         using var context = factory.CreateDbContext();

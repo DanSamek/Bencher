@@ -2,21 +2,19 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Shared
+@using WebApplication.Data.Models
 @using WebApplication.Stores
+@using WebApplication.Web.Components
 
 @inject OpeningBookStore OpeningBookStore 
+
+<Alert @ref="_alert" Danger Text="" />
 
 <EditForm Model="_formData" OnValidSubmit="AddOpeningBook" FormName="AddOpeningBook">
     <DataAnnotationsValidator/>
     
     <div class="form-floating mb-3">
         <InputFile class="form-control" OnChange="OnFileChanged" Id="File" />
-        @if (_invalidFileType)
-        {
-            <div class="text-danger">
-                File type is invalid, expected .epd or .pgn filetype.
-            </div>
-        }
     </div>
    
     <button type="submit" class="btn btn-primary ms-auto d-block" value="Save">Add</button>
@@ -24,12 +22,13 @@
 
 @code {
     private OpeningBookFormModel _formData = new OpeningBookFormModel();
-    private bool _invalidFileType;
-
+    private Alert? _alert;
+    
     private static readonly string LowerEpd = $".{nameof(OpeningBookType.EPD).ToLower()}";
     private static readonly string LowerPgn = $".{nameof(OpeningBookType.PGN).ToLower()}";
 
-    private const int MAX_OPENING_BOOK_SIZE = 100 * 1024 * 1024; // TODO validate DB
+    private static readonly string FILE_TOO_BIG = $"Opening book is too big, maximum size is {OpeningBookContent.MEGABYTES_DATA_SIZE} MB.";
+    private const string INVALID_FILE_TYPE = "File type is invalid, expected .epd or .pgn"; 
     
     /// <summary>
     /// Action when opening book is added.
@@ -45,24 +44,38 @@
 
     private async Task OnFileChanged(InputFileChangeEventArgs args)
     {
-        _invalidFileType = false;
         var file = args.File;
         
         var extension = Path.GetExtension(file.Name);
         if (extension != LowerEpd && extension != LowerPgn)
         {
-            _invalidFileType = true;
+            SetText(true);
             return;
         } 
         
         _formData.OpeningBookType = extension == LowerEpd ? OpeningBookType.EPD : OpeningBookType.PGN;
         _formData.Name = file.Name;
 
-        await using var stream = file.OpenReadStream(MAX_OPENING_BOOK_SIZE);
-        _formData.Data = new byte[stream.Length];
-        await stream.ReadExactlyAsync(_formData.Data, 0, (int)stream.Length);
+        try
+        {
+            await using var stream = file.OpenReadStream(OpeningBookContent.MAX_OPENING_BOOK_SIZE);
+            _formData.Data = new byte[stream.Length];
+            await stream.ReadExactlyAsync(_formData.Data, 0, (int)stream.Length);
+        }
+        catch
+        {
+            SetText(false);
+        }
     }
 
+    private void SetText(bool invalidFileType)
+    {
+        var text = invalidFileType ? INVALID_FILE_TYPE : FILE_TOO_BIG;
+        
+        _alert?.SetText(text);
+        _alert?.Show();
+    }
+    
     private class OpeningBookFormModel
     {
         [Required]

@@ -1,3 +1,4 @@
+@using Mono.TextTemplating
 @inherits CustomComponentBase
 
 @if (_visible)
@@ -45,7 +46,14 @@
         _visible = true;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Sets text.
+    /// </summary>
+    public void SetText(string text)
+    {
+        Text = text;
+    }
 
     private void Hide() => _visible = false;
     

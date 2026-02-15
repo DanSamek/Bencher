@@ -5,8 +5,9 @@
 
 @{
     var nameWithId = $"{Name}{Id}";
+    var mb3Class = Mb3 ? "mb-3" : string.Empty;
 }
-<div class="form-floating mb-3">
+<div class="form-floating @mb3Class">
     <InputNumber TValue="TNumber" class="form-control" ValueExpression="() => _inputValue" Value="@_inputValue" ValueChanged="OnValueChanged" Id="@nameWithId"></InputNumber>
     <label for="@nameWithId" class="form-label">@Name</label>
     <ValidationMessage For="For"/>
@@ -14,6 +15,12 @@
 
 @code {
     private TNumber _inputValue = default!;
+
+    /// <summary>
+    /// If css class "mb-3" is added to the div.
+    /// </summary>
+    [Parameter]
+    public bool Mb3 { get; set; } = true;
     
     /// <summary>
     /// Input name.
