@@ -35,3 +35,6 @@ All environment variables are required for the run except `GMAIL_SUBJECT`.
 ### How to run (locally)
 - `cd WebApplication`
 - `dotnet run -c Release`
+
+
+**See also manual.md**
