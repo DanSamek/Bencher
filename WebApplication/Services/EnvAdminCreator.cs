@@ -41,8 +41,7 @@ public class EnvAdminCreator
         if (!result.Succeeded)
         {
             var reasons = result.Errors.Aggregate(string.Empty, (current, error) => current + " " + error.Description);
-            Console.WriteLine($"Unable to create admin user, {reasons}");
-            _logger.Error($"Unable to create admin user, {reasons}");
+            _logger.Warn($"Unable to create admin user, {reasons}");
         }
     }
 }

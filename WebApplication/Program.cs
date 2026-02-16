@@ -12,6 +12,9 @@ using WebApplication.Services.GmailSender;
 using WebApplication.Stores;
 using WebApplication.Web;
 
+// Log4net.
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config", Watch = true)]
+
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 
 DotNetEnv.Env.Load();
