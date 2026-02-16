@@ -63,7 +63,7 @@ public class GmailSender : IEmailSender<ApplicationUser>
             }
             catch (Exception ex)
             {
-                _logger.Error(ex.Message);
+                _logger.Error(ex.Message, ex);
             }
             return Task.CompletedTask;
         });

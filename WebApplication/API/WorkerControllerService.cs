@@ -1,3 +1,4 @@
+using log4net;
 using Shared;
 using Shared.Dtos.Requests;
 using WebApplication.Data.Models;
@@ -23,6 +24,9 @@ public class WorkerControllerService : IWorkerControllerService
     private static readonly SemaphoreSlim _getTestSemaphore = new SemaphoreSlim(1, 1);
     private static readonly SemaphoreSlim _resultsSemaphore = new SemaphoreSlim(1, 1);
     private static readonly SemaphoreSlim _autobenchStateSemaphore = new SemaphoreSlim(1, 1);
+    
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(WorkerControllerService));
+    
     
     /// <summary>
     /// .Ctor
@@ -81,7 +85,7 @@ public class WorkerControllerService : IWorkerControllerService
             // Test can be eventually deleted !
             var test = _testStore.GetById(workerLog.Test.Id);
             if (test is null) throw new NotFoundException();
-            
+
             var toIncrement = (resultsDto.Ll + resultsDto.Ld + resultsDto.Dd + resultsDto.Wl + resultsDto.Wd + resultsDto.Ww) * 2;
             if (workerLog.NumberOfGames + toIncrement > workerLog.TotalNumberOfGames) throw new NotFoundException();
 
@@ -96,7 +100,7 @@ public class WorkerControllerService : IWorkerControllerService
             _workerLogStore.Update(workerLog);
 
             var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
-            
+
             // SPRT part.
             var statistics = Sprt.GetStatistics(test);
             if (statistics.Result != Sprt.SprtResult.Unknown)
@@ -106,6 +110,11 @@ public class WorkerControllerService : IWorkerControllerService
             }
 
             return running && statistics.Result == Sprt.SprtResult.Unknown;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+            throw new NotFoundException();
         }
         finally
         {
@@ -145,6 +154,11 @@ public class WorkerControllerService : IWorkerControllerService
             {
                 await _testBranchStore.SetTestBranchBench(workerLog.Test.Id, autobenchState.Bench);
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+            throw new NotFoundException();
         }
         finally
         {
@@ -188,6 +202,11 @@ public class WorkerControllerService : IWorkerControllerService
             // there is no WorkerLog, but test is in the running state -> invalid. 
             await _testStore.SetRunningState(test.Id);
             return (wl, test);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+            throw new NotFoundException();
         }
         finally
         {
