@@ -176,6 +176,8 @@
             && data is { Autobenched: true, TestBranchBench: null }) data.TestBranchBench = 0;
         else if (!result) return;
 
+        if (data is { Autobenched: true }) data.TestBranchBench = 0;
+
         var test = TestStore.Create(UserId!, data);
         NavigationManager.NavigateTo($"/Test/{test.Id}", true);
     }
