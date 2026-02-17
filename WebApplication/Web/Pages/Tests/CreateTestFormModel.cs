@@ -47,6 +47,7 @@ public class CreateTestFormModel
     public int? Priority { get; set; }
     
     [Required(ErrorMessage = "Hash size is required")]
+    [Min(1, ErrorMessage = "Hash size has to be >= 1")]
     public int? HashSize { get; set; }
     
     [Required(ErrorMessage = "Time management is required")]
