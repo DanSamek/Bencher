@@ -220,7 +220,8 @@ public class TestService : ITestService
                 User = user!, // User exists - middleware validated that.
                 Test = test
             };
-        
+            if (wl.Autobenched() && test.AutobenchState!.Resolved) throw new NotFoundException();
+            
             _workerLogStore.Add(wl);
             _workerLogStore.SaveChanges();
             
