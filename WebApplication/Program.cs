@@ -76,7 +76,7 @@ builder.Services.AddScoped<TestErrorStore>();
 
 #region WorkerAPI
 
-builder.Services.AddScoped<IWorkerControllerService, WorkerControllerService>();
+builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddSingleton<CustomExceptionHandler>();
 builder.Services.AddSingleton<WorkerMiddleware>();
 builder.Services.AddHostedService<WorkerLogWatcher>();

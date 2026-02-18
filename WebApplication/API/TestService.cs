@@ -8,9 +8,9 @@ using WebApplication.Stores;
 namespace WebApplication.API;
 
 /// <summary>
-/// Service for the controller.
+/// Service for proper synchronization of the test.
 /// </summary>
-public class WorkerControllerService : IWorkerControllerService
+public class TestService : ITestService
 {
     private readonly WorkerLogStore _workerLogStore;
     private readonly TestStore _testStore;
@@ -21,17 +21,13 @@ public class WorkerControllerService : IWorkerControllerService
     private readonly WorkerErrorStore _workerErrorStore;
     private readonly OpeningBookStore _openingBookStore;
     
-    private static readonly SemaphoreSlim _getTestSemaphore = new SemaphoreSlim(1, 1);
-    private static readonly SemaphoreSlim _resultsSemaphore = new SemaphoreSlim(1, 1);
-    private static readonly SemaphoreSlim _autobenchStateSemaphore = new SemaphoreSlim(1, 1);
-    
-    private static readonly ILog _logger = LogManager.GetLogger(typeof(WorkerControllerService));
-    
+    private static readonly SemaphoreSlim _testStateSemaphore = new SemaphoreSlim(1, 1);
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(TestService));
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public WorkerControllerService(WorkerLogStore workerLogStore, TestStore testStore, PentaStore pentaStore, AutobenchStateStore autobenchStateStore, TestBranchStore testBranchStore, UserStore userStore, WorkerErrorStore workerErrorStore, OpeningBookStore openingBookStore)
+    public TestService(WorkerLogStore workerLogStore, TestStore testStore, PentaStore pentaStore, AutobenchStateStore autobenchStateStore, TestBranchStore testBranchStore, UserStore userStore, WorkerErrorStore workerErrorStore, OpeningBookStore openingBookStore)
     {
         _workerLogStore = workerLogStore;
         _testStore = testStore;
@@ -46,42 +42,70 @@ public class WorkerControllerService : IWorkerControllerService
     /// <inheritdoc /> 
     public bool HandleRunningTestFromWorker(int connectionId)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(connectionId);
-        if (workerLog is null || workerLog.State != WorkerLogState.Active) throw new NotFoundException();
+        _testStateSemaphore.Wait();
+        try
+        {
+            var workerLog = _workerLogStore.GetByConnectionId(connectionId);
+            if (workerLog is null) throw new NotFoundException();
+            if (workerLog.Test.State is TestState.Stopped or TestState.Finished) return false;
+            if (workerLog.State != WorkerLogState.Active) throw new NotFoundException();
         
-        _testStore.SetRunningState(workerLog.Test);
-        workerLog.SetLastConnectTimeNow();
+            _testStore.SetRunningState(workerLog.Test);
+            workerLog.SetLastConnectTimeNow();
                 
-        _workerLogStore.SaveChanges();
+            _workerLogStore.SaveChanges();
         
-        var running = workerLog.Test.State.Running();
-        return running;
+            var running = workerLog.Test.State.Running();
+            return running;
+        }
+        catch (NotFoundException)
+        {
+            throw new NotFoundException();
+        }
+        finally
+        {
+            _testStateSemaphore.Release();
+        }
     }
     
     /// <inheritdoc /> 
     public async Task SaveTestError(TestErrorDto testErrorDto)
     {
-        var workerLog = _workerLogStore.GetByConnectionId(testErrorDto.ConnectionId);
-        if (workerLog is null || testErrorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE 
-            || workerLog.Error != null || workerLog.State != WorkerLogState.Active) throw new NotFoundException();
-        
-        workerLog.State = WorkerLogState.Finished;
-        _workerLogStore.AddError(workerLog, testErrorDto.Log);
-        
-        await StopTest(workerLog.Test.Id);
+        await _testStateSemaphore.WaitAsync();
+        try
+        {
+            var workerLog = _workerLogStore.GetByConnectionId(testErrorDto.ConnectionId);
+            if (workerLog is null || testErrorDto.Log.Length > Constants.MAX_LOG_FILE_SIZE
+                || workerLog.Error != null || workerLog.State != WorkerLogState.Active
+                || !workerLog.Test.State.Running()) throw new NotFoundException();
+
+            workerLog.State = WorkerLogState.Finished;
+            _workerLogStore.AddError(workerLog, testErrorDto.Log);
+            
+            await StopTestPr(workerLog.Test.Id);
+        }
+        catch (NotFoundException)
+        {
+            throw new NotFoundException();
+        }
+        finally
+        {
+            _testStateSemaphore.Release();
+        }
     }
     
     /// <inheritdoc /> 
     public async Task<bool> UpdateSPRTResults(ResultsDto resultsDto)
     {
-        await _resultsSemaphore.WaitAsync();
+        await _testStateSemaphore.WaitAsync();
         try
         {
             var workerLog = _workerLogStore.GetByConnectionId(resultsDto.ConnectionId);
-            if (workerLog is null || workerLog.State != WorkerLogState.Active) throw new NotFoundException();
-
+ 
+            if (workerLog is null) throw new NotFoundException();
             if (workerLog.Test.State != TestState.Running) return false;
-
+            if (workerLog.State != WorkerLogState.Active) throw new NotFoundException();
+            
             // Test can be eventually deleted !
             var test = _testStore.GetById(workerLog.Test.Id);
             if (test is null) throw new NotFoundException();
@@ -112,20 +136,20 @@ public class WorkerControllerService : IWorkerControllerService
             return running && statistics.Result == Sprt.SprtResult.Unknown;
         }
         catch (Exception ex)
-        {
-            _logger.Error(ex.Message, ex);
+        {   
+            LogIfNotNotFoundException(ex);
             throw new NotFoundException();
         }
         finally
         {
-            _resultsSemaphore.Release();
+            _testStateSemaphore.Release();
         }
     }
 
     /// <inheritdoc /> 
     public async Task UpdateAutobenchState(AutobenchDto autobenchDto)
     {
-        await _autobenchStateSemaphore.WaitAsync();
+        await _testStateSemaphore.WaitAsync();
         try
         {
             var workerLog = _workerLogStore.GetByConnectionId(autobenchDto.ConnectionId);
@@ -133,11 +157,12 @@ public class WorkerControllerService : IWorkerControllerService
 
             var autobenchState = _autobenchStateStore.GetAutobenchStateByTestId(workerLog.Test.Id);
             if (autobenchState is null) throw new NotFoundException();
+            if (autobenchState.Resolved) return;
 
             var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
             if (!result)
             {
-                await StopTest(workerLog.Test.Id);
+                await StopTestPr(workerLog.Test.Id);
             }
 
             workerLog.State = WorkerLogState.Finished;
@@ -157,19 +182,19 @@ public class WorkerControllerService : IWorkerControllerService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex.Message, ex);
+            LogIfNotNotFoundException(ex);
             throw new NotFoundException();
         }
         finally
         {
-            _autobenchStateSemaphore.Release();
+            _testStateSemaphore.Release();
         }
     }
     
     /// <inheritdoc /> 
     public async Task<(WorkerLog, Test)> CreateJobForWorker(GetTestDto getTestDto, string userToken)
     {
-        await _getTestSemaphore.WaitAsync();
+        await _testStateSemaphore.WaitAsync();
         try
         {
             var test = _testStore.GetNextTestForWorker(getTestDto.Autobench, getTestDto.NumberOfThreads);
@@ -205,12 +230,30 @@ public class WorkerControllerService : IWorkerControllerService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex.Message, ex);
+            LogIfNotNotFoundException(ex);
             throw new NotFoundException();
         }
         finally
         {
-            _getTestSemaphore.Release();
+            _testStateSemaphore.Release();
+        }
+    }
+    
+    /// <inheritdoc /> 
+    public async Task SetPausedIfNoActiveWorkers(int testId)
+    {
+        await _testStateSemaphore.WaitAsync();
+        try
+        {
+            await _testStore.SetPausedIfNoActiveWorkers(testId);
+        }
+        catch (Exception ex)
+        {
+            LogIfNotNotFoundException(ex);
+        }
+        finally
+        {
+            _testStateSemaphore.Release();
         }
     }
     
@@ -238,9 +281,35 @@ public class WorkerControllerService : IWorkerControllerService
     public byte[] GetContentForOpeningBook(int openingBookId)
         => _openingBookStore.LoadContent(openingBookId);
 
-    private async Task StopTest(int testId)
+    /// <inheritdoc />
+    public async Task StopTest(int testId)
+    {
+        await _testStateSemaphore.WaitAsync();
+        try
+        {
+            await StopTestPr(testId);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
+        }
+        finally
+        {
+            _testStateSemaphore.Release();
+        }
+    }
+
+    private async Task StopTestPr(int testId)
     {
         await _testStore.StopTest(testId);
         await _workerLogStore.StopAllWorkers(testId);
+    }
+    
+    private static void LogIfNotNotFoundException(Exception ex)
+    {
+        if (ex is not NotFoundException)
+        {
+            _logger.Error(ex.Message, ex);   
+        }
     }
 }

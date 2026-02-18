@@ -25,7 +25,8 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     public override void Setup()
     {
         base.Setup();
-        var scopeFactory = new TestScopeFactory(Factory, CreateTestStore());
+        var scopeFactory = new TestScopeFactory(Factory, CreateTestStore(), CreateTestService());
+        
         _watcher = new WorkerLogWatcher(scopeFactory);
         RefreshController();
 
@@ -102,7 +103,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     /// it can happen that test has no workers -> test should be paused.
     /// </summary>
     [Test]
-    public async Task StopTest()
+    public async Task PauseTest()
     {
         await CreateWorkerLogs(5);
 
@@ -160,7 +161,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
     }
 }
 
-file class TestServiceProvider(TestContextFactory factory, TestStore testStore) : IServiceProvider
+file class TestServiceProvider(TestContextFactory factory, TestStore testStore, ITestService testService) : IServiceProvider
 {
     public object GetService(Type serviceType)
     {
@@ -168,21 +169,25 @@ file class TestServiceProvider(TestContextFactory factory, TestStore testStore) 
         {
             return testStore;
         }
+        if (serviceType == typeof(ITestService))
+        {
+            return testService;
+        }
         return factory.CreateDbContext();
     }
 }
 
-file class TestServiceScope(TestContextFactory factory, TestStore testStore) : IServiceScope
+file class TestServiceScope(TestContextFactory factory, TestStore testStore, ITestService testService) : IServiceScope
 {
-    public IServiceProvider ServiceProvider { get; } = new TestServiceProvider(factory, testStore);
+    public IServiceProvider ServiceProvider { get; } = new TestServiceProvider(factory, testStore,testService);
     public void Dispose() {}
 }
 
-file class TestScopeFactory(TestContextFactory factory, TestStore testStore) : IServiceScopeFactory
+file class TestScopeFactory(TestContextFactory factory, TestStore testStore, ITestService testService) : IServiceScopeFactory
 {
     public IServiceScope CreateScope()
     {
-        var serviceScope = new TestServiceScope(factory, testStore);
+        var serviceScope = new TestServiceScope(factory, testStore, testService);
         return serviceScope;
     }
 }

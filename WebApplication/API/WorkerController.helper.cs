@@ -8,7 +8,7 @@ public partial class WorkerController
 {
     private OkObjectResult HandleAutobenchResponse(WorkerLog workerLog, Test test)
     {
-        var testBranch = _workerControllerService.GetTestBranch(test.TestBranchId);
+        var testBranch = _testService.GetTestBranch(test.TestBranchId);
         var result = new GetTestAutobenchResponse
         {
             ConnectionId = workerLog.Id,
@@ -21,10 +21,10 @@ public partial class WorkerController
 
     private OkObjectResult HandleNormalTestResponse(WorkerLog workerLog, Test test)
     {
-        var testBranch = _workerControllerService.GetTestBranch(test.TestBranchId);
-        var baseBranch = _workerControllerService.GetTestBranch(test.BaseBranchId);
+        var testBranch = _testService.GetTestBranch(test.TestBranchId);
+        var baseBranch = _testService.GetTestBranch(test.BaseBranchId);
 
-        var content = _workerControllerService.GetContentForOpeningBook(test.OpeningBook.Id);
+        var content = _testService.GetContentForOpeningBook(test.OpeningBook.Id);
         var result = new GetTestNonAutobenchResponse
         {
             AdditionalFastchessOptions = test.AdditionalFastchessOptions,

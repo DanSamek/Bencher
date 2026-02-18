@@ -1,7 +1,7 @@
+using log4net;
 using Microsoft.EntityFrameworkCore;
 using WebApplication.Data;
 using WebApplication.Data.Models;
-using WebApplication.Stores;
 
 namespace WebApplication.API;
 
@@ -16,6 +16,7 @@ public class WorkerLogWatcher : BackgroundService
     
     private readonly PeriodicTimer _periodicTimer = new PeriodicTimer(new TimeSpan(0, 0, WATCHER_PERIOD_MINUTES, 0));
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private static readonly ILog _logger = LogManager.GetLogger(typeof(WorkerLogWatcher));
     
     /// <summary>
     /// .Ctor 
@@ -26,30 +27,38 @@ public class WorkerLogWatcher : BackgroundService
     /// <inheritdoc /> 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (true)
+        try
         {
-            using var scope = _serviceScopeFactory.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var lowerBoundTime = DateTime.UtcNow.Subtract(new TimeSpan(0, LAST_CONNECT_TIME_MINUTES_MAX, 0));
-
-            var toDisconnectLogs = context.WorkerLogs
-                .Where(wl => wl.LastConnectTime < lowerBoundTime && wl.State == WorkerLogState.Active);
-
-            var testIdsMaybeNoWorkers = toDisconnectLogs
-                .Select(wl => wl.Test.Id)
-                .ToHashSet();
-
-            await toDisconnectLogs
-                .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Disconnected),
-                    cancellationToken: stoppingToken);
-
-            var store = scope.ServiceProvider.GetRequiredService<TestStore>();
-            foreach (var testId in testIdsMaybeNoWorkers)
+            while (true)
             {
-                await store.SetPausedIfNoActiveWorkers(testId);
-            }
+                using var scope = _serviceScopeFactory.CreateScope();
+                var service = scope.ServiceProvider.GetRequiredService<ITestService>();
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                
+                var lowerBoundTime = DateTime.UtcNow.Subtract(new TimeSpan(0, LAST_CONNECT_TIME_MINUTES_MAX, 0));
 
-            await _periodicTimer.WaitForNextTickAsync(stoppingToken);
+                var toDisconnectLogs = context.WorkerLogs
+                    .Where(wl => wl.LastConnectTime < lowerBoundTime && wl.State == WorkerLogState.Active);
+
+                var testIdsMaybeNoWorkers = toDisconnectLogs
+                    .Select(wl => wl.Test.Id)
+                    .ToHashSet();
+
+                await toDisconnectLogs
+                    .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Disconnected),
+                        cancellationToken: stoppingToken);
+                
+                foreach (var testId in testIdsMaybeNoWorkers)
+                {
+                    await service.SetPausedIfNoActiveWorkers(testId);
+                }
+
+                await _periodicTimer.WaitForNextTickAsync(stoppingToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex.Message, ex);
         }
     }
 }
