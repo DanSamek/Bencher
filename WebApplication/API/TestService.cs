@@ -49,6 +49,7 @@ public class TestService : ITestService
             if (workerLog is null) throw new NotFoundException();
             if (workerLog.Test.State is TestState.Stopped or TestState.Finished) return false;
             if (workerLog.State != WorkerLogState.Active) throw new NotFoundException();
+            if (workerLog.Autobenched() && workerLog.Test.AutobenchState!.Resolved) return false;
         
             _testStore.SetRunningState(workerLog.Test);
             workerLog.SetLastConnectTimeNow();
