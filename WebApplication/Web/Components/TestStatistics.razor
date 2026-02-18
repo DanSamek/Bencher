@@ -37,11 +37,11 @@
          
          RenderFragment rf = @<text>
                                   <code class="text-center @statusClass" id="@Id" style="@Style">
-                                      LLR: @statistics.Llr.ToString("F") @Test.Settings.ToString()<br />
+                                      LLR: @statistics.Llr.ToString("F2") @Test.Settings.ToString()<br />
                                       @if (Detail)
                                       {
                                           <text>
-                                              Elo: @statistics.Elo.ToString("F") (-@statistics.EloLowerBound.ToString("F"), +@statistics.EloUpperBound.ToString("F"))<br/>
+                                              Elo: @statistics.Elo.ToString("F2") (-@statistics.EloLowerBound.ToString("F2"), +@statistics.EloUpperBound.ToString("F2"))<br/>
                                           </text>
                                       }
                                       WDL: [@wdl.W, @wdl.L, @wdl.D] <br/>
