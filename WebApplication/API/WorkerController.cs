@@ -12,14 +12,14 @@ namespace WebApplication.API;
 [Route(Constants.WORKER_API_PREFIX)]
 public partial class WorkerController : ControllerBase  
 {   
-    private readonly IWorkerControllerService _workerControllerService;
+    private readonly ITestService _testService;
     
     /// <summary>
     /// .Ctor
     /// </summary>
-    public WorkerController(IWorkerControllerService workerControllerService)
+    public WorkerController(ITestService testService)
     {
-        _workerControllerService = workerControllerService;
+        _testService = testService;
     }
     
     /// <summary>
@@ -31,7 +31,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ResponseBase))]
     public IActionResult WorkerError([FromBody] WorkerErrorDto workerErrorDto)
     {
-        _workerControllerService.AddWorkerError(workerErrorDto);
+        _testService.AddWorkerError(workerErrorDto);
         return Ok(new ResponseBase());
     }
     
@@ -43,7 +43,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResponseBase>> TestError([FromBody] TestErrorDto testErrorDto)
     {
-        await _workerControllerService.SaveTestError(testErrorDto);
+        await _testService.SaveTestError(testErrorDto);
         return Ok(new ResponseBase());
     }
     
@@ -55,7 +55,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResultsResponseDto>> Results([FromBody] ResultsDto resultsDto)
     {
-        var isTestStillRunning = await _workerControllerService.UpdateSPRTResults(resultsDto);
+        var isTestStillRunning = await _testService.UpdateSPRTResults(resultsDto);
         return Ok(new ResultsResponseDto(isTestStillRunning));
     }
     
@@ -67,7 +67,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ResponseBase>> Autobench([FromBody] AutobenchDto autobenchDto)
     {
-        await _workerControllerService.UpdateAutobenchState(autobenchDto);
+        await _testService.UpdateAutobenchState(autobenchDto);
         return Ok(new ResponseBase());
     }
     
@@ -80,7 +80,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetTestNonAutobenchResponse))]
     public async Task<IActionResult> GetTest([FromBody] GetTestDto getTestDto)
     {
-        var (wl, test) = await _workerControllerService.CreateJobForWorker(getTestDto, HttpContext.GetAccessToken());
+        var (wl, test) = await _testService.CreateJobForWorker(getTestDto, HttpContext.GetAccessToken());
         return getTestDto.Autobench ? HandleAutobenchResponse(wl, test) : HandleNormalTestResponse(wl, test);
     }
     
@@ -93,7 +93,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<RunningTestResponseDto> RunningTest([FromBody] RunningTestDto runningTestDto)
     {
-        var stillRunning = _workerControllerService.HandleRunningTestFromWorker(runningTestDto.ConnectionId);
+        var stillRunning = _testService.HandleRunningTestFromWorker(runningTestDto.ConnectionId);
         var result = new RunningTestResponseDto(stillRunning);
         return Ok(result);
     }
@@ -106,7 +106,7 @@ public partial class WorkerController : ControllerBase
     public ActionResult<ValidateResponseDto> Validate()
     {
         var accessToken = HttpContext.GetAccessToken();
-        var username = _workerControllerService.GetUsernameByAccessToken(accessToken);
+        var username = _testService.GetUsernameByAccessToken(accessToken);
         var result = new ValidateResponseDto(username);
         return Ok(result);
     }
@@ -118,7 +118,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TotalPausedTestsDto))]
     public ActionResult<TotalPausedTestsDto> TotalPausedTestsWithMaxPriority()
     {
-        var totalPausedTests = _workerControllerService.GetTotalPausedTestsWithMaxPriority();
+        var totalPausedTests = _testService.GetTotalPausedTestsWithMaxPriority();
         var result = new TotalPausedTestsDto
         {
             Count = totalPausedTests
@@ -133,7 +133,7 @@ public partial class WorkerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MaxThreadsForTestDto))]
     public ActionResult<MaxThreadsForTestDto> MaxThreadsForTestWithMaxPriority()
     {
-        var maxThreads = _workerControllerService.GetMaxThreadsForTestWithMaxPriority();
+        var maxThreads = _testService.GetMaxThreadsForTestWithMaxPriority();
         var result = new MaxThreadsForTestDto
         {
             MaximumThreads = maxThreads

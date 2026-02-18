@@ -520,7 +520,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             var numberOfPairs = numberOfGames / 2;
             while (numberOfPairs > 0)
             {
-                var controller = new WorkerController(CreateWorkerControllerService());
+                var controller = new WorkerController(CreateTestService());
 
                 var simplePenta = SimplePenta.Generate(iterPairs);
                 bag.Add(simplePenta);

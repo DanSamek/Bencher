@@ -2,6 +2,7 @@
 
 @page "/Test/{id:int}"
 
+@using WebApplication.API
 @using WebApplication.Data.Models
 @using WebApplication.Services.GitBranchComparison
 @using WebApplication.Stores
@@ -15,6 +16,7 @@
 @inject UserStore UserStore
 @inject IGitBranchComparisonService GitBranchComparisonService
 @inject IJSRuntime JsRuntime
+@inject ITestService TestService
 
 <PageTitle>@_test!.Name</PageTitle>
 
@@ -161,7 +163,7 @@
     
     private async Task StopTest()
     {
-        await TestStore.StopTest(_test!.Id);
+        await TestService.StopTest(_test!.Id);
         RefreshTest();
     }
     

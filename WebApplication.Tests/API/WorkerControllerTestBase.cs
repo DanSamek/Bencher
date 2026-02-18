@@ -20,7 +20,7 @@ public class WorkerControllerTestBase : TestBase
     /// </summary>
     protected void RefreshController()
     {
-        Controller = new WorkerController(CreateWorkerControllerService());
+        Controller = new WorkerController(CreateTestService());
     }
     
     protected void LoginAs(string username)
@@ -42,8 +42,8 @@ public class WorkerControllerTestBase : TestBase
         return (T)((result.Result as OkObjectResult)!).Value!;
     }
 
-    protected IWorkerControllerService CreateWorkerControllerService()
-    => new WorkerControllerService(new WorkerLogStore(Factory), CreateTestStore(), new PentaStore(Factory), new AutobenchStateStore(Factory), 
+    protected ITestService CreateTestService()
+    => new TestService(new WorkerLogStore(Factory), CreateTestStore(), new PentaStore(Factory), new AutobenchStateStore(Factory), 
         new TestBranchStore(Factory), new UserStore(Factory), new WorkerErrorStore(Factory),  new OpeningBookStore(Factory));
     
 }

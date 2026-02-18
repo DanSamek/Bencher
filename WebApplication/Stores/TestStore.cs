@@ -346,7 +346,7 @@ public class TestStore : Store<Test>
         if (!stillRunning)
         {
             await GetDbSet()
-                .Where(t => t.Id == testId)
+                .Where(t => t.Id == testId && (t.State == TestState.Running || t.State == TestState.Autobenched))
                 .ExecuteUpdateAsync(spc => spc.SetProperty(t => t.State, TestState.Paused));
         }
 

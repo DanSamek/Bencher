@@ -3,7 +3,7 @@ using WebApplication.Data.Models;
 
 namespace WebApplication.API;
 
-public interface IWorkerControllerService
+public interface ITestService
 {
     /// <summary>
     /// Sets workerlog state to running and sets test state to running.
@@ -69,4 +69,14 @@ public interface IWorkerControllerService
     /// </summary>
     /// <returns></returns>
     byte[] GetContentForOpeningBook(int openingBookId);
+    
+    /// <summary>
+    /// Sets a test to a paused state if there are not connected workers.
+    /// </summary>
+    Task SetPausedIfNoActiveWorkers(int testId);
+
+    /// <summary>
+    /// Sets a test state to stopped. 
+    /// </summary>
+    Task StopTest(int testId);
 }
