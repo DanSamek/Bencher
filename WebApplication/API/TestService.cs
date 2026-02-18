@@ -158,12 +158,15 @@ public class TestService : ITestService
 
             var autobenchState = _autobenchStateStore.GetAutobenchStateByTestId(workerLog.Test.Id);
             if (autobenchState is null) throw new NotFoundException();
-            if (autobenchState.Resolved) return;
-
-            var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
-            if (!result)
+            
+            var result = true;
+            if (!autobenchState.Resolved)
             {
-                await StopTestPr(workerLog.Test.Id);
+                result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
+                if (!result)
+                {
+                    await StopTestPr(workerLog.Test.Id);
+                }   
             }
 
             workerLog.State = WorkerLogState.Finished;
