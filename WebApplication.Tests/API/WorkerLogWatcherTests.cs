@@ -153,7 +153,7 @@ public class WorkerLogWatcherTests : WorkerControllerTestBase
             var connectionId = resultDto.ConnectionId;
 
             RefreshController();
-            Controller.RunningTest(new RunningTestDto
+            await Controller.RunningTest(new RunningTestDto
             {
                 ConnectionId = connectionId
             });

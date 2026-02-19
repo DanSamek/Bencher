@@ -195,7 +195,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var wl = Factory.CreateDbContext().WorkerLogs.First(wl => wl.Id == resultDto.ConnectionId);
         
         RefreshController();
-        Controller.RunningTest(new RunningTestDto
+        await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -223,7 +223,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         var wl = Factory.CreateDbContext().WorkerLogs.First(wl => wl.Id == resultDto.ConnectionId);
         
         RefreshController();
-        Controller.RunningTest(new RunningTestDto
+        await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -243,9 +243,9 @@ public class WorkerControllerTests : WorkerControllerTestBase
     [Test]
     public void RunningTest_InvalidConnectionId()
     {
-        Assert.Throws<NotFoundException>(() =>
+        Assert.ThrowsAsync<NotFoundException>(async () =>
         {
-            Controller.RunningTest(new RunningTestDto
+            await Controller.RunningTest(new RunningTestDto
             {
                 ConnectionId = 5555
             });
@@ -262,7 +262,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -312,7 +312,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -340,7 +340,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         
         resultDto = await GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        Controller.RunningTest(new RunningTestDto{ConnectionId = resultDto.ConnectionId});
+        await Controller.RunningTest(new RunningTestDto{ConnectionId = resultDto.ConnectionId});
         
         RefreshController(); 
         await Controller.Autobench(new AutobenchDto
@@ -363,7 +363,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestAutobenchResponse>(true);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -390,7 +390,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -417,7 +417,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestNonAutobenchResponse>(false, 4);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -473,7 +473,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
             var resultDto = await GetTest<GetTestNonAutobenchResponse>(false, workerThreadCounts);
             dtos.Add(resultDto);
             RefreshController();
-            Controller.RunningTest(new RunningTestDto
+            await Controller.RunningTest(new RunningTestDto
             {
                 ConnectionId = resultDto.ConnectionId
             });
@@ -580,7 +580,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -611,7 +611,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestNonAutobenchResponse>(false, 4);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -671,7 +671,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestNonAutobenchResponse>(false, 4);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -713,7 +713,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         
         RefreshController();
         LoginAs("user_2");
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -776,7 +776,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         
         RefreshController();
         LoginAs("user_2");
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -819,7 +819,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         LoginAs("user_2");
         var resultDto = await GetTest<GetTestNonAutobenchResponse>(false);
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -873,7 +873,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(activeWorkerLogs, Is.EqualTo(2));
         
         RefreshController();
-        _ = Controller.RunningTest(new RunningTestDto
+        _ = await Controller.RunningTest(new RunningTestDto
         {
             ConnectionId = resultDto.ConnectionId
         });
@@ -933,7 +933,7 @@ public class WorkerControllerTests : WorkerControllerTestBase
 
             RefreshController();
             LoginAs("user_2");
-            Controller.RunningTest(new RunningTestDto
+            await Controller.RunningTest(new RunningTestDto
             {
                 ConnectionId = dto.ConnectionId
             });

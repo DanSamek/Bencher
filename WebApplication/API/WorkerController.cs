@@ -91,9 +91,9 @@ public partial class WorkerController : ControllerBase
     [HttpPost("running-test")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RunningTestResponseDto))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<RunningTestResponseDto> RunningTest([FromBody] RunningTestDto runningTestDto)
+    public async Task<ActionResult<RunningTestResponseDto>> RunningTest([FromBody] RunningTestDto runningTestDto)
     {
-        var stillRunning = _testService.HandleRunningTestFromWorker(runningTestDto.ConnectionId);
+        var stillRunning = await _testService.HandleRunningTestFromWorker(runningTestDto.ConnectionId);
         var result = new RunningTestResponseDto(stillRunning);
         return Ok(result);
     }

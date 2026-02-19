@@ -179,7 +179,8 @@ public class Test : DoId
     {
         var result = WorkerLogs
             .Where(wl => wl.State == WorkerLogState.Active)
-            .Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
+            .Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames /* not autobench */ 
+                        || wl.TotalNumberOfGames == 0 /* autobench */) 
             .Sum(wl => wl.NumberOfThreads);
         
         return result;
