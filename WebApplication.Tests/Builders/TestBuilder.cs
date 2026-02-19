@@ -23,14 +23,14 @@ public class TestBuilder
         _context = context;
     }
     
-    public TestBuilder AddWorker(int numberOfWorkerThreads)
+    public TestBuilder AddWorker(int numberOfWorkerThreads, bool autobenched = false)
     {
         var wl = new WorkerLog
         {
             Name = "TEST WORKER",
             Mac = "AA:BB:CC:DD:EE:FF",
             NumberOfGames = 0,
-            TotalNumberOfGames = 64,
+            TotalNumberOfGames = autobenched ? 0 : 64,
             LastConnectTime = DateTime.UtcNow,
             NumberOfThreads = numberOfWorkerThreads,
             ConnectTime = DateTime.UtcNow,

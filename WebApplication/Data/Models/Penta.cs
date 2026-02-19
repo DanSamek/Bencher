@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Shared.Dtos.Requests;
 
 namespace WebApplication.Data.Models;
 
@@ -88,4 +89,14 @@ public class Penta : DoId
     public int TotalPairs() => Ll + Ld + DdWl + Wd + Ww;
     public double TotalPoints() => Ll * 0 + Ld * 0.25 + DdWl * 0.5 + Wd * 0.75 + Ww * 1;
     public double Score() => TotalPoints() / TotalPairs();
+
+    public void Add(ResultsDto resultsDto)
+    {
+        Ll += resultsDto.Ll;
+        Ld += resultsDto.Ld;
+        Dd += resultsDto.Dd;
+        Wl += resultsDto.Wl;
+        Wd += resultsDto.Wd;
+        Ww += resultsDto.Ww;
+    }
 }

@@ -10,7 +10,7 @@ public interface ITestService
     /// </summary>
     /// <param name="connectionId">Worker's connection id</param>
     /// <exception cref="NotFoundException">Is thrown if workerlog is null or is not active.</exception>
-    public bool HandleRunningTestFromWorker(int connectionId);
+    public Task<bool> HandleRunningTestFromWorker(int connectionId);
 
     /// <summary>
     /// Saves test error log from the worker

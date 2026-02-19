@@ -124,4 +124,41 @@ public class WorkerLogStoreTests : TestBase
         
         Assert.That(stoppedWorkers, Has.Length.EqualTo(5));
     }
+    
+    /// <summary>
+    /// Tests <see cref="WorkerLogStore.SetActiveAutobenchWorkersAsFinished"/>.
+    /// </summary>
+    [Test]
+    public async Task SetActiveAutobenchWorkersAsFinished()
+    {
+        ClearDb();
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("test_book")
+            .CreateSprtSettings()
+            .CreateUser("test_user")
+            .AddEngine("stockfish")
+            .AddBranch("test_branch")
+            .AddBranch("base_branch")
+            .AddAutobenchedTest("test_1", "test_book", "base_branch", "test_branch")
+            .AddWorker(1, true)
+            .AddWorker(2, true)
+            .AddWorker(4, true)
+            .AddWorker(8, true)
+            .AddWorker(1, true)
+            .Close()
+            .Close()
+            .Close()
+            .Close();
+
+        var store = new WorkerLogStore(Factory);
+        
+        var workerLogs = Factory.CreateDbContext().WorkerLogs.ToArray();
+        Assert.That(workerLogs.All(wl => wl.State == WorkerLogState.Active));
+        
+        var test = Factory.CreateDbContext().Tests.First();
+        await store.SetActiveAutobenchWorkersAsFinished(test.Id);
+        
+        workerLogs = Factory.CreateDbContext().WorkerLogs.ToArray();
+        Assert.That(workerLogs.All(wl => wl.State == WorkerLogState.Finished));
+    }
 }

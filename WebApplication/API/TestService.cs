@@ -40,9 +40,9 @@ public class TestService : ITestService
     }
    
     /// <inheritdoc /> 
-    public bool HandleRunningTestFromWorker(int connectionId)
+    public async Task<bool> HandleRunningTestFromWorker(int connectionId)
     {
-        _testStateSemaphore.Wait();
+        await _testStateSemaphore.WaitAsync();
         try
         {
             var workerLog = _workerLogStore.GetByConnectionId(connectionId);
@@ -127,6 +127,7 @@ public class TestService : ITestService
             var running = await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
 
             // SPRT part.
+            test.Penta.Add(resultsDto);
             var statistics = Sprt.GetStatistics(test);
             if (statistics.Result != Sprt.SprtResult.Unknown)
             {
@@ -159,29 +160,27 @@ public class TestService : ITestService
             var autobenchState = _autobenchStateStore.GetAutobenchStateByTestId(workerLog.Test.Id);
             if (autobenchState is null) throw new NotFoundException();
             
-            var result = true;
-            if (!autobenchState.Resolved)
+            var result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
+            if (!result)
             {
-                result = autobenchState.UpdateConfidence(autobenchDto.Autobench);
-                if (!result)
-                {
-                    await StopTestPr(workerLog.Test.Id);
-                }   
-            }
+                await StopTestPr(workerLog.Test.Id);
+            }   
 
             workerLog.State = WorkerLogState.Finished;
             _workerLogStore.SaveChanges();
             _autobenchStateStore.SaveChanges();
-
+            
+            // If test is resolved, set this as a bench of the test branch.
+            // And also stop all active workers.
+            if (autobenchState.Resolved)
+            {
+                await _workerLogStore.SetActiveAutobenchWorkersAsFinished(workerLog.Test.Id);
+                await _testBranchStore.SetTestBranchBench(workerLog.Test.Id, autobenchState.Bench);
+            }
+            
             if (result)
             {
                 await _testStore.SetPausedIfNoActiveWorkers(workerLog.Test.Id);
-            }
-
-            // If test is resolved, set this as a bench of the test branch.
-            if (autobenchState.Resolved)
-            {
-                await _testBranchStore.SetTestBranchBench(workerLog.Test.Id, autobenchState.Bench);
             }
         }
         catch (Exception ex)
@@ -223,7 +222,6 @@ public class TestService : ITestService
                 User = user!, // User exists - middleware validated that.
                 Test = test
             };
-            if (wl.Autobenched() && test.AutobenchState!.Resolved) throw new NotFoundException();
             
             _workerLogStore.Add(wl);
             _workerLogStore.SaveChanges();

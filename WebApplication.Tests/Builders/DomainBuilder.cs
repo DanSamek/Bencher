@@ -87,12 +87,12 @@ public class DomainBuilder
     }
     
 
-    public DomainBuilder CreateSprtSettings()
+    public DomainBuilder CreateSprtSettings(double elo0 = 0, double elo1 = 2)
     {
         var settings = new SprtSettings
         {
-            Elo0 = 0,
-            Elo1 = 2,
+            Elo0 = elo0,
+            Elo1 = elo1,
             Alpha = 0.05,
             Beta = 0.05,
             Tests = []

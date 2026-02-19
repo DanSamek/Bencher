@@ -69,4 +69,14 @@ public class WorkerLogStore : Store<WorkerLog>
             .Where(wl => wl.Test.Id == testId && wl.State == WorkerLogState.Active)
             .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Finished));
     }
+    
+    /// <summary>
+    /// Sets finished state for all autobenched workers. 
+    /// </summary>
+    public async Task SetActiveAutobenchWorkersAsFinished(int testId)
+    {
+        await GetDbSet()
+            .Where(wl => wl.Test.Id == testId && wl.TotalNumberOfGames == 0 /*Autobenched*/ && wl.State == WorkerLogState.Active)
+            .ExecuteUpdateAsync(spc => spc.SetProperty(wl => wl.State, WorkerLogState.Finished));
+    }
 }

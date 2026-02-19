@@ -42,6 +42,7 @@ public class WorkerLog : DoId
     
     /// <summary>
     /// Number of games that will be played on the worker.
+    /// NOTE: If this value is set to 0, is expected, that its autobench.
     /// </summary>
     [Required]
     public required int TotalNumberOfGames { get; set; }
