@@ -13,3 +13,9 @@ Shared - shared codes used in WebApplication and Worker
 See:
 - WebApplication/README.md
 - Worker/README.md
+
+
+<img src="https://fit.cvut.cz/static/images/fit-cvut-logo-en.svg" alt="FIT CTU logo" height="200">
+
+This software was developed with the support of the **Faculty of Information Technology, Czech Technical University in Prague**.
+For more information, visit [fit.cvut.cz](https://fit.cvut.cz).
