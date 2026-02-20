@@ -14,8 +14,17 @@ See:
 - WebApplication/README.md
 - Worker/README.md
 
+<br />
+<br />
+<br />
+<br />
 
-<img src="https://fit.cvut.cz/static/images/fit-cvut-logo-en.svg" alt="FIT CTU logo" height="200">
+<div align="center">
 
+<img src="https://fit.cvut.cz/static/images/fit-cvut-logo-en.svg" alt="FIT CTU logo" height="100">
+<br />
+<br />
 This software was developed with the support of the **Faculty of Information Technology, Czech Technical University in Prague**.
+<br />
 For more information, visit [fit.cvut.cz](https://fit.cvut.cz).
+</div>
