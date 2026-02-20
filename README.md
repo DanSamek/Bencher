@@ -16,15 +16,13 @@ See:
 
 <br />
 <br />
-<br />
-<br />
 
 <div align="center">
 
 <img src="https://fit.cvut.cz/static/images/fit-cvut-logo-en.svg" alt="FIT CTU logo" height="100">
 <br />
 <br />
-This software was developed with the support of the **Faculty of Information Technology, Czech Technical University in Prague**.
+This software was developed with the support of the <b>Faculty of Information Technology, Czech Technical University in Prague</b>.
 <br />
 For more information, visit [fit.cvut.cz](https://fit.cvut.cz).
 </div>
