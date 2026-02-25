@@ -32,7 +32,7 @@
     <div class="d-flex gap-3 mb-3">
         @if (_canEdit)
         {
-            @if (_test.State != TestState.Stopped)
+            @if (_test.State != TestState.Stopped && _test.State != TestState.Finished)
             {
                 <button @onclick="StopTest" class="btn btn-warning">Stop</button>
             }
