@@ -44,7 +44,7 @@ public static class FastchessArgumentsCreator
         
         sb.AddArgument($"-rounds {getTestNonAutobenchResponse.NumberOfGames / 2}");
         sb.AddArgument("-games 2");
-        sb.AddArgument("-repeat");
+        //sb.AddArgument("-repeat");
         
         sb.AddArgument($"-concurrency {processorThreads / getTestNonAutobenchResponse.NumberOfThreads}");
         sb.AddArgument("-ratinginterval 0");
