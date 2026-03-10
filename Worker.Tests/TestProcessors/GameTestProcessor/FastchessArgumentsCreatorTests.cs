@@ -45,7 +45,6 @@ public class FastchessArgumentsCreatorTests
               option.Threads=2
               -rounds 16
               -games 2
-              -repeat
               -concurrency 2
               -ratinginterval 0
               -openings order=random file=/tmp/openingbook.epd format=epd
@@ -78,7 +77,6 @@ public class FastchessArgumentsCreatorTests
              option.Threads=2
              -rounds 64
              -games 2
-             -repeat
              -concurrency 8
              -ratinginterval 0
              -openings order=random file=/tmp/openingbook.epd format=epd
@@ -110,7 +108,6 @@ public class FastchessArgumentsCreatorTests
               option.Threads=4
               -rounds 128
               -games 2
-              -repeat
               -concurrency 16
               -ratinginterval 0
               -openings order=random file=/tmp/openingbook.epd format=epd
@@ -143,7 +140,6 @@ public class FastchessArgumentsCreatorTests
              option.Threads=2
              -rounds 16
              -games 2
-             -repeat
              -concurrency 2
              -ratinginterval 0
              -openings order=random file=/tmp/openingbook.epd format=epd
