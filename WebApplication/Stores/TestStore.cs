@@ -79,19 +79,19 @@ public class TestStore : Store<Test>
         // If there is not running test, we will pick a paused test with the highest priority.
         var anyRunningTest = AnyRunningTest(autobench);
         
-        // Get maximum priority of all tests.
-        var runningPriority = MaxPriority();
+        // Get maximum priority of all tests (paused | running | autobenched).
+        var maximumPriority = MaxPriority();
 
         if (!anyRunningTest)
         {
-            var test = PausedTestWithHighestPriority(autobench, workerNumberOfThreads, runningPriority);
+            var test = PausedTestWithHighestPriority(autobench, workerNumberOfThreads, maximumPriority);
             return test;
         }
         
         // Get a paused test with a same priority.
         var notRunningTestWithoutWorkers =
             WhereFilter(Include(), autobench, workerNumberOfThreads)
-                .Where(t => t.State == TestState.Paused && t.Priority == runningPriority)
+                .Where(t => t.State == TestState.Paused && t.Priority == maximumPriority)
                 .OrderByDescending(t => t.ThreadScale)
                 .FirstOrDefault();
         
@@ -102,7 +102,7 @@ public class TestStore : Store<Test>
 
         var filteredRunningTests = Include()
             .Where(t => (autobench ? t.State == TestState.Autobenched : t.State == TestState.Running) &&
-                        t.Priority == runningPriority);
+                        t.Priority == maximumPriority);
         
         if (autobench)
         {
@@ -425,9 +425,9 @@ public class TestStore : Store<Test>
         => GetDbSet()
             .Any(t => autobench ? t.State == TestState.Autobenched : t.State == TestState.Running); 
     
-    private Test? PausedTestWithHighestPriority(bool autobench, int workerNumberOfThreads, int runningPriority)
+    private Test? PausedTestWithHighestPriority(bool autobench, int workerNumberOfThreads, int maximumPriority)
         => WhereFilter(Include(), autobench,  workerNumberOfThreads)
-            .Where(t => t.State == TestState.Paused && t.Priority == runningPriority)
+            .Where(t => t.State == TestState.Paused && t.Priority == maximumPriority)
             .OrderByDescending(t => t.Priority)
             .OrderByLastConnectedWorker()
             .FirstOrDefault();
