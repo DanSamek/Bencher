@@ -74,11 +74,11 @@ public partial class WorkerController : ControllerBase
     /// <summary>
     /// Request of the worker for a test.
     /// </summary>
-    [HttpPost("get-test")]
+    [HttpGet("test")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetTestAutobenchResponse))]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetTestNonAutobenchResponse))]
-    public async Task<IActionResult> GetTest([FromBody] GetTestDto getTestDto)
+    public async Task<IActionResult> GetTest([FromQuery] GetTestDto getTestDto)
     {
         var (wl, test) = await _testService.CreateJobForWorker(getTestDto, HttpContext.GetAccessToken());
         return getTestDto.Autobench ? HandleAutobenchResponse(wl, test) : HandleNormalTestResponse(wl, test);

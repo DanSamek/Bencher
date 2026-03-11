@@ -182,9 +182,11 @@ public class Communication : ICommunication
     {
         try
         {
-            var dto = CreateGetTestDto(autobench);
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/{Constants.WORKER_API_PREFIX}/get-test");
-            var responseContent = SendAndDeserialize<T, GetTestDto>(requestMessage, dto);
+            var uri = CreateGetTestUri(autobench);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"/{Constants.WORKER_API_PREFIX}/test?{uri}");
+            var result = _client.Send(requestMessage); 
+            if (!result.IsSuccessStatusCode) return null;
+            var responseContent = Helper.Deserialize<T>(result);
             return responseContent;
         }
         catch (Exception ex)
@@ -218,8 +220,10 @@ public class Communication : ICommunication
         return result;
     }
 
-    private GetTestDto CreateGetTestDto(bool autobench)
+    private string CreateGetTestUri(bool autobench)
     {
+        var uri = $"Autobench={autobench}&Mac={_workerMac}&Name={Environment.MachineName}&NumberOfThreads={_options.NumberOfThreads}";
+        /*
         var dto = new GetTestDto
         {
             Autobench = autobench,
@@ -227,7 +231,8 @@ public class Communication : ICommunication
             Name = Environment.MachineName,
             NumberOfThreads = _options.NumberOfThreads
         };
-        return dto;
+        */
+        return uri;
     }
     
     private TOut? SendAndDeserialize<TOut, TIn>(HttpRequestMessage requestMessage, TIn dto) 
