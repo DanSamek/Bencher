@@ -549,14 +549,14 @@ public class TestStoreTests : TestBase
                 .AddEngine("stockfish")
                     .AddBranch("base_branch")
                     .AddBranch("test_branch")
-                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Running, numberOfThreads: 4)
-                        .AddWorker(1)       
+                    .AddTest("test_1", "test_book", "base_branch", "test_branch", state: TestState.Running, numberOfThreads: 2, timeManagement: "3+0.03")
+                        .AddWorker(16)       
                     .Close()        
-                    .AddTest("test_2", "test_book", "base_branch", "test_branch", state: TestState.Running, numberOfThreads: 2)
-                        .AddWorker(1)
+                    .AddTest("test_2", "test_book", "base_branch", "test_branch", state: TestState.Running, numberOfThreads: 4, timeManagement: "3+0.03")
+                        .AddWorker(16)
                     .Close()        
-                    .AddTest("test_3", "test_book", "base_branch", "test_branch", state: TestState.Running, numberOfThreads: 1)
-                        .AddWorker(1)
+                    .AddTest("test_3", "test_book", "base_branch", "test_branch", state: TestState.Running, numberOfThreads: 1, timeManagement: "3+0.03")
+                        .AddWorker(16)
                     .Close()
                 .Close()
             .Close()
@@ -567,7 +567,7 @@ public class TestStoreTests : TestBase
         var testStore = CreateTestStore();
         var nextTest = testStore.GetNextTestForWorker(false, 16);
         Assert.That(nextTest, Is.Not.Null);
-        Assert.That(nextTest.Name, Is.EqualTo("test_1"));
+        Assert.That(nextTest.Name, Is.EqualTo("test_2"));
     }
     
     

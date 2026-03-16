@@ -1084,7 +1084,57 @@ public class WorkerControllerTests : WorkerControllerTestBase
         Assert.That(dto, Is.Not.Null);
         Assert.That(dto.MaximumThreads, Is.EqualTo(1));
     }
-    
+
+    /// <summary>
+    /// Test for <see cref="WorkerController.GetTest"/> -- iterated version -- multiple requests. 
+    /// </summary>
+    [Test]
+    public async Task GetTest_Iterated()
+    {
+        ClearDb();
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("uho")
+            .CreateSprtSettings()
+            .CreateUser("user_3")
+            .WithAccessToken("12345678")
+            .AddEngine("stockfish")
+            .AddBranch("base_branch")
+            .AddBranch("test_branch")
+            .AddTest("test_1", "uho", "base_branch", "test_branch", numberOfThreads: 4)
+            .Close()
+            .AddTest("test_2", "uho", "base_branch", "test_branch", numberOfThreads: 2)
+            .Close()
+            .AddTest("test_3", "uho", "base_branch", "test_branch", numberOfThreads: 1)
+            .Close()
+            .Close()
+            .Close();
+
+        var workerNumberOfThreads = new[] { 8, 4, 16, 8, 16, 6, 16, 32, 16, 8, 8, 12, 16, 16 };
+        foreach (var numberOfThreads in workerNumberOfThreads)
+        {
+            RefreshController();
+            LoginAs("user_3");
+            var dto = new GetTestDto
+            {
+                Autobench = false,
+                Mac = "AB:CD:EF:GH:IJ",
+                Name = "TEST",
+                NumberOfThreads = numberOfThreads
+            };
+            _ = await Controller.GetTest(dto);
+        }
+
+        var tests = Factory.CreateDbContext()
+            .Tests
+            .OrderBy(t => t.Id)
+            .Include(t => t.WorkerLogs)
+            .ToArray();
+        
+        Assert.That(tests[0].ActiveWorkerThreadCount(), Is.EqualTo(110));
+        Assert.That(tests[1].ActiveWorkerThreadCount(), Is.EqualTo(48));
+        Assert.That(tests[2].ActiveWorkerThreadCount(), Is.EqualTo(24));
+    }
+
     private int TestBranchBench(int testId)
     {
         var testBranchBench = Factory.CreateDbContext()
