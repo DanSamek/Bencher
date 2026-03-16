@@ -114,10 +114,10 @@ public class TestStore : Store<Test>
         {
             filteredRunningTests = filteredRunningTests
                 .OrderByDescending(t =>
-                    (t.ThreadScale / 2) / (t.WorkerLogs.Where(wl => wl.NumberOfGames != wl.TotalNumberOfGames)
+                    (t.ThreadScale / 2.0) / (t.WorkerLogs.Where(wl => wl.State == WorkerLogState.Active && wl.NumberOfGames != wl.TotalNumberOfGames)
                         .Sum(wl => wl.NumberOfThreads)));
         }
-        
+
         var result = filteredRunningTests.FirstOrDefault();
         return result;
     }
@@ -430,6 +430,7 @@ public class TestStore : Store<Test>
             .Where(t => t.State == TestState.Paused && t.Priority == maximumPriority)
             .OrderByDescending(t => t.Priority)
             .OrderByLastConnectedWorker()
+            .ThenByDescending(t => t.ThreadScale)
             .FirstOrDefault();
 
     private IQueryable<Test> WhereFilter(IQueryable<Test> tests, bool autobench, int workerNumberOfThreads)
