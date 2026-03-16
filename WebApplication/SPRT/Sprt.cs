@@ -109,24 +109,22 @@ public static class Sprt
         
         return result;
     }
-    /*
-        Variance() -> sn^2 = (1 / n - 1) * (sum m (xi - xn)^2), where xi is a constant [0, 0.25, 0.5, 0.75, 1.0].
-            ->Elem()) -> (m / totalPairs) * (xi - xn)^2  
-    */
+    
     private static double Variance(Penta penta, double score)
     {
         var totalPairs = penta.TotalPairs(); 
         
-        var llVariance = Elem(penta.Ll, 0, score, totalPairs);
-        var ldVariance = Elem(penta.Ld, 0.25, score, totalPairs);
-        var wlVariance = Elem(penta.DdWl, 0.5, score, totalPairs);
-        var wdVariance = Elem(penta.Wd, 0.75, score, totalPairs);
-        var wwVariance = Elem(penta.Ww, 1, score, totalPairs);
+        var llVariance = Elem(penta.Ll, 0, score);
+        var ldVariance = Elem(penta.Ld, 0.25, score);
+        var wlVariance = Elem(penta.DdWl, 0.5, score);
+        var wdVariance = Elem(penta.Wd, 0.75, score);
+        var wwVariance = Elem(penta.Ww, 1, score);
         
         var variance = llVariance + ldVariance + wlVariance + wdVariance + wwVariance;
+        variance /= totalPairs - 1;
         return variance;
     }
     
-    private static double Elem(int m, double xi, double xn, double totalPairs)
-        => (m / (totalPairs - 1)) * Math.Pow(xi - xn, 2);
+    private static double Elem(int m, double xi, double xn)
+        => m * Math.Pow(xi - xn, 2);
 }
