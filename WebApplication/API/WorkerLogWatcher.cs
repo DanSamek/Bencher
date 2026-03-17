@@ -29,7 +29,7 @@ public class WorkerLogWatcher : BackgroundService
     {
         try
         {
-            while (true)
+            while (!stoppingToken.IsCancellationRequested)
             {
                 using var scope = _serviceScopeFactory.CreateScope();
                 var service = scope.ServiceProvider.GetRequiredService<ITestService>();
