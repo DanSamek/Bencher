@@ -65,7 +65,6 @@ public static class Program
     {
         var communication = new Communication.Communication(runnerOptions, factory.Get());
         communication.WorkerError(trace);
-        Console.WriteLine(trace);
         ApplicationInfo.Stopping();
     }
 }

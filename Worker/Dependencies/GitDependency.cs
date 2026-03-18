@@ -24,7 +24,7 @@ public partial class GitDependency : IValidatableDependency
         return string.IsNullOrEmpty(error) && _regex.IsMatch(output ?? string.Empty);
     }
     
-    string IValidatableDependency.ErrorMessage() => "Unable to resolve git dependency";
+    string IValidatableDependency.ErrorMessage() => "Git is not installed";
     
     [GeneratedRegex("git version")]
     private static partial Regex GitVersionRegex();

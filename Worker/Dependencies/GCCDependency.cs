@@ -21,11 +21,11 @@ public partial class GCCDependency : ICompilerDependency
     {
         var command = "gcc -v";
         var process = _processInfoCreator.Create(command);
-        var (_, error) = _runner.RunProcess(process); 
+        var (_, error) = _runner.RunProcess(process);
         return _regex.IsMatch(error ?? string.Empty);
     }
 
-    public string ErrorMessage() => "Unable to resolve GCC dependency";
+    public string ErrorMessage() => "GCC is not installed";
     public Compilers Compiler =>  Compilers.Gcc;
     
     [GeneratedRegex("gcc version")]

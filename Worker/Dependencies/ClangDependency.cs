@@ -25,7 +25,7 @@ public partial class ClangDependency : ICompilerDependency
         return _regex.IsMatch(error ?? string.Empty);
     }
 
-    public string ErrorMessage() => "Unable to resolve Clang dependency";
+    public string ErrorMessage() => "Clang is not installed";
 
     public Compilers Compiler => Compilers.Clang;
 
