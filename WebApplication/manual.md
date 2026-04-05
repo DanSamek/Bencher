@@ -3,14 +3,14 @@
 ### User roles
 
 - Not verified 
-    - can login but unable to create tests, add opening books, add engines..
+    - Can login but unable to create tests, add opening books, add engines..
 - Verified 
-    - can create tests, add opening books, add engines,...
+    - Can create tests, add opening books, add engines,...
 - Admin 
-    - approves (verify) not verified users
-    - is able to:
-        - delete users 
-        - stop/delete tests
+    - Approves (verify) not verified users
+    - Is able to:
+        - Delete users
+        - Stop/delete tests
 
 ### Navigation menu
 
@@ -82,6 +82,6 @@ Access token is used on workers - for login.
     - Workers expect that built binary will be in the `/tmp/{generated_folder}/bencher_bin` and binary name is `engine`
 
 ### Requirements for the engine
-- Implementation of the `bench` command that outputs `bench: xxx nps: yyy` on standart output.
+- Implementation of the `bench` command that outputs `bench: xxx nps: yyy` on standard output.
     - Bench is usually set of positions for which we run search with fixed depth (for example 10).
 
