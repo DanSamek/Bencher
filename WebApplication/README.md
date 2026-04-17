@@ -37,4 +37,8 @@ All environment variables are required for the run except `GMAIL_SUBJECT`.
 - `dotnet run -c Release`
 
 
+### Known local exceptions and possible solutions
+- `The SSL connection could not be established`
+    - Solution: `dotnet dev-certs https --trust`
+
 **See also manual.md**

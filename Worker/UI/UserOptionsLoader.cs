@@ -5,11 +5,7 @@ public static class UserOptionsLoader
     /// <summary>
     /// Minimum number of threads required for the thread split algorithm. 
     /// </summary>
-    #if DEBUG
-    private const int MIN_THREAD_SPLIT = 0;
-    #else
     private const int MIN_THREAD_SPLIT = 16;
-    #endif
     /// <summary>
     /// Options, that will be loaded from the user.
     /// </summary>
@@ -35,29 +31,34 @@ public static class UserOptionsLoader
             numberOfThreads = Environment.ProcessorCount;
         }
 
-        if (numberOfThreads >= MIN_THREAD_SPLIT)
+        if (Helper.DEVELOPMENT)
+#pragma warning disable CS0162 // Unreachable code detected
         {
-            valid = false;
-            while (!valid)
+            if (numberOfThreads >= MIN_THREAD_SPLIT)
             {
-                Console.WriteLine("Try split threads [T/F]:");
-                var splitThreadsString = Console.ReadLine();
-                if (splitThreadsString is null || splitThreadsString.Length != 1) continue;
+                valid = false;
+                while (!valid)
+                {
+                    Console.WriteLine("Try split threads [T/F]:");
+                    var splitThreadsString = Console.ReadLine();
+                    if (splitThreadsString is null || splitThreadsString.Length != 1) continue;
 
-                var splitThreadsChar = char.ToLower(splitThreadsString[0]); 
-                splitThreads = splitThreadsChar switch
-                {
-                    't' => true,
-                    _ => false
-                };
+                    var splitThreadsChar = char.ToLower(splitThreadsString[0]); 
+                    splitThreads = splitThreadsChar switch
+                    {
+                        't' => true,
+                        _ => false
+                    };
                 
-                valid = splitThreadsChar switch
-                {
-                    't' or 'f' => true,
-                    _ => false
-                };
+                    valid = splitThreadsChar switch
+                    {
+                        't' or 'f' => true,
+                        _ => false
+                    };
+                }    
             }    
         }
+#pragma warning restore CS0162 // Unreachable code detected
         
         var result = new UserOptions(numberOfThreads, splitThreads);
         return result;
