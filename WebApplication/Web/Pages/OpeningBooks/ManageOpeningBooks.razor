@@ -15,7 +15,7 @@
 
 <PageTitle>Manage opening books</PageTitle>
 
-<Alert @ref="_alert" Danger Text="It is not possible to delete an opening book with not finished tests." />
+<Alert @ref="_alert" Danger Text="It is not possible to remove an opening book with a test." />
 
 <PageHeader Value="Manage opening books" />
 
@@ -84,7 +84,7 @@
         <tbody>
         @foreach (var openingBook in openingBooks)
         {
-            <OpeningBookRow OpeningBook="openingBook" EnableDelete="enableDelete" OnOpeningBookDeleted="ReloadState" OnAnyNotFinishedTest="() => _alert?.Show()"/>
+            <OpeningBookRow OpeningBook="openingBook" EnableDelete="enableDelete" OnOpeningBookDeleted="ReloadState" OnAnyTest="() => _alert?.Show()"/>
         }
         </tbody>
     </table>;

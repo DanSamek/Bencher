@@ -105,35 +105,43 @@ public class OpeningBookStoreTests : TestBase
     }
     
     /// <summary>
-    /// Tests <see cref="OpeningBookStore.AnyRunningTest" />.
+    /// Tests <see cref="OpeningBookStore.AnyTest" /> if opening book has at least one test. 
     /// </summary>
-    [TestCase(TestState.Autobenched, true)]
-    [TestCase(TestState.Finished, false)]
-    [TestCase(TestState.Paused, true)]
-    [TestCase(TestState.Running, true)]
-    [TestCase(TestState.Stopped, false)]
-    public void AnyRunningTest(TestState state, bool anyRunningExpected)
+    [Test]
+    public void AnyTest_Exists()
     {
-        DateTime? date = state is TestState.Finished or TestState.Stopped ? DateTime.UtcNow : null;
         new DomainBuilder(Factory.CreateDbContext())
             .CreateBook("test-book")
             .CreateSprtSettings()
             .CreateUser("test-user")
-                .AddEngine("stockfish")
-                    .AddBranch("base-branch")
-                    .AddBranch("test-branch")
-                    .AddTest("test-1", "test-book", "base-branch", "test-branch", state: state, ended: date)
-                        .Close()
-                    .Close()
-                .Close()
+            .AddEngine("stockfish")
+            .AddBranch("base-branch")
+            .AddBranch("test-branch")
+            .AddTest("test-1", "test-book", "base-branch", "test-branch")
+            .Close()
+            .Close()
+            .Close()
             .Close();
         
         var store = new OpeningBookStore(Factory);
-        var bookId = Factory.CreateDbContext().OpeningBooks.First().Id;
-        var result = store.AnyRunningTest(bookId);
-        Assert.That(result, Is.EqualTo(anyRunningExpected));
+        var result = store.AnyTest(Factory.CreateDbContext().OpeningBooks.First().Id);
+        Assert.That(result, Is.EqualTo(true));
     }
-
+    
+    
+    /// <summary>
+    /// Tests <see cref="OpeningBookStore.AnyTest" /> if opening book has zero tests. 
+    /// </summary>
+    [Test]
+    public void AnyTest_Not_Exists()
+    {
+        new DomainBuilder(Factory.CreateDbContext())
+            .CreateBook("test-book");
+        
+        var store = new OpeningBookStore(Factory);
+        var result = store.AnyTest(Factory.CreateDbContext().OpeningBooks.First().Id);
+        Assert.That(result, Is.EqualTo(false));
+    }
 
     /// <summary>
     /// Tests <see cref="OpeningBookStore.LoadContent"/>.

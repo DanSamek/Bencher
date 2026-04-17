@@ -48,14 +48,14 @@
     /// Action when opening book has not finished test.
     /// </summary>
     [Parameter, EditorRequired]
-    public required Action OnAnyNotFinishedTest { get; set; }
+    public required Action OnAnyTest { get; set; }
 
     private void RemoveOpeningBook()
     {
-        var result = OpeningBookStore.AnyRunningTest(OpeningBook.Id);
+        var result = OpeningBookStore.AnyTest(OpeningBook.Id);
         if (result)
         {
-            OnAnyNotFinishedTest.Invoke();
+            OnAnyTest.Invoke();
             return;
         }
         OpeningBookStore.DeleteById(OpeningBook.Id);

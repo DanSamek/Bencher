@@ -7,13 +7,21 @@ namespace Worker.UI;
 /// </summary>
 public static class ApplicationInfo
 {
-    private static string VERSION_ID => "0.4";
+    private static string VERSION_ID => "1.0";
     private static string AUTHORS => "Daniel Samek";
     private static readonly ErrorTrace _errorTrace = new();
 
+    private const string NAME =
+        "__________                     .__                            __      __             __                 \n" +
+        "\\______   \\ ____   ____   ____ |  |__   ___________          /  \\    /  \\___________|  | __ ___________ \n" +
+        " |    |  _// __ \\ /    \\_/ ___\\|  |  \\_/ __ \\_  __ \\  ______ \\   \\/\\/   /  _ \\_  __ \\  |/ // __ \\_  __ \\\n" +
+        " |    |   \\  ___/|   |  \\  \\___|   Y  \\  ___/|  | \\/ /_____/  \\        (  <_> )  | \\/    <\\  ___/|  | \\/\n" +
+        " |______  /\\___  >___|  /\\___  >___|  /\\___  >__|              \\__/\\  / \\____/|__|  |__|_ \\\\___  >__|   \n" +
+        "        \\/     \\/     \\/     \\/     \\/     \\/                       \\/                   \\/    \\/       ";
+    
     public static void Display()
     {
-        Console.WriteLine("Bencher - worker");
+        Console.WriteLine(NAME);
         Console.WriteLine($"Version: {VERSION_ID}");
         Console.WriteLine($"Authors: {AUTHORS}");
         Console.WriteLine("\n");

@@ -75,13 +75,12 @@ public class OpeningBookStore : Store<OpeningBook>
             .ExecuteDelete();
     
     /// <summary>
-    /// Checks if opening book is used in any running test.
+    /// Checks if opening book is used in any test.
     /// </summary>
-    public bool AnyRunningTest(int openingBookId)
+    public bool AnyTest(int openingBookId)
         => Context
             .Tests
-            .Any(t => t.OpeningBook.Id == openingBookId && t.State != TestState.Stopped &&
-                        t.State != TestState.Finished);
+            .Any(t => t.OpeningBook.Id == openingBookId);
     
     /// <summary>
     /// Loads opening book content.

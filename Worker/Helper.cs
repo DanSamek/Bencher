@@ -5,6 +5,7 @@ namespace Worker;
 
 public static class Helper
 {
+    public const bool DEVELOPMENT = false;
     public const string ERROR_PREFIX = "[ERROR]";
     public const string INFO_PREFIX = "[INFO]";
     
