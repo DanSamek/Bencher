@@ -28,6 +28,7 @@ All environment variables are required for the run except `GMAIL_SUBJECT`.
 ### Database setup (locally)
 - `cd WebApplication`
 - `docker compose -f postgres-compose.yml up`
+- `dotnet build` (when occurs: `Unable to retrieve project metadata. Ensure it's an SDK-style project.`)
 - `dotnet ef database update` (only when first run or new migration)
 
 *NOTE: This will start the database with configuration from `.env` (It will be available on localhost:5432 so this port has to be free!)*
