@@ -9,7 +9,7 @@
 
 ### Environment variables 
 
-Template for usage is ready in the file `.empty.env`.
+Template for usage is ready in the file `empty.env`.
 Before run rename it to `.env`
 
 ```
